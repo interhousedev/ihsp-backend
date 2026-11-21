@@ -2,6 +2,7 @@
 
 import datetime as dt
 from typing import Annotated
+from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import ContainerDep, StudentCtx
 from app.interfaces.http.v1.admission.routes_items import _locale
@@ -235,6 +236,59 @@ async def put_ikigai(
     return IkigaiBody.of(saved)
 
 
+class FitAnalysisAxisOut(BaseModel):
+    """One axis before and after the AI correction."""
+
+    key: str
+    base_score: int | None
+    score: int | None
+
+
+class FitAnalysisOut(BaseModel):
+    """The corrected fit ring of one university and a short text."""
+
+    base_total: int | None
+    total: int | None
+    known_share: float
+    axes: list[FitAnalysisAxisOut]
+    strengths: list[str]
+    risks: list[str]
+    next_step: str
+    ai: bool = Field(description="False without AI consent: rule-based values.")
+
+
+async def post_fit_analysis(
+    institution_id: UUID,
+    container: ContainerDep,
+    ctx: StudentCtx,
+    accept_language: Lang = None,
+) -> FitAnalysisOut:
+    """A quick AI read of the caller's fit for one university (cached, limited)."""
+    a = await container.admission.fit_analysis.analyse(
+        ctx, institution_id, _locale(accept_language)
+    )
+    return FitAnalysisOut(
+        base_total=a.base_total,
+        total=a.total,
+        known_share=a.known_share,
+        axes=[
+            FitAnalysisAxisOut(key=x.key, base_score=x.base_score, score=x.score)
+            for x in a.axes
+        ],
+        strengths=list(a.strengths),
+        risks=list(a.risks),
+        next_step=a.next_step,
+        ai=a.ai,
+    )
+
+
+router.add_api_route(
+    "/fit/{institution_id}/analysis",
+    post_fit_analysis,
+    methods=["POST"],
+    response_model=FitAnalysisOut,
+    operation_id="admission_post_fit_analysis",
+)
 router.add_api_route(
     "/me/fit-preferences",
     get_fit_preferences,

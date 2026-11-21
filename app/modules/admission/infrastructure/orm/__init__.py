@@ -12,6 +12,7 @@ from app.modules.admission.infrastructure.orm.essay_invites import *  # noqa: F4
 from app.modules.admission.infrastructure.orm.essay_reviews import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.exemplars import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.fit import *  # noqa: F401,F403
+from app.modules.admission.infrastructure.orm.item_opportunity import *  # noqa: F401,F403,E501
 from app.modules.admission.infrastructure.orm.kb import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.matching import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.memory_notes import *  # noqa: F401,F403

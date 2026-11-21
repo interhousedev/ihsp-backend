@@ -84,22 +84,51 @@ def build_intake_fetcher() -> SafeFetcher:
 class TaxonomySubjectLike(Protocol):
     """A subject of the opportunity taxonomy."""
 
-    id: Any
-    name: dict[str, str]
+    @property
+    def id(self) -> Any:
+        """The id."""
+        ...
+
+    @property
+    def name(self) -> dict[str, str]:
+        """The name."""
+        ...
 
 
 class _SubfieldLike(Protocol):
-    id: Any
-    name: dict[str, str]
-    subjects: Sequence[TaxonomySubjectLike]
+    @property
+    def id(self) -> Any:
+        """The id."""
+        ...
+
+    @property
+    def name(self) -> dict[str, str]:
+        """The name."""
+        ...
+
+    @property
+    def subjects(self) -> Sequence[TaxonomySubjectLike]:
+        """The subjects."""
+        ...
 
 
 class TaxonomyFieldLike(Protocol):
     """A field of the taxonomy with its subfields and subjects."""
 
-    id: Any
-    name: dict[str, str]
-    subfields: Sequence[_SubfieldLike]
+    @property
+    def id(self) -> Any:
+        """The id."""
+        ...
+
+    @property
+    def name(self) -> dict[str, str]:
+        """The name."""
+        ...
+
+    @property
+    def subfields(self) -> Sequence[_SubfieldLike]:
+        """The subfields."""
+        ...
 
 
 @dataclass(slots=True)

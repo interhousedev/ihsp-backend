@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
 from pathlib import Path
 from typing import Any, Literal
 
 from app.modules.admission.domain.study_fields import canonical_names
 from app.modules.admission.infrastructure.catalog_data.profiles import PROFILES
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 
 _DIR = Path(__file__).parent
 
@@ -106,15 +107,35 @@ class Safety(_Model):
     crime_index: Fact = Fact()
 
 
-class Institution(_Model):
-    """A university with its sourced facts."""
+class Description(_Model):
+    """A short description of an institution in each interface language."""
 
-    slug: str = Field(pattern=r"^[a-z0-9-]+$")
+    en: str = Field(max_length=400)
+    ru: str = Field(max_length=400)
+    uz: str = Field(max_length=400)
+
+
+def slug_from_domain(domain: str) -> str:
+    """The default slug of an entry that has only a website domain."""
+    d = domain.strip().lower().removeprefix("www.")
+    return re.sub(r"[^a-z0-9]+", "-", d).strip("-")
+
+
+class Institution(_Model):
+    """A university with its sourced facts.
+
+    ``slug`` may be omitted when ``website_domain`` is set (enrichment files); it
+    then defaults to the domain with dots turned into hyphens.
+    """
+
+    slug: str = Field(default="", pattern=r"^([a-z0-9-]+)?$")
     name: str
     country: str = Field(pattern=r"^[A-Z]{2}$")
     city: str
     website_domain: str | None = None
+    description: Description | None = None
     city_type: CityType | None = None
+    institution_type: Literal["public", "private"] | None = None
     fields: list[str] = []
     acceptance_rate: RangeFact | None = None  # percent
     intl_acceptance_rate: Fact | None = None  # value: percent
@@ -128,6 +149,14 @@ class Institution(_Model):
     source_url: HttpUrl
     year: int = Field(ge=2000, le=2100)
     verified: bool = False
+
+    @model_validator(mode="after")
+    def _default_slug(self) -> "Institution":
+        if not self.slug:
+            if not self.website_domain:
+                raise ValueError("slug or website_domain is required")
+            self.slug = slug_from_domain(self.website_domain)
+        return self
 
 
 class Program(_Model):
@@ -154,12 +183,24 @@ class Seed(_Model):
 def _read_all() -> list[Seed]:
     return [
         Seed.model_validate(json.loads(p.read_text("utf-8")))
-        for p in sorted(_DIR.glob("*.json"))
+        for p in [
+            *sorted(_DIR.glob("*.json")),
+            *sorted((_DIR / "enrich").glob("*.json")),
+        ]
     ]
 
 
+def enrich_slugs() -> set[str]:
+    """Slugs of the entries that come from ``enrich/*.json``."""
+    return {
+        i.slug
+        for p in (_DIR / "enrich").glob("*.json")
+        for i in Seed.model_validate(json.loads(p.read_text("utf-8"))).institutions
+    }
+
+
 def load_seed() -> list[dict[str, Any]]:
-    """All institutions from every ``*.json`` file, validated, as plain dicts.
+    """All institutions of ``*.json`` and ``enrich/*.json``, validated, as dicts.
 
     ``PROFILES`` adds the city type, institution type and demo media by slug.
     """
@@ -171,7 +212,7 @@ def load_seed() -> list[dict[str, Any]]:
 
 
 def load_programs() -> list[dict[str, Any]]:
-    """All national programmes from every ``*.json`` file, validated."""
+    """All national programmes of ``*.json`` and ``enrich/*.json``, validated."""
     return [p.model_dump(mode="json") for seed in _read_all() for p in seed.programs]
 
 

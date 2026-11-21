@@ -14,13 +14,13 @@ from app.modules.admission.application.review_checks import (
     clean_rewrite,
     delimit,
     input_hash,
-    limits_for,
     looks_injected,
     nfc,
     numbers,
     plain,
     projected_only_numbers,
     rewrite_violation,
+    warn_limits_for,
 )
 from app.modules.admission.application.review_prompts import (
     PROMPT_VERSION,
@@ -49,7 +49,6 @@ from app.modules.admission.domain.errors import (
     AdmissionNotFoundError,
     ConsentRequiredError,
     QuotaExceededError,
-    WordsNotSetError,
 )
 from app.modules.admission.domain.items import Item
 from app.modules.admission.ports.ai import PromptSource, QuotaOf, StructuredAi
@@ -83,7 +82,7 @@ class ItemInput:
 
     item: Item
     metrics: list[Metric]
-    words: ProfileWordsRef
+    words: ProfileWordsRef | None
 
 
 async def owned_item(
@@ -100,7 +99,10 @@ async def owned_item(
 
 
 def review_hash(
-    item: Item, metrics: Sequence[Metric], words: ProfileWordsRef, locale: str
+    item: Item,
+    metrics: Sequence[Metric],
+    words: ProfileWordsRef | None,
+    locale: str,
 ) -> str:
     """Return the cache key of a review of this exact input."""
     return input_hash(
@@ -123,15 +125,15 @@ def review_hash(
                 "weeks": item.weeks_per_year,
             },
             "metrics": canonical_metrics(metrics),
-            "words": [nfc(w) for w in words.words],
-            "words_version": words.version,
+            "words": [nfc(w) for w in words.words] if words else [],
+            "words_version": words.version if words else None,
         }
     )
 
 
 def caps_of(kind: str) -> dict[str, int]:
-    """Return the character caps as prompt values."""
-    position_max, org_max, description_max = limits_for(kind)
+    """Return the soft character lengths the model should aim for."""
+    position_max, org_max, description_max = warn_limits_for(kind)
     return {
         "position_max": position_max,
         "org_max": org_max,
@@ -230,8 +232,8 @@ class ItemReviewService:
             await require_ai_consent(self._consents, item.student_id)
             metrics = (await uow.items.metrics_for([item.id])).get(item.id, [])
             words = await uow.items.words(item.student_id)
-            if words is None or not words.words:
-                raise WordsNotSetError()
+            if words is not None and not words.words:
+                words = None
             digest = review_hash(item, metrics, words, locale)
             cached = await uow.items.find_review(TARGET_KIND, item.id, digest)
             if cached is not None and cached.status == "ready":
@@ -293,12 +295,9 @@ class ItemReviewService:
             system += "\n" + await render_prompt(
                 self._prompts, AiTask.ADMIT_ITEM_REVIEW, "strict", locale
             )
-        user = (
-            "words: "
-            + ", ".join(data.words.words)
-            + "\n"
-            + delimit(item, data.metrics, strict=strict)
-        )
+        user = delimit(item, data.metrics, strict=strict)
+        if data.words is not None:
+            user = "words: " + ", ".join(data.words.words) + "\n" + user
         raw, model = await self._ai.json(
             task=AiTask.ADMIT_ITEM_REVIEW,
             system=system,
@@ -332,7 +331,7 @@ class ItemReviewService:
             "prompt_version": PROMPT_VERSION,
             "rubric_version": RUBRIC_VERSION,
             "schema_version": SCHEMA_VERSION,
-            "words_version": data.words.version,
+            "words_version": data.words.version if data.words else None,
             "status": "ready",
         }
         if parsed.safeguarding:
@@ -371,7 +370,9 @@ class ItemReviewService:
             ],
             "word_fit": [
                 f.model_dump()
-                for f in align_word_fit(parsed.word_fit, data.words.words)
+                for f in align_word_fit(
+                    parsed.word_fit, data.words.words if data.words else []
+                )
             ],
             "rewrite": rewrite.model_dump() if rewrite else None,
             "missing_facts": [plain(f) for f in parsed.missing_facts][

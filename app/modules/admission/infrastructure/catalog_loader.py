@@ -1,8 +1,10 @@
 """Idempotent load of the seed catalog into the admission tables (§3.4, §11.1).
 
 Every row has a deterministic UUIDv5 id derived from the seed key (slug, url, fact
-key), so a second run updates the same rows instead of adding new ones. Reviewed
-seed entries (`verified`) are published with `official` facts; the rest stay
+key), so a second run updates the same rows instead of adding new ones. A seed
+entry whose website domain belongs to another row (typically staff-created) is
+not duplicated: its facts are added to that row, never over values already there.
+Reviewed seed entries (`verified`) are published with `official` facts; the rest stay
 `provisional` with `manual` facts and are shown as unverified.
 """
 
@@ -30,6 +32,7 @@ from app.modules.admission.infrastructure.orm.catalog import (
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 _NS = uuid5(NAMESPACE_URL, "admission.catalog.seed")
 _AID = {
@@ -48,12 +51,12 @@ def seed_id(*parts: object) -> UUID:
 
 @dataclass(frozen=True, slots=True)
 class LoadReport:
-    """Rows written by one load (inserted or refreshed)."""
+    """Rows written by one load; `enriched` entries matched an existing domain."""
 
     institutions: int
     facts: int
     scholarships: int
-    skipped: int
+    enriched: int
 
 
 class _Loader:
@@ -64,7 +67,16 @@ class _Loader:
         self.now = now
         self.media = media
         self.facts = 0
+        self.foreign = False
+        """True while writing onto a row the seed did not create."""
         self.sources: set[UUID] = set()
+
+    async def taken(self, model: Any, mine: UUID, *where: ColumnElement[bool]) -> bool:
+        """Whether a foreign (non-seed) row matching `where` already exists."""
+        if not self.foreign:
+            return False
+        ids = (await self.s.scalars(select(model.id).where(*where))).all()
+        return any(i != mine for i in ids)
 
     async def source(self, url: object) -> UUID | None:
         if not url:
@@ -95,6 +107,14 @@ class _Loader:
         existing = await self.s.get(FactRow, fid)
         if existing is not None and existing.reviewer_id is not None:
             return  # a staff-reviewed fact is never overwritten by the seed
+        if await self.taken(
+            FactRow,
+            fid,
+            FactRow.entity_kind == "institution",
+            FactRow.entity_id == inst,
+            FactRow.key == key,
+        ):
+            return  # a staff-entered value of the existing row stays
         await self.s.merge(
             FactRow(
                 id=fid,
@@ -113,9 +133,15 @@ class _Loader:
         )
         self.facts += 1
 
-    async def institution(self, d: dict[str, Any]) -> int:
-        inst = seed_id("institution", d["slug"])
-        verified = bool(d["verified"])
+    async def row(
+        self, d: dict[str, Any], inst: UUID, owner: UUID | None, verified: bool
+    ) -> None:
+        """Merge the institution row, or only fill the description of `owner`."""
+        if owner is not None:
+            row = await self.s.get(InstitutionRow, owner)
+            if row is not None and row.description is None:
+                row.description = d.get("description")
+            return
         org = self.media.get(normalize_domain(d.get("website_domain")) or "")
         await self.s.merge(
             InstitutionRow(
@@ -129,8 +155,16 @@ class _Loader:
                 status="published" if verified else "provisional",
                 logo_url=d.get("logo_url") or (org.logo_url if org else None),
                 cover_url=d.get("cover_url") or (org.cover_url if org else None),
+                **_optional(d, "description"),
             )
         )
+
+    async def institution(self, d: dict[str, Any], owner: UUID | None = None) -> int:
+        """Write one seed entry; with `owner`, onto that existing row only."""
+        inst = owner or seed_id("institution", d["slug"])
+        self.foreign = owner is not None
+        verified = bool(d["verified"])
+        await self.row(d, inst, owner, verified)
         base = {"url": d["source_url"], "year": d["year"], "verified": verified}
 
         async def put(
@@ -190,9 +224,17 @@ class _Loader:
         await self.cost_and_aid(inst, d, verified)
         n = 0
         for sch in d.get("scholarships") or []:
+            sid = seed_id("scholarship", d["slug"], sch["name"])
+            if await self.taken(
+                ScholarshipRow,
+                sid,
+                ScholarshipRow.institution_id == inst,
+                func.lower(ScholarshipRow.name) == sch["name"][:200].lower(),
+            ):
+                continue
             await self.s.merge(
                 ScholarshipRow(
-                    id=seed_id("scholarship", d["slug"], sch["name"]),
+                    id=sid,
                     name=sch["name"][:200],
                     provider="institution",
                     institution_id=inst,
@@ -212,21 +254,28 @@ class _Loader:
         coa, tuition = d.get("intl_coa_usd") or {}, d.get("intl_tuition_usd") or {}
         if coa.get("value") is not None:
             cycle = coa.get("year") or d["year"]
-            await self.s.merge(
-                CostOfAttendanceRow(
-                    id=seed_id("coa", inst, cycle),
-                    institution_id=inst,
-                    cycle=cycle,
-                    currency=coa.get("currency", "USD"),
-                    tuition=(
-                        Decimal(str(tuition["value"]))
-                        if tuition.get("value") is not None
-                        else None
-                    ),
-                    total=Decimal(str(coa["value"])),
-                    source_id=await self.source(coa.get("source_url")),
+            cid = seed_id("coa", inst, cycle)
+            if not await self.taken(
+                CostOfAttendanceRow,
+                cid,
+                CostOfAttendanceRow.institution_id == inst,
+                CostOfAttendanceRow.cycle == cycle,
+            ):
+                await self.s.merge(
+                    CostOfAttendanceRow(
+                        id=cid,
+                        institution_id=inst,
+                        cycle=cycle,
+                        currency=coa.get("currency", "USD"),
+                        tuition=(
+                            Decimal(str(tuition["value"]))
+                            if tuition.get("value") is not None
+                            else None
+                        ),
+                        total=Decimal(str(coa["value"])),
+                        source_id=await self.source(coa.get("source_url")),
+                    )
                 )
-            )
         aid = d.get("aid") or {}
         basis = aid.get("basis") or {}
         merit = aid.get("merit_for_internationals") or {}
@@ -235,15 +284,23 @@ class _Loader:
         if basis.get("value") in _AID or avg.get("value") or explicit is not None:
             kind, full = _AID.get(str(basis.get("value")), ("unknown", None))
             cycle = basis.get("year") or avg.get("year") or d["year"]
+            pid = seed_id("aid", inst, cycle)
+            if await self.taken(
+                AidPolicyRow,
+                pid,
+                AidPolicyRow.institution_id == inst,
+                AidPolicyRow.cycle == cycle,
+            ):
+                return
             await self.s.merge(
                 AidPolicyRow(
-                    id=seed_id("aid", inst, cycle),
+                    id=pid,
                     institution_id=inst,
                     cycle=cycle,
                     intl_need_based=kind,
                     meets_full_need=full if explicit is None else bool(explicit),
                     merit_available=bool(
-                        merit.get("value") or basis["value"] == "merit_only"
+                        merit.get("value") or basis.get("value") == "merit_only"
                     ),
                     avg_aid=(
                         Decimal(str(avg["value"]))
@@ -293,21 +350,26 @@ async def load_catalog(session: AsyncSession, now: dt.datetime) -> LoadReport:
     """Upsert the seed institutions and national programmes; the caller commits.
 
     A seed institution whose website domain belongs to another row (typically one
-    created by staff) is skipped rather than duplicated.
+    created by staff) is not duplicated: its facts, scholarships and description
+    are added to that row, and nothing already there is overwritten.
     """
     loader = _Loader(session, now, by_domain(load_org_media()))
-    schol = skipped = 0
+    schol = enriched = 0
     seed = load_seed()
     for d in seed:
         domain = normalize_domain(d.get("website_domain"))
-        if domain is not None:
-            owner = await loader.owner_of_domain(domain)
-            if owner is not None and owner != seed_id("institution", d["slug"]):
-                skipped += 1
-                continue
-        schol += await loader.institution(d)
+        owner = await loader.owner_of_domain(domain) if domain is not None else None
+        if owner is not None and owner == seed_id("institution", d["slug"]):
+            owner = None
+        enriched += owner is not None
+        schol += await loader.institution(d, owner)
     programs = load_programs()
     for p in programs:
         await loader.program(p)
     await session.flush()
-    return LoadReport(len(seed) - skipped, loader.facts, schol + len(programs), skipped)
+    return LoadReport(len(seed), loader.facts, schol + len(programs), enriched)
+
+
+def _optional(d: dict[str, Any], key: str) -> dict[str, Any]:
+    """`{key: value}` when the seed has a value, so a merge never blanks the column."""
+    return {key: d[key]} if d.get(key) else {}

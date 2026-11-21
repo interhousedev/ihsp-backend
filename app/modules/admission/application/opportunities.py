@@ -510,6 +510,7 @@ class OpportunityService:
                 applied = await repo.apply(
                     draft, target_id=current.target_id, by=current.submitted_by
                 )
+                await repo.resolve_item_links(current.id, applied)
             saved = await repo.save_review(
                 dataclasses.replace(
                     current,

@@ -12,11 +12,21 @@ from app.interfaces.http.v1.admission.schemas_catalog_staff import (
     CatalogProposalOut,
     CatalogReviewIn,
     FactSpecOut,
+    InstitutionStatus,
+    StaffInstitutionCreateIn,
+    StaffInstitutionPageOut,
+    StaffInstitutionPutIn,
+    StaffInstitutionRowOut,
+)
+from app.modules.admission.domain.catalog_staff import (
+    PAGE_DEFAULT,
+    PAGE_MAX,
+    QUERY_MAX,
 )
 from app.modules.admission.domain.intl_fact_display import fact_spec_view
 from app.modules.identity.domain.personal_token import PersonalTokenScope
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Query, Response, status
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
@@ -82,6 +92,67 @@ async def catalog_fact_spec(
     return FactSpecOut.model_validate({"groups": groups})
 
 
+async def list_staff_institutions(
+    container: ContainerDep,
+    ctx: AnyContext,
+    q: Annotated[str | None, Query(max_length=QUERY_MAX)] = None,
+    country: Annotated[str | None, Query(min_length=2, max_length=2)] = None,
+    inst_status: Annotated[InstitutionStatus | None, Query(alias="status")] = None,
+    page: Annotated[int, Query(ge=1, le=10000)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=PAGE_MAX)] = PAGE_DEFAULT,
+) -> StaffInstitutionPageOut:
+    """Every institution of any status, searchable by name, city or domain."""
+    found = await container.admission.catalog_staff.search(
+        ctx,
+        query=q,
+        country=country,
+        status=inst_status,
+        page=page,
+        page_size=page_size,
+    )
+    return StaffInstitutionPageOut(
+        items=[StaffInstitutionRowOut.of(i) for i in found.items],
+        total=found.total,
+        page=page,
+        page_size=page_size,
+        countries=found.countries,
+    )
+
+
+async def create_staff_institution(
+    body: StaffInstitutionCreateIn, container: ContainerDep, ctx: AnyContext
+) -> StaffInstitutionRowOut:
+    """Add an institution directly (published unless `status` says otherwise)."""
+    created = await container.admission.catalog_staff.create(
+        ctx, body.model_dump(exclude_unset=True)
+    )
+    return StaffInstitutionRowOut.of(created)
+
+
+async def put_staff_institution(
+    institution_id: UUID,
+    body: StaffInstitutionPutIn,
+    container: ContainerDep,
+    ctx: AnyContext,
+) -> StaffInstitutionRowOut:
+    """Edit an institution; omitted fields stay, `null` clears (409 if stale)."""
+    saved = await container.admission.catalog_staff.update(
+        ctx,
+        institution_id,
+        body.model_dump(exclude_unset=True, exclude={"lock_version"}),
+        lock_version=body.lock_version,
+    )
+    return StaffInstitutionRowOut.of(saved)
+
+
+async def delete_staff_institution(
+    institution_id: UUID, container: ContainerDep, ctx: AnyContext
+) -> Response:
+    """Delete an unused institution (409 `admission/catalog_in_use` otherwise)."""
+    await container.admission.catalog_staff.delete(ctx, institution_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 _R = router.add_api_route
 _R(
     "/staff/catalog/proposals",
@@ -111,4 +182,34 @@ _R(
     methods=["GET"],
     response_model=FactSpecOut,
     operation_id="admission_catalog_fact_spec",
+)
+_R(
+    "/staff/catalog/institutions",
+    list_staff_institutions,
+    methods=["GET"],
+    response_model=StaffInstitutionPageOut,
+    operation_id="admission_staff_institutions_list",
+)
+_R(
+    "/staff/catalog/institutions",
+    create_staff_institution,
+    methods=["POST"],
+    status_code=status.HTTP_201_CREATED,
+    response_model=StaffInstitutionRowOut,
+    operation_id="admission_staff_institutions_create",
+)
+_R(
+    "/staff/catalog/institutions/{institution_id}",
+    put_staff_institution,
+    methods=["PUT"],
+    response_model=StaffInstitutionRowOut,
+    operation_id="admission_staff_institutions_put",
+)
+_R(
+    "/staff/catalog/institutions/{institution_id}",
+    delete_staff_institution,
+    methods=["DELETE"],
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    operation_id="admission_staff_institutions_delete",
 )

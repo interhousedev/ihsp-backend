@@ -81,6 +81,13 @@ class DeadlineOut(BaseModel):
     label_short: str
 
 
+def _description(raw: dict[str, str] | None, locale: str) -> str | None:
+    """The description in `locale`, falling back to English."""
+    if not raw:
+        return None
+    return raw.get(locale) or raw.get("en") or None
+
+
 def dated_deadlines(raw: Any, locale: str = "en") -> list[DeadlineOut]:
     """Deadlines that have a date; a stored one without a date is not listed."""
     return [DeadlineOut(**d) for d in clean_deadlines(raw, locale) if d["date"]]
@@ -180,6 +187,10 @@ class InstitutionOut(BaseModel):
     logo_url: str | None
     cover_url: str | None
     website_url: str | None
+    description: str | None = Field(
+        default=None,
+        description="Short description in the request locale (en fallback).",
+    )
     fit_total: int | None = Field(
         default=None,
         ge=0,
@@ -244,6 +255,7 @@ class InstitutionOut(BaseModel):
             logo_url=i.logo_url,
             cover_url=i.cover_url,
             website_url=(f"https://{i.website_domain}" if i.website_domain else None),
+            description=_description(i.description, locale),
             fit_total=fit.total if fit is not None else None,
             known_share=fit.known_share if fit is not None else None,
             aid_profile=(

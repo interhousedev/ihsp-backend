@@ -23,6 +23,7 @@ from app.modules.admission.application.catalog_proposals import (
     CatalogProposalService,
 )
 from app.modules.admission.application.catalog_research import CatalogResearch
+from app.modules.admission.application.catalog_staff import CatalogStaffService
 from app.modules.admission.application.chances import ChancesService
 from app.modules.admission.application.chooser import CatalogService, ListService
 from app.modules.admission.application.comments import CommentService
@@ -50,12 +51,14 @@ from app.modules.admission.application.essays import (
 from app.modules.admission.application.exemplar_search import UowExemplarSource
 from app.modules.admission.application.exemplars import ExemplarService
 from app.modules.admission.application.fit import FitService
+from app.modules.admission.application.fit_analysis import FitAnalysisService
 from app.modules.admission.application.fit_preferences import FitPreferenceService
 from app.modules.admission.application.goal_plan import GoalPlanService
 from app.modules.admission.application.goal_plan_suggest import GoalPlanSuggester
 from app.modules.admission.application.honor_suggestions import HonorSuggestionService
 from app.modules.admission.application.interview import ItemInterviewService
 from app.modules.admission.application.item_grade import ItemGradeService
+from app.modules.admission.application.item_opportunity import ItemOpportunityService
 from app.modules.admission.application.items import ItemService
 from app.modules.admission.application.kb import KbService
 from app.modules.admission.application.list_plan import ListPlanService
@@ -66,6 +69,9 @@ from app.modules.admission.application.nudges import NudgeService
 from app.modules.admission.application.opportunities import (
     LmsCourseLookup,
     OpportunityService,
+)
+from app.modules.admission.application.opportunities_staff import (
+    OpportunityStaffService,
 )
 from app.modules.admission.application.opportunity_comments import OppCommentService
 from app.modules.admission.application.opportunity_intake import OpportunityIntake
@@ -194,6 +200,7 @@ class AdmissionServices:
     outcomes: OutcomeService
     nudges: NudgeService
     items: ItemService
+    item_opportunity: ItemOpportunityService
     honor_suggestions: HonorSuggestionService
     goal_plan: GoalPlanService
     goal_plan_suggest: GoalPlanSuggester
@@ -205,6 +212,8 @@ class AdmissionServices:
     item_interviews: ItemInterviewService
     opportunity_intake: OpportunityIntake
     opportunities: OpportunityService
+    opportunities_staff: OpportunityStaffService
+    catalog_staff: CatalogStaffService
     orgs: OrgService
     opportunity_comments: OppCommentService
     opportunity_planner: OpportunityPlanner
@@ -224,6 +233,7 @@ class AdmissionServices:
     today: TodayService
     fit_preferences: FitPreferenceService
     fit: FitService
+    fit_analysis: FitAnalysisService
     professions: ProfessionService
     tasks_ai: TaskSuggester
     assistant: AssistantService
@@ -311,6 +321,10 @@ def build(
     opportunities = OpportunityService(
         uow_factory, access, deps.clock, lms_courses, deps.rate_limiter, org_exists
     )
+    curators = CatalogProposalService(uow_factory, deps.clock)
+    intake = OpportunityIntake(
+        model, texts, web_search=web_search, profile_of=profile_of
+    )
     chooser = ListService(uow_factory, access, runtime, settings, deps.clock, identity)
     budget = BudgetService(chooser)
     calendar = CalendarService(
@@ -346,6 +360,20 @@ def build(
         uni_web,
         deps.clock,
         uni_pages,
+    )
+    fit_service = FitService(uow_factory, chooser, JsonProfessionCatalog())
+    fit_analysis = FitAnalysisService(
+        uow_factory,
+        access,
+        consents,
+        SqlUniChatRepository(deps.sessionmaker),
+        UowAssistantData(uow_factory),
+        fit_service,
+        model,
+        deps.rate_limiter,
+        _quota_of(deps, "admit_list_suggest_per_week"),
+        texts,
+        deps.clock,
     )
     uni_advice = UniAdviceService(
         uow_factory,
@@ -449,6 +477,15 @@ def build(
         outcomes=OutcomeService(uow_factory, access, identity),
         nudges=NudgeService(uow_factory, deps.clock),
         items=ItemService(uow_factory, access, certificates),
+        item_opportunity=ItemOpportunityService(
+            uow_factory,
+            access,
+            intake,
+            opportunities,
+            consents,
+            deps.rate_limiter,
+            deps.clock,
+        ),
         honor_suggestions=HonorSuggestionService(uow_factory, access, certificates),
         goal_plan=GoalPlanService(uow_factory, access, deps.clock),
         goal_plan_suggest=GoalPlanSuggester(
@@ -497,10 +534,12 @@ def build(
         item_interviews=ItemInterviewService(
             uow_factory, access, model, consents, texts
         ),
-        opportunity_intake=OpportunityIntake(
-            model, texts, web_search=web_search, profile_of=profile_of
-        ),
+        opportunity_intake=intake,
         opportunities=opportunities,
+        opportunities_staff=OpportunityStaffService(
+            uow_factory, curators.can_review, lms_courses, org_exists
+        ),
+        catalog_staff=CatalogStaffService(uow_factory, curators.can_review),
         orgs=OrgService(uow_factory, opportunities, deps.clock),
         opportunity_comments=OppCommentService(
             uow_factory, opportunities, deps.clock, identity
@@ -562,7 +601,8 @@ def build(
         readiness=readiness,
         fit_preferences=FitPreferenceService(uow_factory),
         professions=ProfessionService(uow_factory, JsonProfessionCatalog()),
-        fit=FitService(uow_factory, chooser, JsonProfessionCatalog()),
+        fit=fit_service,
+        fit_analysis=fit_analysis,
         today=TodayService(
             uow_factory,
             readiness,

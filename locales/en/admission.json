@@ -43,6 +43,7 @@
   "admission-purpose-finance-text": "My budget and aid answers may be used to check affordability and seen by my counselor.",
   "admission-catalog-fact-invalid": "This fact is not valid. Check the value, the source link and the year.",
   "admission-catalog-duplicate": "This school is already in the catalog or has a pending proposal.",
+  "admission-catalog-in-use": "This entry is used in student data, so it cannot be deleted. Hide it instead.",
   "admission-catalog-proposal-limit": "You have reached the daily limit of {limit} catalog proposals. Try again tomorrow.",
   "admission-fork-last-target": "A supplemental essay needs at least one prompt. Keep this essay on its last prompt or change it instead.",
   "admission-essay-too-short": "The essay is too short to check. Write at least {min} words; it has {count} now.",

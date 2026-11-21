@@ -4,23 +4,56 @@ from typing import Final
 
 from app.modules.admission.domain.items import (
     DESCRIPTION_MAX,
+    DESCRIPTION_WARN,
     GRADE_LETTERS,
     GRADE_TIP_MAX,
     TITLE_MAX,
+    TITLE_WARN,
 )
 from app.modules.notebooks.domain.artifacts.strict import to_strict_schema
 
 from pydantic import BaseModel, Field
 
-PROMPT_VERSION: Final = "item_grade@1"
+PROMPT_VERSION: Final = "item_grade@2"
 SCHEMA_NAME: Final = "item_grade"
+
+GRADE_DESCRIPTORS: Final[dict[str, dict[str, str]]] = {
+    "A": {
+        "en": "Excellent and well written",
+        "ru": "Отлично и хорошо написано",
+        "uz": "A'lo va yaxshi yozilgan",
+    },
+    "B": {
+        "en": "Good, clear with small gaps",
+        "ru": "Хорошо, понятно, есть небольшие пробелы",
+        "uz": "Yaxshi, tushunarli, kichik kamchiliklar bor",
+    },
+    "C": {
+        "en": "Basic and not fully understandable",
+        "ru": "Базово и не до конца понятно",
+        "uz": "Oddiy va to'liq tushunarli emas",
+    },
+    "D": {
+        "en": "Weak, vague or missing key facts",
+        "ru": "Слабо, расплывчато или не хватает ключевых фактов",
+        "uz": "Zaif, noaniq yoki asosiy faktlar yetishmaydi",
+    },
+    "E": {
+        "en": "Needs rewriting",
+        "ru": "Нужно переписать",
+        "uz": "Qayta yozish kerak",
+    },
+}
+SCALE: Final = "\n".join(f"{k}: {v['en']}" for k, v in GRADE_DESCRIPTORS.items())
 
 SYSTEM: Final = f"""You grade one activity or honor of a high-school student for a \
 university application, the way a Common App reader would. You get its kind, \
 category, organization, title (at most {TITLE_MAX} characters) and description (at \
-most {DESCRIPTION_MAX} characters). Grade the title and the description separately \
-with one letter: A (excellent), B (good), C (fine, can be sharper), D (weak), E \
-(unclear or empty). A good title names the role and the organization precisely. A \
+most {DESCRIPTION_MAX} characters). Aim for a title within {TITLE_WARN} characters and \
+a description within {DESCRIPTION_WARN}; longer text reads worse. Grade the title and \
+the description separately with one letter on this scale:
+{SCALE}
+A good title names the role and the organization precisely. A \
 good description is concrete: action verbs, numbers, results and the student's own \
 part, with no filler and no repetition of the title. For each give one tip of at \
 most {GRADE_TIP_MAX} characters: one concrete change the student can make now. For \

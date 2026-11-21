@@ -13,6 +13,7 @@ from app.modules.admission.application.items import ItemView, MetricDraft
 from app.modules.admission.application.review import NOTE_MAX
 from app.modules.admission.application.review_prompts import LANGUAGES
 from app.modules.admission.domain.items import Item, ItemGrade
+from app.modules.admission.infrastructure.ai.prompts.item_grade import GRADE_DESCRIPTORS
 from app.modules.admission.ports.items import Metric, StoredReview
 
 from fastapi import APIRouter, Header, Response, status
@@ -112,12 +113,23 @@ class ItemGradeOut(BaseModel):
     title_tip: str
     description_grade: str
     description_tip: str
+    title_descriptor: str | None = None
+    description_descriptor: str | None = None
+    overall: str | None = None
     model: str
 
     @classmethod
-    def of(cls, g: ItemGrade) -> "ItemGradeOut":
-        """Map the stored grade."""
+    def of(cls, g: ItemGrade, locale: str = "en") -> "ItemGradeOut":
+        """Map the stored grade with descriptors in the locale; overall is the worse."""
+
+        def say(letter: str) -> str | None:
+            names = GRADE_DESCRIPTORS.get(letter)
+            return names.get(locale, names["en"]) if names else None
+
         return cls(
+            title_descriptor=say(g.title_grade),
+            description_descriptor=say(g.description_grade),
+            overall=max(g.title_grade, g.description_grade),
             title_grade=g.title_grade,
             title_tip=g.title_tip,
             description_grade=g.description_grade,
@@ -151,6 +163,7 @@ class ItemOut(BaseModel):
     grade_stale: bool
     level: str | None
     certificate_entry_id: UUID | None
+    missing: list[str]
 
     @classmethod
     def of(cls, v: ItemView) -> "ItemOut":
@@ -179,6 +192,7 @@ class ItemOut(BaseModel):
             grade_stale=i.grade_stale,
             level=i.level,
             certificate_entry_id=i.certificate_entry_id,
+            missing=i.missing_for_ready(),
         )
 
 

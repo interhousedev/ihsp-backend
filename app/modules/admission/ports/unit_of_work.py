@@ -6,6 +6,7 @@ from typing import Protocol, Self
 
 from app.modules.admission.ports.career import CareerRepository
 from app.modules.admission.ports.catalog_proposals import CatalogProposalRepository
+from app.modules.admission.ports.catalog_staff import CatalogStaffRepository
 from app.modules.admission.ports.chooser import CatalogRepository, ListRepository
 from app.modules.admission.ports.consultations import (
     ConsultationRepository,
@@ -85,6 +86,11 @@ class AdmissionUnitOfWork(Protocol):
     @property
     def catalog_proposals(self) -> CatalogProposalRepository:
         """Staff proposals to change the catalog."""
+        ...
+
+    @property
+    def catalog_staff(self) -> CatalogStaffRepository:
+        """Staff lists and deletes of institutions and opportunities."""
         ...
 
     @property

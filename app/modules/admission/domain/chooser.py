@@ -79,6 +79,7 @@ class CatalogInstitution:
     logo_aspect: float | None = None
     website_domain: str | None = None
     aid_profile: AidProfile | None = None
+    description: dict[str, str] | None = None
 
     @property
     def verified(self) -> bool:

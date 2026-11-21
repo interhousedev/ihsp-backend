@@ -23159,6 +23159,117 @@
         "title": "FileUrlSchema",
         "type": "object"
       },
+      "FitAnalysisAxisOut": {
+        "description": "One axis before and after the AI correction.",
+        "properties": {
+          "base_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Score"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "required": [
+          "key",
+          "base_score",
+          "score"
+        ],
+        "title": "FitAnalysisAxisOut",
+        "type": "object"
+      },
+      "FitAnalysisOut": {
+        "description": "The corrected fit ring of one university and a short text.",
+        "properties": {
+          "ai": {
+            "description": "False without AI consent: rule-based values.",
+            "title": "Ai",
+            "type": "boolean"
+          },
+          "axes": {
+            "items": {
+              "$ref": "#/components/schemas/FitAnalysisAxisOut"
+            },
+            "title": "Axes",
+            "type": "array"
+          },
+          "base_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Total"
+          },
+          "known_share": {
+            "title": "Known Share",
+            "type": "number"
+          },
+          "next_step": {
+            "title": "Next Step",
+            "type": "string"
+          },
+          "risks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Risks",
+            "type": "array"
+          },
+          "strengths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Strengths",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "base_total",
+          "total",
+          "known_share",
+          "axes",
+          "strengths",
+          "risks",
+          "next_step",
+          "ai"
+        ],
+        "title": "FitAnalysisOut",
+        "type": "object"
+      },
       "FitItemOut": {
         "description": "The fit of one list entry.",
         "properties": {
@@ -26631,6 +26742,18 @@
             "title": "Deadlines",
             "type": "array"
           },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Short description in the request locale (en fallback).",
+            "title": "Description"
+          },
           "details": {
             "default": [],
             "items": {
@@ -26848,6 +26971,100 @@
           "next_cursor"
         ],
         "title": "InstitutionPageOut",
+        "type": "object"
+      },
+      "IntakeDraftIO": {
+        "description": "A researched draft; the student may edit it before linking.",
+        "properties": {
+          "blocked": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Blocked",
+            "type": "array"
+          },
+          "event_dates": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 12,
+            "title": "Event Dates",
+            "type": "array"
+          },
+          "kind": {
+            "default": "event",
+            "maxLength": 20,
+            "title": "Kind",
+            "type": "string"
+          },
+          "materials": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "maxItems": 6,
+            "title": "Materials",
+            "type": "array"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing",
+            "type": "array"
+          },
+          "provider": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Provider",
+            "type": "string"
+          },
+          "recurrence": {
+            "default": "",
+            "maxLength": 120,
+            "title": "Recurrence",
+            "type": "string"
+          },
+          "registration_deadlines": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 12,
+            "title": "Registration Deadlines",
+            "type": "array"
+          },
+          "subject_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 12,
+            "title": "Subject Ids",
+            "type": "array"
+          },
+          "summary": {
+            "default": "",
+            "maxLength": 1200,
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 200,
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "IntakeDraftIO",
         "type": "object"
       },
       "Interaction": {
@@ -27669,6 +27886,17 @@
       "ItemGradeOut": {
         "description": "An A-E grade with a one-line tip for the title and the description.",
         "properties": {
+          "description_descriptor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description Descriptor"
+          },
           "description_grade": {
             "title": "Description Grade",
             "type": "string"
@@ -27680,6 +27908,28 @@
           "model": {
             "title": "Model",
             "type": "string"
+          },
+          "overall": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall"
+          },
+          "title_descriptor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title Descriptor"
           },
           "title_grade": {
             "title": "Title Grade",
@@ -27775,6 +28025,122 @@
           "index"
         ],
         "title": "ItemMoveIn",
+        "type": "object"
+      },
+      "ItemOpportunityEnvelope": {
+        "description": "The link, or null.",
+        "properties": {
+          "link": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ItemOpportunityOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "link"
+        ],
+        "title": "ItemOpportunityEnvelope",
+        "type": "object"
+      },
+      "ItemOpportunityIn": {
+        "description": "Exactly one: an existing entry or a new (researched) draft.",
+        "properties": {
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IntakeDraftIO"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "opportunity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opportunity Id"
+          }
+        },
+        "title": "ItemOpportunityIn",
+        "type": "object"
+      },
+      "ItemOpportunityOut": {
+        "description": "The opportunity of an activity; `verified` once a moderator approved it.",
+        "properties": {
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "opportunity": {
+            "$ref": "#/components/schemas/OpportunityBriefOut"
+          },
+          "opportunity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opportunity Id"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "verified",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submission_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submission Id"
+          }
+        },
+        "required": [
+          "item_id",
+          "status",
+          "opportunity_id",
+          "submission_id",
+          "opportunity",
+          "reason"
+        ],
+        "title": "ItemOpportunityOut",
         "type": "object"
       },
       "ItemOrderIn": {
@@ -27901,6 +28267,13 @@
             "title": "Metrics",
             "type": "array"
           },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing",
+            "type": "array"
+          },
           "organization": {
             "title": "Organization",
             "type": "string"
@@ -27977,7 +28350,8 @@
           "grade",
           "grade_stale",
           "level",
-          "certificate_entry_id"
+          "certificate_entry_id",
+          "missing"
         ],
         "title": "ItemOut",
         "type": "object"
@@ -40131,6 +40505,61 @@
         "title": "OppReportOut",
         "type": "object"
       },
+      "OpportunityBriefOut": {
+        "description": "The current basics of an entry or a proposal.",
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "title",
+          "provider",
+          "kind",
+          "url",
+          "summary"
+        ],
+        "title": "OpportunityBriefOut",
+        "type": "object"
+      },
       "OpportunityDetailOut": {
         "description": "An entry with its organization and published comments.",
         "properties": {
@@ -40708,6 +41137,127 @@
           "sort"
         ],
         "title": "OpportunityListOut",
+        "type": "object"
+      },
+      "OpportunityLookupIn": {
+        "description": "One line: a link, or a name and an organization.",
+        "properties": {
+          "locale": {
+            "default": "en",
+            "enum": [
+              "uz",
+              "ru",
+              "en"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "query": {
+            "maxLength": 300,
+            "minLength": 2,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "OpportunityLookupIn",
+        "type": "object"
+      },
+      "OpportunityLookupOut": {
+        "description": "The draft, similar catalog entries and a pending twin proposal.",
+        "properties": {
+          "draft": {
+            "$ref": "#/components/schemas/IntakeDraftIO"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/OpportunityMatchOut"
+            },
+            "title": "Matches",
+            "type": "array"
+          },
+          "pending_submission_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pending Submission Id"
+          }
+        },
+        "required": [
+          "draft",
+          "matches",
+          "pending_submission_id"
+        ],
+        "title": "OpportunityLookupOut",
+        "type": "object"
+      },
+      "OpportunityMatchOut": {
+        "description": "A catalog entry that looks like the lookup.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "title",
+          "provider",
+          "kind",
+          "url",
+          "summary",
+          "id"
+        ],
+        "title": "OpportunityMatchOut",
         "type": "object"
       },
       "OpportunityOut": {
@@ -43067,6 +43617,9 @@
             },
             "title": "Tasks",
             "type": "array"
+          },
+          "tracing": {
+            "$ref": "#/components/schemas/PipelineTracingOut"
           }
         },
         "required": [
@@ -43074,7 +43627,8 @@
           "tasks",
           "route",
           "effective",
-          "env_default"
+          "env_default",
+          "tracing"
         ],
         "title": "PipelineOut",
         "type": "object"
@@ -43083,6 +43637,17 @@
         "additionalProperties": false,
         "description": "PUT /pipelines/{pipeline}: each field null falls through to the environment.",
         "properties": {
+          "capture_content": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capture Content"
+          },
           "connector_id": {
             "anyOf": [
               {
@@ -43124,9 +43689,44 @@
               }
             ],
             "title": "Reasoning Effort"
+          },
+          "tracing_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tracing Enabled"
           }
         },
         "title": "PipelineRouteBody",
+        "type": "object"
+      },
+      "PipelineTracingOut": {
+        "description": "Whether a pipeline's calls are traced to Langfuse, and with content.",
+        "properties": {
+          "capture_content": {
+            "title": "Capture Content",
+            "type": "boolean"
+          },
+          "default_enabled": {
+            "title": "Default Enabled",
+            "type": "boolean"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled",
+          "capture_content",
+          "default_enabled"
+        ],
+        "title": "PipelineTracingOut",
         "type": "object"
       },
       "PipelinesResponse": {
@@ -51842,6 +52442,17 @@
       "RouteOut": {
         "description": "The runtime route of a pipeline.",
         "properties": {
+          "capture_content": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capture Content"
+          },
           "connector_id": {
             "anyOf": [
               {
@@ -51874,6 +52485,17 @@
               }
             ],
             "title": "Reasoning Effort"
+          },
+          "tracing_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tracing Enabled"
           },
           "updated_at": {
             "anyOf": [
@@ -57131,6 +57753,208 @@
         "title": "StaffHomeworkResponse",
         "type": "object"
       },
+      "StaffInstitutionCreateIn": {
+        "description": "A new institution: `name` and `country` are required.",
+        "properties": {
+          "aliases": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aliases"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "country": {
+            "maxLength": 2,
+            "minLength": 2,
+            "title": "Country",
+            "type": "string"
+          },
+          "cover_url": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Url"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "university",
+                  "college",
+                  "foundation_provider"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "languages": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Languages"
+          },
+          "logo_fit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "circle",
+                  "contain"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Fit"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "logo_zoom": {
+            "anyOf": [
+              {
+                "maximum": 3.0,
+                "minimum": 0.5,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Zoom"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "name_local": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Local"
+          },
+          "setting": {
+            "anyOf": [
+              {
+                "enum": [
+                  "big_city",
+                  "college_town",
+                  "campus",
+                  "small_city"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Setting"
+          },
+          "size_band": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Band"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "published",
+                  "provisional",
+                  "archived"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "website_domain": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website Domain"
+          }
+        },
+        "required": [
+          "name",
+          "country"
+        ],
+        "title": "StaffInstitutionCreateIn",
+        "type": "object"
+      },
       "StaffInstitutionOut": {
         "description": "Raw catalog view with notes; the student payload never carries them.",
         "properties": {
@@ -57177,6 +58001,454 @@
         "title": "StaffInstitutionOut",
         "type": "object"
       },
+      "StaffInstitutionPageOut": {
+        "description": "One page of institutions and the countries the filter offers.",
+        "properties": {
+          "countries": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Countries",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StaffInstitutionRowOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size",
+          "countries"
+        ],
+        "title": "StaffInstitutionPageOut",
+        "type": "object"
+      },
+      "StaffInstitutionPutIn": {
+        "description": "An edit under the optimistic lock the form was loaded with.",
+        "properties": {
+          "aliases": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aliases"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "maxLength": 2,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "cover_url": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Url"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "university",
+                  "college",
+                  "foundation_provider"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "languages": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Languages"
+          },
+          "lock_version": {
+            "minimum": 0.0,
+            "title": "Lock Version",
+            "type": "integer"
+          },
+          "logo_fit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "circle",
+                  "contain"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Fit"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "logo_zoom": {
+            "anyOf": [
+              {
+                "maximum": 3.0,
+                "minimum": 0.5,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Zoom"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "name_local": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Local"
+          },
+          "setting": {
+            "anyOf": [
+              {
+                "enum": [
+                  "big_city",
+                  "college_town",
+                  "campus",
+                  "small_city"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Setting"
+          },
+          "size_band": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Band"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "published",
+                  "provisional",
+                  "archived"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "website_domain": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website Domain"
+          }
+        },
+        "required": [
+          "lock_version"
+        ],
+        "title": "StaffInstitutionPutIn",
+        "type": "object"
+      },
+      "StaffInstitutionRowOut": {
+        "description": "An institution of any status, for the staff table and the edit form.",
+        "properties": {
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Aliases",
+            "type": "array"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "country": {
+            "title": "Country",
+            "type": "string"
+          },
+          "cover_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Url"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "in_use": {
+            "title": "In Use",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "university",
+              "college",
+              "foundation_provider"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Languages",
+            "type": "array"
+          },
+          "lock_version": {
+            "title": "Lock Version",
+            "type": "integer"
+          },
+          "logo_fit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "circle",
+                  "contain"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Fit"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "logo_zoom": {
+            "title": "Logo Zoom",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "name_local": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Local"
+          },
+          "setting": {
+            "anyOf": [
+              {
+                "enum": [
+                  "big_city",
+                  "college_town",
+                  "campus",
+                  "small_city"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Setting"
+          },
+          "size_band": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Band"
+          },
+          "status": {
+            "enum": [
+              "published",
+              "provisional",
+              "archived"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "website_domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website Domain"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "name_local",
+          "country",
+          "city",
+          "website_domain",
+          "kind",
+          "size_band",
+          "setting",
+          "languages",
+          "aliases",
+          "status",
+          "logo_url",
+          "cover_url",
+          "logo_zoom",
+          "logo_fit",
+          "in_use",
+          "lock_version",
+          "updated_at"
+        ],
+        "title": "StaffInstitutionRowOut",
+        "type": "object"
+      },
       "StaffLessonResponse": {
         "description": "``StaffLesson``.",
         "properties": {
@@ -57219,6 +58491,247 @@
           "attendance"
         ],
         "title": "StaffLessonResponse",
+        "type": "object"
+      },
+      "StaffOpportunityIn": {
+        "description": "Create an entry.",
+        "properties": {
+          "fields": {
+            "$ref": "#/components/schemas/OpportunityFields"
+          }
+        },
+        "required": [
+          "fields"
+        ],
+        "title": "StaffOpportunityIn",
+        "type": "object"
+      },
+      "StaffOpportunityOut": {
+        "description": "An entry with every editable field.",
+        "properties": {
+          "archived": {
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "fields": {
+            "$ref": "#/components/schemas/OpportunityFields"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "in_use": {
+            "title": "In Use",
+            "type": "boolean"
+          },
+          "lock_version": {
+            "title": "Lock Version",
+            "type": "integer"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "fields",
+          "archived",
+          "in_use",
+          "lock_version",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "StaffOpportunityOut",
+        "type": "object"
+      },
+      "StaffOpportunityPageOut": {
+        "description": "One page of the staff table.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StaffOpportunityRowOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "StaffOpportunityPageOut",
+        "type": "object"
+      },
+      "StaffOpportunityPutIn": {
+        "description": "Overwrite an entry; `lock_version` is the one the form was loaded with.",
+        "properties": {
+          "fields": {
+            "$ref": "#/components/schemas/OpportunityFields"
+          },
+          "lock_version": {
+            "minimum": 0.0,
+            "title": "Lock Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "fields",
+          "lock_version"
+        ],
+        "title": "StaffOpportunityPutIn",
+        "type": "object"
+      },
+      "StaffOpportunityRowOut": {
+        "description": "One line of the staff table.",
+        "properties": {
+          "archived": {
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "exam_dates": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "title": "Exam Dates",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "exam",
+              "certification",
+              "course",
+              "event",
+              "recurring",
+              "program",
+              "scholarship",
+              "research"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "lock_version": {
+            "title": "Lock Version",
+            "type": "integer"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "registration_deadlines": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "title": "Registration Deadlines",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "provider",
+          "url",
+          "logo_url",
+          "country",
+          "registration_deadlines",
+          "exam_dates",
+          "archived",
+          "updated_at",
+          "lock_version"
+        ],
+        "title": "StaffOpportunityRowOut",
+        "type": "object"
+      },
+      "StaffOpportunityVisibilityIn": {
+        "description": "Hide (`archived`) or show an entry.",
+        "properties": {
+          "archived": {
+            "title": "Archived",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "archived"
+        ],
+        "title": "StaffOpportunityVisibilityIn",
         "type": "object"
       },
       "StaffRankingResponse": {
@@ -65838,6 +67351,124 @@
           "otpauth_uri"
         ],
         "title": "TotpSetupResponse",
+        "type": "object"
+      },
+      "TracingBody": {
+        "additionalProperties": false,
+        "description": "PUT /tracing: `secret_key` is write-only; omitted keeps the stored one.",
+        "properties": {
+          "host": {
+            "maxLength": 500,
+            "title": "Host",
+            "type": "string"
+          },
+          "public_key": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Public Key",
+            "type": "string"
+          },
+          "secret_key": {
+            "anyOf": [
+              {
+                "format": "password",
+                "maxLength": 255,
+                "type": "string",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secret Key"
+          }
+        },
+        "required": [
+          "host",
+          "public_key"
+        ],
+        "title": "TracingBody",
+        "type": "object"
+      },
+      "TracingOut": {
+        "description": "GET/PUT/DELETE /tracing: the Langfuse project, never its secret key.",
+        "properties": {
+          "capture_default": {
+            "title": "Capture Default",
+            "type": "boolean"
+          },
+          "env_configured": {
+            "title": "Env Configured",
+            "type": "boolean"
+          },
+          "env_host": {
+            "title": "Env Host",
+            "type": "string"
+          },
+          "has_secret": {
+            "title": "Has Secret",
+            "type": "boolean"
+          },
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "public_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Public Key"
+          },
+          "secret_last4": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secret Last4"
+          },
+          "source": {
+            "enum": [
+              "runtime",
+              "env",
+              "none"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "source",
+          "host",
+          "public_key",
+          "has_secret",
+          "secret_last4",
+          "env_configured",
+          "env_host",
+          "capture_default",
+          "updated_at"
+        ],
+        "title": "TracingOut",
         "type": "object"
       },
       "TranscriptRequestIn": {
@@ -77264,6 +78895,88 @@
           }
         },
         "summary": "Get Request",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/tracing": {
+      "delete": {
+        "description": "Remove the stored project and its key; the environment's applies again.",
+        "operationId": "remove_tracing_v1_admin_ai_tracing_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TracingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Remove Tracing",
+        "tags": [
+          "admin-ai"
+        ]
+      },
+      "get": {
+        "description": "The Langfuse project calls are traced to; the secret key is never shown.",
+        "operationId": "get_tracing_v1_admin_ai_tracing_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TracingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Tracing",
+        "tags": [
+          "admin-ai"
+        ]
+      },
+      "put": {
+        "description": "Set the Langfuse project; the secret key goes to Vault, never back out.",
+        "operationId": "set_tracing_v1_admin_ai_tracing_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TracingBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TracingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Tracing",
         "tags": [
           "admin-ai"
         ]
@@ -93049,6 +94762,66 @@
         ]
       }
     },
+    "/v1/admission/fit/{institution_id}/analysis": {
+      "post": {
+        "description": "A quick AI read of the caller's fit for one university (cached, limited).",
+        "operationId": "admission_post_fit_analysis",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "institution_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Institution Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitAnalysisOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Fit Analysis",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/goal-plan": {
       "get": {
         "description": "My milestones.",
@@ -95333,6 +97106,137 @@
         ]
       }
     },
+    "/v1/admission/me/items/{item_id}/opportunity": {
+      "delete": {
+        "description": "Unlink (the proposal stays in moderation).",
+        "operationId": "admission_delete_item_opportunity",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Item Opportunity",
+        "tags": [
+          "admission"
+        ]
+      },
+      "get": {
+        "description": "The opportunity linked to the caller's activity, with current data.",
+        "operationId": "admission_get_item_opportunity",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemOpportunityEnvelope"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Item Opportunity",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Link an entry, or propose a draft (a pending twin proposal is reused).",
+        "operationId": "admission_put_item_opportunity",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemOpportunityIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemOpportunityOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Item Opportunity",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/me/items/{item_id}/review": {
       "post": {
         "description": "Review my item (cached per input; soft daily limits).",
@@ -96777,6 +98681,48 @@
           }
         },
         "summary": "List Opportunities",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/opportunities/lookup": {
+      "post": {
+        "description": "Research one line (\"not in the list\"); needs `admission_ai` consent.",
+        "operationId": "admission_lookup_opportunity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpportunityLookupIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpportunityLookupOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Lookup Opportunity",
         "tags": [
           "admission"
         ]
@@ -98466,7 +100412,196 @@
         ]
       }
     },
+    "/v1/admission/staff/catalog/institutions": {
+      "get": {
+        "description": "Every institution of any status, searchable by name, city or domain.",
+        "operationId": "admission_staff_institutions_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "country",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 2,
+                  "minLength": 2,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "published",
+                    "provisional",
+                    "archived"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffInstitutionPageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Staff Institutions",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Add an institution directly (published unless `status` says otherwise).",
+        "operationId": "admission_staff_institutions_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffInstitutionCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffInstitutionRowOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Staff Institution",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/staff/catalog/institutions/{institution_id}": {
+      "delete": {
+        "description": "Delete an unused institution (409 `admission/catalog_in_use` otherwise).",
+        "operationId": "admission_staff_institutions_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "institution_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Institution Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Staff Institution",
+        "tags": [
+          "admission"
+        ]
+      },
       "get": {
         "description": "Raw facts with their notes (staff and catalog curators only).",
         "operationId": "admission_staff_catalog_institution",
@@ -98557,6 +100692,58 @@
           }
         },
         "summary": "Patch Staff Institution",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Edit an institution; omitted fields stay, `null` clears (409 if stale).",
+        "operationId": "admission_staff_institutions_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "institution_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Institution Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffInstitutionPutIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffInstitutionRowOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Staff Institution",
         "tags": [
           "admission"
         ]
@@ -99510,6 +101697,162 @@
         ]
       }
     },
+    "/v1/admission/staff/opportunities": {
+      "get": {
+        "description": "Every entry, live and hidden, searchable by title or provider.",
+        "operationId": "admission_staff_opportunities_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "exam",
+                    "certification",
+                    "course",
+                    "event",
+                    "recurring",
+                    "program",
+                    "scholarship",
+                    "research"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "live",
+                "archived"
+              ],
+              "title": "State",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffOpportunityPageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Staff Opportunities",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Publish a new entry without moderation.",
+        "operationId": "admission_staff_opportunities_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffOpportunityIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffOpportunityOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Staff Opportunity",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/staff/opportunities/reports": {
       "get": {
         "description": "Open reports (staff).",
@@ -99754,6 +102097,137 @@
         ]
       }
     },
+    "/v1/admission/staff/opportunities/{opportunity_id}": {
+      "delete": {
+        "description": "Delete an unused entry (409 `admission/catalog_in_use` otherwise).",
+        "operationId": "admission_staff_opportunities_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Opportunity Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Staff Opportunity",
+        "tags": [
+          "admission"
+        ]
+      },
+      "get": {
+        "description": "One entry with all its fields.",
+        "operationId": "admission_staff_opportunities_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Opportunity Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffOpportunityOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Staff Opportunity",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Overwrite every field of an entry (409 when `lock_version` is stale).",
+        "operationId": "admission_staff_opportunities_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Opportunity Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffOpportunityPutIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffOpportunityOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Staff Opportunity",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/staff/opportunities/{opportunity_id}/archive": {
       "post": {
         "description": "Hide or restore a published entry.",
@@ -99796,6 +102270,60 @@
           }
         },
         "summary": "Archive Opportunity",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/opportunities/{opportunity_id}/visibility": {
+      "post": {
+        "description": "Hide an entry from students or bring it back.",
+        "operationId": "admission_staff_opportunities_visibility",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Opportunity Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffOpportunityVisibilityIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffOpportunityOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Staff Opportunity Visibility",
         "tags": [
           "admission"
         ]

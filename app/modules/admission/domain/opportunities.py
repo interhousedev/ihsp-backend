@@ -670,3 +670,16 @@ def analyse(
         if other != ids[0]
     ]
     return PlanAnalytics(load, coverage, unplaced, conflicts)
+
+
+@dataclass(frozen=True, slots=True)
+class ItemOpportunityLink:
+    """An activity linked to a pending submission, a catalog entry or both.
+
+    Approval of the submission sets `opportunity_id`; reads join the current
+    entry, so moderator edits reach every linked activity.
+    """
+
+    item_id: UUID
+    submission_id: UUID | None = None
+    opportunity_id: UUID | None = None

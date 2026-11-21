@@ -103,6 +103,23 @@ class FitService:
             for i in institutions
         }
 
+    async def detail(
+        self,
+        ctx: AdmissionContext,
+        inst: CatalogInstitution,
+        locale: str,
+        year: int,
+    ) -> tuple[FitResult, StudentFit]:
+        """Fit of one institution plus the student inputs it was computed from."""
+        student, weights = await self._student(ctx.user_id)
+        fit = compute_fit(
+            student,
+            EntryFit(inst, estimate(inst, "unknown", year).label),
+            weights,
+            locale,
+        )
+        return fit, student
+
     async def list_fit(self, ctx: AdmissionContext, locale: str) -> ListFit:
         """Fit of each entry of the caller's own list."""
         items = await self._chooser.view(ctx, ctx.user_id)

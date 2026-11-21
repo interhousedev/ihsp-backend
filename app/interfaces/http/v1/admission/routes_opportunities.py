@@ -13,6 +13,13 @@ from app.interfaces.http.v1.admission.deps import (
     ContainerDep,
     StudentCtx,
 )
+from app.interfaces.http.v1.admission.schemas_item_opportunity import (
+    ItemOpportunityEnvelope,
+    ItemOpportunityIn,
+    ItemOpportunityOut,
+    OpportunityLookupIn,
+    OpportunityLookupOut,
+)
 from app.interfaces.http.v1.admission.schemas_opp_comments import OppCommentOut
 from app.interfaces.http.v1.admission.schemas_opportunities import (
     AiPlanEnvelope,
@@ -43,6 +50,7 @@ from app.interfaces.http.v1.admission.schemas_opportunities import (
     TaxonomyOut,
 )
 from app.modules.admission.application.opportunities import CatalogFilter
+from app.shared.base_error import ValidationFailedError
 
 from fastapi import APIRouter, Query, Response, status
 
@@ -443,4 +451,76 @@ _R(
     methods=["GET"],
     response_model=OpportunityDetailOut,
     operation_id="admission_get_opportunity",
+)
+
+
+async def lookup_opportunity(
+    body: OpportunityLookupIn, container: ContainerDep, ctx: StudentCtx
+) -> OpportunityLookupOut:
+    """Research one line ("not in the list"); needs `admission_ai` consent."""
+    found = await container.admission.item_opportunity.lookup(
+        ctx, body.query, body.locale
+    )
+    return OpportunityLookupOut.of(found)
+
+
+async def get_item_opportunity(
+    item_id: UUID, container: ContainerDep, ctx: StudentCtx
+) -> ItemOpportunityEnvelope:
+    """The opportunity linked to the caller's activity, with current data."""
+    view = await container.admission.item_opportunity.get(ctx, item_id)
+    return ItemOpportunityEnvelope(link=ItemOpportunityOut.of(view) if view else None)
+
+
+async def put_item_opportunity(
+    item_id: UUID, body: ItemOpportunityIn, container: ContainerDep, ctx: StudentCtx
+) -> ItemOpportunityOut:
+    """Link an entry, or propose a draft (a pending twin proposal is reused)."""
+    svc = container.admission.item_opportunity
+    if (body.opportunity_id is None) == (body.draft is None):
+        raise ValidationFailedError(params={"field": "opportunity_id"})
+    if body.opportunity_id is not None:
+        view = await svc.link_existing(ctx, item_id, body.opportunity_id)
+    else:
+        assert body.draft is not None
+        view = await svc.link_new(ctx, item_id, body.draft.draft())
+    return ItemOpportunityOut.of(view)
+
+
+async def delete_item_opportunity(
+    item_id: UUID, container: ContainerDep, ctx: StudentCtx
+) -> Response:
+    """Unlink (the proposal stays in moderation)."""
+    await container.admission.item_opportunity.unlink(ctx, item_id)
+    return Response(status_code=_NO)
+
+
+_R(
+    "/opportunities/lookup",
+    lookup_opportunity,
+    methods=["POST"],
+    response_model=OpportunityLookupOut,
+    operation_id="admission_lookup_opportunity",
+)
+_R(
+    "/me/items/{item_id}/opportunity",
+    get_item_opportunity,
+    methods=["GET"],
+    response_model=ItemOpportunityEnvelope,
+    operation_id="admission_get_item_opportunity",
+)
+_R(
+    "/me/items/{item_id}/opportunity",
+    put_item_opportunity,
+    methods=["PUT"],
+    response_model=ItemOpportunityOut,
+    operation_id="admission_put_item_opportunity",
+)
+_R(
+    "/me/items/{item_id}/opportunity",
+    delete_item_opportunity,
+    methods=["DELETE"],
+    status_code=_NO,
+    response_class=Response,
+    operation_id="admission_delete_item_opportunity",
 )

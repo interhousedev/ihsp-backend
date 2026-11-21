@@ -117,12 +117,8 @@ class ItemRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
         check_in("kind", ("activity", "honor")),
         check_in("status", ("draft", "ready")),
         max_len("position", 60),
-        max_len("org", 100),
-        CheckConstraint(
-            "char_length(description) <= "
-            "CASE WHEN kind = 'honor' THEN 100 ELSE 150 END",
-            name="description_length",
-        ),
+        max_len("org", 110),
+        max_len("description", 600),
         Index("ix_items_student_id_sort_order", "student_id", "sort_order"),
         S,
     )
@@ -130,8 +126,8 @@ class ItemRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
     student_id: Mapped[UUID] = mapped_column(Uuid)
     kind: Mapped[str] = mapped_column(String(8))
     position: Mapped[str] = mapped_column(String(60))
-    org: Mapped[str] = mapped_column(String(100), server_default="")
-    description: Mapped[str] = mapped_column(String(150), server_default="")
+    org: Mapped[str] = mapped_column(String(110), server_default="")
+    description: Mapped[str] = mapped_column(String(600), server_default="")
     category: Mapped[str | None] = mapped_column(String(40))
     grade_levels: Mapped[list[int]] = mapped_column(
         ARRAY(Integer), server_default=text("'{}'")

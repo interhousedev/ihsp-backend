@@ -110,6 +110,7 @@ class InstitutionRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
     status: Mapped[str] = mapped_column(String(12), server_default="provisional")
     logo_url: Mapped[str | None] = mapped_column(String(2000))
     cover_url: Mapped[str | None] = mapped_column(String(2000))
+    description: Mapped[dict[str, str] | None] = mapped_column(JSONB)
     aliases: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
     logo_zoom: Mapped[float] = mapped_column(Float, server_default="1.0")
     logo_fit: Mapped[str | None] = mapped_column(String(8))

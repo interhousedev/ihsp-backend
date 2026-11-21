@@ -11,9 +11,11 @@ from typing import Any, Final
 from app.modules.admission.application.review_schema import AiRewrite, AiWordFit
 from app.modules.admission.domain.items import (
     DESCRIPTION_MAX,
-    HONOR_DESCRIPTION_MAX,
+    DESCRIPTION_WARN,
     ORG_MAX,
+    ORG_WARN,
     TITLE_MAX,
+    TITLE_WARN,
     Item,
 )
 from app.modules.admission.ports.items import Metric
@@ -66,8 +68,15 @@ def plain(text: str) -> str:
 
 def limits_for(kind: str) -> tuple[int, int, int]:
     """Return the position, organization and description caps of an item kind."""
-    description = HONOR_DESCRIPTION_MAX if kind == "honor" else DESCRIPTION_MAX
-    return TITLE_MAX, ORG_MAX, description
+    return TITLE_MAX, ORG_MAX, DESCRIPTION_MAX
+
+
+def warn_limits_for(kind: str) -> tuple[int, int, int]:
+    """Return the soft position, organization and description lengths.
+
+    Text over these is allowed (a warning), only text over `limits_for` fails.
+    """
+    return TITLE_WARN, ORG_WARN, DESCRIPTION_WARN
 
 
 def numbers(text: str) -> set[Decimal]:

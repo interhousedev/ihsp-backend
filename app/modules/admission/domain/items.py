@@ -18,9 +18,12 @@ ProofStatus = Literal["pending", "verified", "rejected"]
 
 TITLE_MAX: Final = 60
 """Common App allows 50; 60 leaves room for the student to trim."""
-ORG_MAX: Final = 100
-DESCRIPTION_MAX: Final = 150
-HONOR_DESCRIPTION_MAX: Final = 100
+ORG_MAX: Final = 110
+DESCRIPTION_MAX: Final = 600
+TITLE_WARN: Final = 50
+"""Soft limit: longer titles are allowed but flagged."""
+ORG_WARN: Final = 100
+DESCRIPTION_WARN: Final = 150
 MAX_ACTIVITIES: Final = 10
 MAX_HONORS: Final = 5
 MAX_DRAFTS: Final = 30
@@ -86,7 +89,8 @@ class Item:
     """One activity or honor, written in Common App limits.
 
     `title` is the Common App position/leadership (activities) or honor title.
-    Drafts may be incomplete; `ready` items satisfy `missing_for_ready`.
+    Drafts and ready items may be incomplete (`ready` needs a title);
+    `missing_for_ready` lists what the student should still fill in.
     """
 
     id: UUID
@@ -122,8 +126,9 @@ class Item:
         """Enforce the character limits; normalises text to NFC."""
         self.title = ensure_max_chars(self.title, TITLE_MAX, "title")
         self.organization = ensure_max_chars(self.organization, ORG_MAX, "organization")
-        limit = HONOR_DESCRIPTION_MAX if self.kind == "honor" else DESCRIPTION_MAX
-        self.description = ensure_max_chars(self.description, limit, "description")
+        self.description = ensure_max_chars(
+            self.description, DESCRIPTION_MAX, "description"
+        )
         allowed = HONOR_CATEGORIES if self.kind == "honor" else ACTIVITY_CATEGORIES
         if self.category is not None and self.category not in allowed:
             raise InvalidAnswerError(params={"question": "category"})

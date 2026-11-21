@@ -137,15 +137,14 @@ def _metric(item_id: UUID, draft: MetricDraft) -> Metric:
 
 
 def _check_ready(item: Item) -> None:
-    missing = item.missing_for_ready()
-    if missing:
-        raise ItemIncompleteError(params={"fields": missing})
+    if not item.title.strip():
+        raise ItemIncompleteError(params={"fields": ["title"]})
 
 
 def _check_slot(item: Item, others: Sequence[Item]) -> None:
     """Check an item entering its status among the other items of its kind.
 
-    A ready item must be complete and counts against 10 activities / 5 honors;
+    A ready item needs a title and counts against 10 activities / 5 honors;
     drafts may be incomplete and count only against the draft cap of 30.
     """
     status: ItemStatus = item.status

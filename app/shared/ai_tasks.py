@@ -115,6 +115,7 @@ class AiTask(StrEnum):
     ADMIT_CAREER_MAJORS = "admit_career_majors"
     ADMIT_CAREER_SPIKE = "admit_career_spike"
     ADMIT_UNI_ADVICE = "admit_uni_advice"
+    ADMIT_FIT_ANALYSIS = "admit_fit_analysis"
     ADMIT_LIST_SUGGEST = "admit_list_suggest"
     ADMIT_LIST_BRIEF = "admit_list_brief"
     ADMIT_TASKS_SUGGEST = "admit_tasks_suggest"
@@ -202,6 +203,12 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     ),
     AiTask.ADMIT_UNI_ADVICE: _admission(
         "Admission: questions, academic and activity advice for one university.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_FIT_ANALYSIS: _admission(
+        "Admission: quick compact analysis of the fit ring of one university.",
         model=NOTEBOOK_MODEL,
         budget_weight=1,
         reasoning_effort=_NO_REASONING,

@@ -105,6 +105,7 @@ def test_the_catalog_lists_the_places_that_call_a_model() -> None:
         "admit_career_majors",
         "admit_career_spike",
         "admit_uni_advice",
+        "admit_fit_analysis",
         "admit_list_suggest",
         "admit_list_brief",
         "admit_tasks_suggest",
@@ -162,7 +163,7 @@ def test_a_discover_override_beats_the_default_model() -> None:
 def test_the_default_changes_every_task_without_its_own_value() -> None:
     """AI__DEFAULT__* is what the tasks inherit."""
     ai = AiSettings(
-        default={  # type: ignore[arg-type]
+        default={
             "model": "x/default",
             "temperature": 0.9,
             "max_output_tokens": 999,
@@ -213,7 +214,7 @@ def test_a_task_override_beats_the_default_and_leaves_other_tasks_alone() -> Non
 def test_a_task_override_can_set_one_field_and_inherit_the_rest() -> None:
     """An empty override field falls through to the default."""
     ai = AiSettings(
-        default={"model": "x/default", "temperature": 0.5},  # type: ignore[arg-type]
+        default={"model": "x/default", "temperature": 0.5},
         tasks={AiTask.ADMIN_CHAT: AiTaskSettings(temperature=0.1)},
     )
 
@@ -239,7 +240,7 @@ def test_the_default_model_is_haiku_55_and_chats_do_not_reason() -> None:
 
 def test_the_smart_tier_ships_with_gemini_at_low_effort_and_weight_eight() -> None:
     """The built-in value of the task beats the default, an override beats both."""
-    ai = AiSettings(default={"model": "x/default"})  # type: ignore[arg-type]
+    ai = AiSettings(default={"model": "x/default"})
 
     smart = ai.profile(AiTask.STUDENT_CHAT_SMART)
     fast = ai.profile(AiTask.STUDENT_CHAT)
@@ -447,7 +448,7 @@ def test_the_old_data_collection_and_smart_weight_map_too(
 def test_the_smart_weight_alias_still_refuses_zero() -> None:
     """The old LIMITS__AI_SMART_WEIGHT keeps its `>= 1` rule."""
     with pytest.raises(ValidationError):
-        Settings(limits={"ai_smart_weight": 0})  # type: ignore[arg-type]
+        Settings(limits={"ai_smart_weight": 0})
 
 
 def test_a_new_variable_beats_its_deprecated_alias(
