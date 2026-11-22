@@ -626,6 +626,14 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "seyf vault хранилище секреты secrets keys kalit unseal",
     ),
     _d(
+        "admin-essay-keys",
+        "admin",
+        "/essay-keys/",
+        _AD,
+        ("Esse kalitlari", "Ключи эссе", "Essay keys"),
+        "esse kalit kalitlar ключи эссе шифрование essay keys backup restore rotate zaxira nusxa",
+    ),
+    _d(
         "admin-devices",
         "admin",
         "/devices/",
