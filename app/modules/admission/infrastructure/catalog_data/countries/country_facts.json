@@ -1,0 +1,217 @@
+{
+  "countries": [
+    {
+      "country": "US",
+      "as_of": "2026-11",
+      "facts": {
+        "cost_of_living": {
+          "score": null,
+          "values": {
+            "min_wage_usd_month": 1257,
+            "basis": "federal minimum wage 7.25 USD/h x 40 h x 4.33 weeks"
+          },
+          "text": {
+            "en": "The federal minimum wage is 7.25 USD per hour (about 1,257 USD a month full time); many states and cities pay more. Student budgets vary widely by city.",
+            "ru": "Федеральный минимум оплаты труда — 7,25 USD в час (около 1 257 USD в месяц при полной занятости); во многих штатах и городах он выше. Бюджет студента сильно зависит от города.",
+            "uz": "Federal minimal ish haqi soatiga 7,25 USD (toʼliq bandlikda oyiga taxminan 1 257 USD); koʼp shtat va shaharlarda yuqoriroq. Talaba xarajatlari shaharga qarab keskin farq qiladi."
+          },
+          "sources": [
+            "https://www.dol.gov/agencies/whd/minimum-wage/state"
+          ]
+        },
+        "student_visa": {
+          "score": null,
+          "values": {
+            "fee_usd": 185,
+            "uz_notes": "F-1 visa; interview at the US Embassy"
+          },
+          "text": {
+            "en": "F-1 visa application fee is 185 USD (SEVIS and university fees are separate). An interview is required.",
+            "ru": "Консульский сбор за визу F-1 — 185 USD (взнос SEVIS и платежи университета отдельно). Нужно собеседование.",
+            "uz": "F-1 viza uchun konsullik yigʼimi 185 USD (SEVIS va universitet toʼlovlari alohida). Suhbat talab etiladi."
+          },
+          "sources": [
+            "https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/fees/fees-visa-services.html"
+          ]
+        },
+        "work_rights": {
+          "score": null,
+          "values": {
+            "hours_term": 20,
+            "hours_holiday": 40
+          },
+          "text": {
+            "en": "F-1 students may work on campus up to 20 hours a week during term and full time during official breaks. Off-campus work needs authorization.",
+            "ru": "Студенты F-1 могут работать в кампусе до 20 часов в неделю в учебное время и полный день на каникулах. Работа вне кампуса требует разрешения.",
+            "uz": "F-1 talabalari oʼquv davrida kampusda haftasiga 20 soatgacha, taʼtilda toʼliq ishlashi mumkin. Kampusdan tashqarida ishlash uchun ruxsat kerak."
+          },
+          "sources": [
+            "https://studyinthestates.dhs.gov/students/work/working-on-campus"
+          ]
+        },
+        "post_study": {
+          "score": null,
+          "values": {
+            "visa_name": "Optional Practical Training (OPT)",
+            "months": 12
+          },
+          "text": {
+            "en": "OPT allows 12 months of work in the field of study after graduation (a further 24 months for STEM degrees).",
+            "ru": "OPT даёт 12 месяцев работы по специальности после выпуска (ещё 24 месяца для STEM-программ).",
+            "uz": "OPT bitirgandan soʼng mutaxassislik boʼyicha 12 oy ishlash imkonini beradi (STEM dasturlari uchun yana 24 oy)."
+          },
+          "sources": [
+            "https://www.uscis.gov/working-in-the-united-states/students-and-exchange-visitors/optional-practical-training-opt-for-f-1-students"
+          ]
+        }
+      }
+    },
+    {
+      "country": "GB",
+      "as_of": "2026-11",
+      "facts": {
+        "cost_of_living": {
+          "score": null,
+          "values": {
+            "min_hourly_wage_gbp": 12.71,
+            "basis": "National Living Wage, age 21+, from April 2026"
+          },
+          "text": {
+            "en": "The National Living Wage is 12.71 GBP per hour for ages 21 and over (from April 2026); younger workers get lower rates.",
+            "ru": "Национальный прожиточный минимум — 12,71 GBP в час для возраста от 21 года (с апреля 2026); для более молодых ставки ниже.",
+            "uz": "Milliy yashash minimumi 21 yosh va undan kattalar uchun soatiga 12,71 GBP (2026-yil apreldan); yoshlar uchun stavka pastroq."
+          },
+          "sources": [
+            "https://www.gov.uk/national-minimum-wage-rates"
+          ]
+        },
+        "student_visa": {
+          "score": null,
+          "values": {
+            "fee_gbp": 524,
+            "uz_notes": "Student visa; CAS from the university is required"
+          },
+          "text": {
+            "en": "The Student visa application fee is 524 GBP (outside the UK). You need a CAS from a licensed sponsor and proof of funds.",
+            "ru": "Сбор за студенческую визу — 524 GBP (при подаче вне Великобритании). Нужны CAS от университета-спонсора и подтверждение средств.",
+            "uz": "Talaba vizasi uchun yigʼim 524 GBP (Buyuk Britaniyadan tashqarida). Litsenziyali universitetdan CAS va mablagʼ tasdigʼi kerak."
+          },
+          "sources": [
+            "https://www.gov.uk/student-visa"
+          ]
+        },
+        "work_rights": {
+          "score": null,
+          "values": {
+            "hours_term": 20,
+            "hours_holiday": 40
+          },
+          "text": {
+            "en": "Degree-level students may usually work up to 20 hours a week in term time and full time in vacations, if their visa allows it.",
+            "ru": "Студенты уровня бакалавриата и выше обычно могут работать до 20 часов в неделю в учебное время и полный день на каникулах, если это разрешено визой.",
+            "uz": "Bakalavr va undan yuqori talabalar odatda oʼquv davrida haftasiga 20 soat, taʼtilda toʼliq ishlashi mumkin (viza ruxsat bersa)."
+          },
+          "sources": [
+            "https://www.gov.uk/student-visa/work"
+          ]
+        },
+        "post_study": {
+          "score": null,
+          "values": {
+            "visa_name": "Graduate route",
+            "months": 24
+          },
+          "text": {
+            "en": "The Graduate route lets bachelor and master graduates stay and work for 2 years (3 for PhD). Check gov.uk for announced changes to its length.",
+            "ru": "Graduate route позволяет выпускникам бакалавриата и магистратуры остаться и работать 2 года (3 года для PhD). Проверьте на gov.uk объявленные изменения срока.",
+            "uz": "Graduate route bakalavr va magistratura bitiruvchilariga 2 yil (PhD uchun 3 yil) qolib ishlash imkonini beradi. Muddat oʼzgarishlarini gov.uk saytida tekshiring."
+          },
+          "sources": [
+            "https://www.gov.uk/graduate-visa"
+          ]
+        },
+        "health": {
+          "score": null,
+          "values": {
+            "insurance_gbp_year": 776
+          },
+          "text": {
+            "en": "Students pay the Immigration Health Surcharge of 776 GBP per year with the visa application and then use the NHS.",
+            "ru": "Студенты платят иммиграционный медицинский сбор 776 GBP в год при подаче на визу и затем пользуются NHS.",
+            "uz": "Talabalar viza topshirishda yiliga 776 GBP immigratsiya sogʼliqni saqlash yigʼimini toʼlaydi va keyin NHS xizmatidan foydalanadi."
+          },
+          "sources": [
+            "https://www.gov.uk/healthcare-immigration-application/how-much-pay"
+          ]
+        }
+      }
+    },
+    {
+      "country": "DE",
+      "as_of": "2026-11",
+      "facts": {
+        "cost_of_living": {
+          "score": null,
+          "values": {
+            "min_hourly_wage_eur": 13.9,
+            "blocked_account_eur_year": 11904,
+            "basis": "statutory minimum wage 2026; blocked account proof of funds"
+          },
+          "text": {
+            "en": "The statutory minimum wage is 13.90 EUR per hour in 2026. Visa applicants prove funds with a blocked account of 11,904 EUR per year (992 EUR a month).",
+            "ru": "Законный минимум оплаты труда в 2026 году — 13,90 EUR в час. Для визы средства подтверждаются блокированным счётом 11 904 EUR в год (992 EUR в месяц).",
+            "uz": "2026-yilda qonuniy minimal ish haqi soatiga 13,90 EUR. Viza uchun mablagʼ bloklangan hisobda yiliga 11 904 EUR (oyiga 992 EUR) bilan tasdiqlanadi."
+          },
+          "sources": [
+            "https://www.bmas.de/EN/Labour/Minimum-wage/minimum-wage.html",
+            "https://www.make-it-in-germany.com/en/visa-residence/types/study"
+          ]
+        },
+        "work_rights": {
+          "score": null,
+          "values": {
+            "days_year": 140
+          },
+          "text": {
+            "en": "International students may work 140 full days or 280 half days a year; student jobs at the university are not counted against this limit.",
+            "ru": "Иностранные студенты могут работать 140 полных или 280 половинных дней в год; работа в университете в этот лимит не входит.",
+            "uz": "Xorijiy talabalar yiliga 140 toʼliq yoki 280 yarim kun ishlashi mumkin; universitetdagi ish bu limitga kirmaydi."
+          },
+          "sources": [
+            "https://www.make-it-in-germany.com/en/study-training/studying/work"
+          ]
+        },
+        "post_study": {
+          "score": null,
+          "values": {
+            "visa_name": "Residence permit for job seeking (§20 AufenthG)",
+            "months": 18
+          },
+          "text": {
+            "en": "Graduates of German universities may stay up to 18 months to look for a job matching their degree.",
+            "ru": "Выпускники немецких университетов могут оставаться до 18 месяцев для поиска работы по специальности.",
+            "uz": "Germaniya universitetlari bitiruvchilari mutaxassisligi boʼyicha ish izlash uchun 18 oygacha qolishi mumkin."
+          },
+          "sources": [
+            "https://www.make-it-in-germany.com/en/visa-residence/types/job-search-graduates"
+          ]
+        },
+        "student_visa": {
+          "score": null,
+          "values": {
+            "fee_eur": 75,
+            "uz_notes": "National visa for study; apply at the German embassy in Tashkent"
+          },
+          "text": {
+            "en": "The national visa for study costs 75 EUR. Applicants need admission, a blocked account and health insurance.",
+            "ru": "Национальная виза для учёбы стоит 75 EUR. Нужны зачисление, блокированный счёт и медицинская страховка.",
+            "uz": "Oʼqish uchun milliy viza 75 EUR turadi. Qabul xati, bloklangan hisob va sogʼliq sugʼurtasi kerak."
+          },
+          "sources": [
+            "https://www.make-it-in-germany.com/en/visa-residence/types/study"
+          ]
+        }
+      }
+    }
+  ]
+}

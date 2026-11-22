@@ -15,6 +15,9 @@ from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 from app.modules.admission.infrastructure.catalog_data import load_programs, load_seed
+from app.modules.admission.infrastructure.country_facts_loader import (
+    load_country_facts,
+)
 from app.modules.admission.infrastructure.org_media import (
     OrgMedia,
     by_domain,
@@ -388,6 +391,7 @@ async def load_catalog(
     programs = load_programs()
     for p in programs:
         await loader.program(p)
+    await load_country_facts(session)
     await session.flush()
     return LoadReport(len(seed), loader.facts, schol + len(programs), enriched)
 
