@@ -12,6 +12,7 @@ import dataclasses
 import json
 import sys
 
+from app.modules.admission.infrastructure.media_mirror import build_media_mirror
 from app.modules.admission.infrastructure.org_media import (
     ApplyReport,
     apply_org_media,
@@ -27,7 +28,12 @@ async def _run(dry_run: bool) -> ApplyReport:
     engine = make_engine(settings.database.url, 2)
     try:
         async with make_sessionmaker(engine)() as session:
-            report = await apply_org_media(session, load_org_media(), dry_run=dry_run)
+            report = await apply_org_media(
+                session,
+                load_org_media(),
+                dry_run=dry_run,
+                mirror=None if dry_run else build_media_mirror(settings),
+            )
             if dry_run:
                 await session.rollback()
             else:

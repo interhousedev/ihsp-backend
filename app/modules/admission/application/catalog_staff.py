@@ -5,6 +5,7 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.application.media_mirroring import mirror_media
 from app.modules.admission.domain.catalog_display import LOGO_FITS, valid_logo_zoom
 from app.modules.admission.domain.catalog_proposals import (
     INSTITUTION_FIELDS,
@@ -26,6 +27,7 @@ from app.modules.admission.domain.errors import (
 from app.modules.admission.domain.intl_facts import clean_name, fold_name
 from app.modules.admission.domain.permissions import Permission
 from app.modules.admission.domain.urls import is_https_url
+from app.modules.admission.ports.media_mirror import MediaMirror
 from app.modules.admission.ports.repositories import AuditEvent
 from app.modules.admission.ports.unit_of_work import (
     AdmissionUnitOfWork,
@@ -96,10 +98,16 @@ def _check_display(values: dict[str, Any]) -> None:
 class CatalogStaffService:
     """Administrators and catalog curators manage institutions directly."""
 
-    def __init__(self, uow_factory: UowFactory, can_curate: CanCurate) -> None:
-        """Keep the transaction factory and the curator rule."""
+    def __init__(
+        self,
+        uow_factory: UowFactory,
+        can_curate: CanCurate,
+        mirror: MediaMirror | None = None,
+    ) -> None:
+        """Keep the transaction factory, the curator rule and the image mirror."""
         self._uow = uow_factory
         self._can_curate = can_curate
+        self._mirror = mirror
 
     def require_curator(self, ctx: AdmissionContext) -> None:
         """Raise `AdmissionForbiddenError` unless the caller may curate."""
@@ -145,7 +153,7 @@ class CatalogStaffService:
     ) -> StaffInstitution:
         """Add an institution (published unless `status` says otherwise)."""
         self.require_curator(ctx)
-        cleaned = _clean(values)
+        cleaned = await mirror_media(self._mirror, _clean(values), MEDIA_FIELDS)
         for key in _REQUIRED:
             if cleaned.get(key) is None:
                 raise ValidationFailedError(params={"field": key})
@@ -184,7 +192,7 @@ class CatalogStaffService:
     ) -> StaffInstitution:
         """Overwrite the given fields; a stale `lock_version` conflicts."""
         self.require_curator(ctx)
-        cleaned = _clean(values)
+        cleaned = await mirror_media(self._mirror, _clean(values), MEDIA_FIELDS)
         if not cleaned:
             raise ValidationFailedError(params={"field": "fields"})
         async with self._uow() as uow:

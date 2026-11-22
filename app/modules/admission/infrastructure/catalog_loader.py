@@ -29,6 +29,7 @@ from app.modules.admission.infrastructure.orm.catalog import (
     ScholarshipRow,
     SourceRow,
 )
+from app.modules.admission.ports.media_mirror import MediaMirror
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -61,8 +62,13 @@ class LoadReport:
 
 class _Loader:
     def __init__(
-        self, session: AsyncSession, now: dt.datetime, media: dict[str, OrgMedia]
+        self,
+        session: AsyncSession,
+        now: dt.datetime,
+        media: dict[str, OrgMedia],
+        mirror: MediaMirror | None = None,
     ) -> None:
+        self.mirror = mirror
         self.s = session
         self.now = now
         self.media = media
@@ -143,6 +149,11 @@ class _Loader:
                 row.description = d.get("description")
             return
         org = self.media.get(normalize_domain(d.get("website_domain")) or "")
+        logo = d.get("logo_url") or (org.logo_url if org else None)
+        cover = d.get("cover_url") or (org.cover_url if org else None)
+        if self.mirror is not None:
+            logo = await self.mirror.mirror(logo) if logo else None
+            cover = await self.mirror.mirror(cover) if cover else None
         await self.s.merge(
             InstitutionRow(
                 id=inst,
@@ -153,8 +164,8 @@ class _Loader:
                 website_domain=normalize_domain(d.get("website_domain")),
                 kind="university",
                 status="published" if verified else "provisional",
-                logo_url=d.get("logo_url") or (org.logo_url if org else None),
-                cover_url=d.get("cover_url") or (org.cover_url if org else None),
+                logo_url=logo,
+                cover_url=cover,
                 **_optional(d, "description"),
             )
         )
@@ -346,14 +357,17 @@ class _Loader:
         return owner
 
 
-async def load_catalog(session: AsyncSession, now: dt.datetime) -> LoadReport:
+async def load_catalog(
+    session: AsyncSession, now: dt.datetime, mirror: MediaMirror | None = None
+) -> LoadReport:
     """Upsert the seed institutions and national programmes; the caller commits.
 
     A seed institution whose website domain belongs to another row (typically one
     created by staff) is not duplicated: its facts, scholarships and description
-    are added to that row, and nothing already there is overwritten.
+    are added to that row, and nothing already there is overwritten. With a
+    `mirror`, logos and covers are copied into our storage first.
     """
-    loader = _Loader(session, now, by_domain(load_org_media()))
+    loader = _Loader(session, now, by_domain(load_org_media()), mirror)
     schol = enriched = 0
     seed = load_seed()
     for d in seed:

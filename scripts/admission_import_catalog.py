@@ -30,6 +30,7 @@ def _rows(path: str) -> list[dict[str, str]]:
 
 async def _load() -> dict[str, int]:
     from app.modules.admission.infrastructure.catalog_loader import load_catalog
+    from app.modules.admission.infrastructure.media_mirror import build_media_mirror
     from app.settings import load_settings
     from app.shared.db.engine import make_engine, make_sessionmaker
 
@@ -37,7 +38,9 @@ async def _load() -> dict[str, int]:
     engine = make_engine(settings.database.url, 2)
     try:
         async with make_sessionmaker(engine)() as session:
-            report = await load_catalog(session, datetime.now(UTC))
+            report = await load_catalog(
+                session, datetime.now(UTC), build_media_mirror(settings)
+            )
             await session.commit()
         return {
             "institutions": report.institutions,
