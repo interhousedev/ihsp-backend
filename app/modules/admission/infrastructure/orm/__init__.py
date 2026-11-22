@@ -9,6 +9,7 @@ from app.modules.admission.infrastructure.orm.catalog import *  # noqa: F401,F40
 from app.modules.admission.infrastructure.orm.consultations import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.essay_flow import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.essay_invites import *  # noqa: F401,F403
+from app.modules.admission.infrastructure.orm.essay_keys import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.essay_reviews import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.exemplars import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.fit import *  # noqa: F401,F403

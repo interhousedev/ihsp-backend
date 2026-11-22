@@ -1,6 +1,9 @@
 """Administration of users, teachers, audit and OAuth clients (/v1/admin/*)."""
 
 from app.interfaces.http.v1.admin_users.audit.router import router as audit_router
+from app.interfaces.http.v1.admin_users.essay_keys.router import (
+    router as essay_keys_router,
+)
 from app.interfaces.http.v1.admin_users.login_cues.router import (
     router as login_cues_router,
 )
@@ -20,4 +23,5 @@ ROUTERS: list[APIRouter] = [
     oauth_clients_router,
     login_cues_router,
     vault_router,
+    essay_keys_router,
 ]

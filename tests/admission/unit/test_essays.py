@@ -26,6 +26,7 @@ from app.modules.admission.infrastructure.ai.prompts import essays as prompts
 from app.modules.admission.ports.consent import AI, STAFF_VIEW
 from app.shared.actor import Actor, Role
 from app.shared.base_error import RateLimitedError
+from app.shared.ids import new_id
 from tests.admission.unit.fakes import NOW, FakeConsents
 from tests.admission.unit.fakes_crypto import PlainCipher
 from tests.admission.unit.fakes_reviews import MemReviews
@@ -49,8 +50,18 @@ class MemEssays:
         self.vers: dict[UUID, dict[int, EssayVersion]] = {}
         self.idea_rows: dict[UUID, EssayIdea] = {}
 
-    async def list_for(self, student_id: UUID) -> list[Essay]:
-        return [e for e in self.rows.values() if e.student_id == student_id]
+    async def list_for(
+        self, student_id: UUID, *, include_unreadable: bool = False
+    ) -> list[Essay]:
+        return [
+            e
+            for e in self.rows.values()
+            if e.student_id == student_id and (include_unreadable or not e.unreadable)
+        ]
+
+    async def owner_of(self, essay_id: UUID) -> UUID | None:
+        row = self.rows.get(essay_id)
+        return None if row is None else row.student_id
 
     async def statuses(self, student_id: UUID) -> list[str]:
         return [e.status for e in self.rows.values() if e.student_id == student_id]
@@ -177,6 +188,30 @@ async def test_autosave_conflict_on_stale_lock() -> None:
     with pytest.raises(AdmissionConflictError):
         await d.svc.save(ctx, e.id, 0, {"body": "stale tab"})
     assert (await d.svc.get(ctx, e.id)).body == "one two three"
+
+
+async def test_unreadable_essay_is_listed_and_deletable() -> None:
+    d = Desk()
+    ctx = await d.w.ctx()
+    ok = await d.svc.create(ctx, {"title": "Readable"})
+    lost = replace(ok, id=new_id(), title="", unreadable=True)
+    d.repo.rows[lost.id] = lost
+    listed = {e.id: e for e in await d.svc.mine(ctx)}
+    assert listed[lost.id].unreadable and listed[lost.id].body == ""
+    assert not listed[ok.id].unreadable
+    assert [e.id for e in await d.repo.list_for(ctx.user_id)] == [ok.id]
+    await d.svc.delete(ctx, lost.id)
+    assert [e.id for e in await d.svc.mine(ctx)] == [ok.id]
+
+
+async def test_unreadable_essay_of_another_student_cannot_be_deleted() -> None:
+    d = Desk()
+    ctx = await d.w.ctx()
+    other = Essay(id=new_id(), student_id=new_id(), unreadable=True)
+    d.repo.rows[other.id] = other
+    with pytest.raises(AdmissionNotFoundError):
+        await d.svc.delete(ctx, other.id)
+    assert other.id in d.repo.rows
 
 
 async def test_patch_null_clears_word_limit_and_omitted_keeps_it() -> None:

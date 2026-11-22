@@ -179,6 +179,11 @@ class EssaySummaryOut(BaseModel):
         description="`stale` when the essay (or the UI language) changed since."
     )
     deep_read_at: dt.datetime | None
+    unreadable: bool = Field(
+        default=False,
+        description="The sealed text is lost (key gone or changed): no text, "
+        "only deletion is possible.",
+    )
 
     @classmethod
     def of(cls, e: Essay, read: ReadState | None = None) -> "EssaySummaryOut":
@@ -197,6 +202,7 @@ class EssaySummaryOut(BaseModel):
             uniqueness=None if read is None else read.uniqueness,
             deep_read="none" if read is None else read.state,
             deep_read_at=None if read is None else read.read_at,
+            unreadable=e.unreadable,
         )
 
 

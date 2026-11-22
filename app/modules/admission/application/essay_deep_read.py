@@ -361,7 +361,7 @@ class EssayDeepReadService:
         out: dict[UUID, ReadState] = {}
         async with self._uow() as uow:
             for essay in essays:
-                if essay.student_id != ctx.user_id:
+                if essay.student_id != ctx.user_id or essay.unreadable:
                     continue
                 stored = await uow.essay_reviews.list_for_essay(essay.id)
                 row = next((s for s in stored if s.kind == "deep"), None)

@@ -5,6 +5,10 @@ from typing import cast
 from uuid import UUID
 
 from app.modules.admission.domain.essay_reviews import ReviewKind, StoredReview
+from app.modules.admission.infrastructure.essay_unreadable import (
+    readable,
+    readable_one,
+)
 from app.modules.admission.infrastructure.orm.essay_reviews import EssayReviewRow
 from app.modules.admission.infrastructure.orm.sealed import to_json
 from app.modules.admission.ports.essay_crypto import EssayCipher
@@ -55,7 +59,7 @@ class SqlEssayReviewRepository:
         q = _where(essay_id, kind, institution_id)
         q = q.order_by(EssayReviewRow.created_at.desc(), EssayReviewRow.id.desc())
         row = (await self._s.scalars(q.limit(1))).first()
-        return None if row is None else await self._view(row)
+        return await readable_one(row, self._view, "essay_review")
 
     async def find(
         self,
@@ -69,7 +73,7 @@ class SqlEssayReviewRepository:
             EssayReviewRow.input_digest == input_digest
         )
         row = (await self._s.scalars(q)).first()
-        return None if row is None else await self._view(row)
+        return await readable_one(row, self._view, "essay_review")
 
     async def save(self, review: StoredReview) -> None:
         """Store a review; an existing one for the same input is resealed in place."""
@@ -102,4 +106,4 @@ class SqlEssayReviewRepository:
             .where(EssayReviewRow.essay_id == essay_id)
             .order_by(EssayReviewRow.created_at.desc(), EssayReviewRow.id.desc())
         )
-        return [await self._view(r) for r in await self._s.scalars(q)]
+        return await readable(await self._s.scalars(q), self._view, "essay_review")

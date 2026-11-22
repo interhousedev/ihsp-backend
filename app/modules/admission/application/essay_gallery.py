@@ -181,7 +181,10 @@ class EssayGalleryService:
                 raise AdmissionNotFoundError()
             if parent.kind == "supplemental" and len(parent.targets) == 1:
                 raise ForkLastTargetError()
-            if len(await uow.essays.list_for(ctx.user_id)) >= MAX_ESSAYS:
+            if (
+                len(await uow.essays.list_for(ctx.user_id, include_unreadable=True))
+                >= MAX_ESSAYS
+            ):
                 raise ItemLimitError(params={"kind": "essay", "limit": MAX_ESSAYS})
             child = await uow.essays.add(
                 Essay(

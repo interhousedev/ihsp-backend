@@ -1,5 +1,6 @@
 """Builds the admission module (container.admission)."""
 
+import asyncio
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from functools import cache
@@ -41,6 +42,7 @@ from app.modules.admission.application.essay_deep_read import EssayDeepReadServi
 from app.modules.admission.application.essay_gallery import EssayGalleryService
 from app.modules.admission.application.essay_group_labels import GroupLabeler
 from app.modules.admission.application.essay_invites import EssayInviteService
+from app.modules.admission.application.essay_keys import EssayKeyAdmin
 from app.modules.admission.application.essay_match import EssayMatchService
 from app.modules.admission.application.essay_practice import EssayPracticeService
 from app.modules.admission.application.essay_prompt_map import EssayPromptMap
@@ -119,8 +121,16 @@ from app.modules.admission.infrastructure.calendar_repository import (
 )
 from app.modules.admission.infrastructure.catalog_data import study_fields as _fields
 from app.modules.admission.infrastructure.essay_crypto import (
+    CACHE_TTL_SECONDS,
     AesGcmEssayCipher,
     MemoryEssayKeyStore,
+)
+from app.modules.admission.infrastructure.essay_key_backup import (
+    ScryptAesGcmBackupCodec,
+)
+from app.modules.admission.infrastructure.essay_keys_sql import (
+    SqlEssayKeyLedger,
+    SqlEssayResealer,
 )
 from app.modules.admission.infrastructure.kb_repository import SqlKbRepository
 from app.modules.admission.infrastructure.media_mirror import build_media_mirror
@@ -142,7 +152,7 @@ from app.modules.admission.ports.consent import (
     PurposeConsentStore,
 )
 from app.modules.admission.ports.courses import CourseSources
-from app.modules.admission.ports.essay_crypto import EssayCipher
+from app.modules.admission.ports.essay_crypto import EssayCipher, EssayKeyStore
 from app.modules.admission.ports.essays import EssayReader
 from app.modules.admission.ports.media_mirror import MediaMirror
 from app.modules.admission.ports.prompt_studio import PromptStudioAdmin
@@ -266,6 +276,7 @@ class AdmissionServices:
     essay_match: EssayMatchService
     essay_short_answers: EssayShortAnswers
     essay_deep_read: EssayDeepReadService
+    essay_keys: EssayKeyAdmin
 
 
 @dataclass(frozen=True, slots=True)
@@ -300,6 +311,7 @@ def build(
     uni_web: WebSearchApi | None = None,
     uni_pages: UniPageReader | None = None,
     cipher: EssayCipher | None = None,
+    essay_keys: EssayKeyStore | None = None,
     studio_admin: PromptStudioAdmin,
     certificates: CertificateDirectory | None = None,
     embeddings: Callable[[], EmbeddingIndex | None] = lambda: None,
@@ -307,7 +319,8 @@ def build(
 ) -> AdmissionServices:
     """Wire the module; without `purpose_consents` they live in process memory."""
     over = overrides or AdmissionOverrides()
-    cipher = cipher or AesGcmEssayCipher(MemoryEssayKeyStore())
+    key_store = essay_keys or MemoryEssayKeyStore()
+    cipher = cipher or AesGcmEssayCipher(key_store)
     uow_factory = over.uow_factory or _sql_uow_factory(deps, cipher)
     settings = deps.settings.admission
     grades = settings.eligible_grades
@@ -716,6 +729,15 @@ def build(
             texts,
             cipher,
             essay_reviews,
+        ),
+        essay_keys=EssayKeyAdmin(
+            key_store,
+            SqlEssayKeyLedger(deps.sessionmaker),
+            ScryptAesGcmBackupCodec(),
+            SqlEssayResealer(deps.sessionmaker),
+            deps.kicker,
+            deps.clock,
+            settle=lambda: asyncio.sleep(CACHE_TTL_SECONDS + 5),
         ),
     )
 

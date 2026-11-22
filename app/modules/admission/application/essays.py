@@ -164,7 +164,7 @@ class EssayService:
         """Return the owner's essays."""
         await self._owner(ctx)
         async with self._uow() as uow:
-            return await uow.essays.list_for(ctx.user_id)
+            return await uow.essays.list_for(ctx.user_id, include_unreadable=True)
 
     async def get(self, ctx: AdmissionContext, essay_id: UUID) -> Essay:
         """Return one of the owner's essays."""
@@ -185,7 +185,10 @@ class EssayService:
             **values,
         )
         async with self._uow() as uow:
-            if len(await uow.essays.list_for(ctx.user_id)) >= MAX_ESSAYS:
+            if (
+                len(await uow.essays.list_for(ctx.user_id, include_unreadable=True))
+                >= MAX_ESSAYS
+            ):
                 raise ItemLimitError(params={"kind": "essay", "limit": MAX_ESSAYS})
             await self._check(uow, ctx, essay)
             saved = await uow.essays.add(essay)
@@ -237,7 +240,8 @@ class EssayService:
         """Delete the essay and its versions; its ideas stay, unlinked."""
         await self._owner(ctx)
         async with self._uow() as uow:
-            await self._own(uow, ctx, essay_id)
+            if await uow.essays.owner_of(essay_id) != ctx.user_id:
+                raise AdmissionNotFoundError()
             await uow.essays.delete(essay_id)
             await uow.commit()
 

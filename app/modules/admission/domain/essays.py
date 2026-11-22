@@ -90,6 +90,8 @@ class Essay:
     lock_version: int = 0
     created_at: dt.datetime | None = None
     updated_at: dt.datetime | None = None
+    unreadable: bool = False
+    """The sealed text is lost (key gone or changed); only the plain fields are set."""
 
     @property
     def word_count(self) -> int:

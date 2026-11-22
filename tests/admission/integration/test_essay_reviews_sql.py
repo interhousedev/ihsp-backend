@@ -3,7 +3,6 @@
 from uuid import UUID
 
 from app.bootstrap import common  # noqa: F401  (registers every model)
-from app.modules.admission.domain.errors import EssayKeyUnavailableError
 from app.modules.admission.domain.essay_reviews import StoredReview
 from app.modules.admission.domain.essays import Essay
 from app.modules.admission.infrastructure.essay_crypto import (
@@ -18,7 +17,6 @@ from app.modules.admission.infrastructure.orm.catalog import InstitutionRow
 from app.shared.ids import new_id
 from tests.admission.unit.fakes import NOW
 
-import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -126,5 +124,4 @@ async def test_reviews_are_scoped_to_their_essay_and_owner(
     assert await repo.find(theirs, "base", None, "d" * 64) is None
     await cipher.forget(STUDENT)
     db_session.expunge_all()
-    with pytest.raises(EssayKeyUnavailableError):
-        await repo.list_for_essay(mine)
+    assert await repo.list_for_essay(mine) == []  # unreadable rows are skipped

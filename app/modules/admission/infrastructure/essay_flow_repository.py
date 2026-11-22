@@ -21,6 +21,10 @@ from app.modules.admission.domain.essay_flow import (
     StoredIdeaFit,
     prompt_key,
 )
+from app.modules.admission.infrastructure.essay_unreadable import (
+    readable,
+    readable_one,
+)
 from app.modules.admission.infrastructure.essays_repository import (
     _target_json,
     _targets,
@@ -162,7 +166,7 @@ class SqlPracticeRepository:
     async def get(self, student_id: UUID, day: dt.date) -> PracticeEntry | None:
         """The entry of the day, or None."""
         row = await self._row(student_id, day)
-        return None if row is None else await self._view(row)
+        return await readable_one(row, self._view, "essay_practice")
 
     async def save(self, entry: PracticeEntry) -> PracticeEntry:
         """Insert the entry or replace the one of the same student and day."""
@@ -195,7 +199,7 @@ class SqlPracticeRepository:
             .order_by(EssayPracticeRow.day.desc())
             .limit(limit)
         )
-        return [await self._view(r) for r in await self._s.scalars(q)]
+        return await readable(await self._s.scalars(q), self._view, "essay_practice")
 
     async def days(self, student_id: UUID, limit: int) -> list[dt.date]:
         """The days with an entry, newest first (nothing is opened)."""
@@ -444,12 +448,12 @@ class SqlShortAnswerRepository:
         q = select(EssayShortAnswerRow).where(
             EssayShortAnswerRow.student_id == student_id
         )
-        return [await self._view(r) for r in await self._s.scalars(q)]
+        return await readable(await self._s.scalars(q), self._view, "short_answer")
 
     async def get(self, student_id: UUID, prompt_key: str) -> ShortAnswer | None:
         """The answer to one prompt, or None."""
         row = await self._row(student_id, prompt_key)
-        return None if row is None else await self._view(row)
+        return await readable_one(row, self._view, "short_answer")
 
     async def _row(
         self, student_id: UUID, prompt_key: str
