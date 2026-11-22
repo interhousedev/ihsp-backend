@@ -10,6 +10,7 @@ uv run python scripts/admission_research_rankings.py --dry-run --limit 3
 
 import argparse
 import asyncio
+import dataclasses
 import json
 import sys
 from pathlib import Path
@@ -59,7 +60,9 @@ async def _pages(exa: ExaClient, name: str, country: str) -> list[dict[str, str]
     ]
 
 
-async def _run(limit: int | None, dry_run: bool, user: UUID | None) -> list[dict]:
+async def _run(
+    limit: int | None, dry_run: bool, user: UUID | None, publish: bool = False
+) -> list[dict]:
     from app.shared.db.engine import make_engine, make_sessionmaker
 
     from sqlalchemy import select
@@ -95,7 +98,7 @@ async def _run(limit: int | None, dry_run: bool, user: UUID | None) -> list[dict
                 report.append({"name": inst.name, "facts": sorted(facts)})
                 if facts and not dry_run and user is not None:
                     src = next(iter(facts.values()))["source_url"]
-                    await repo.add(
+                    proposal = await repo.add(
                         CatalogProposal(
                             id=new_id(),
                             kind="institution",
@@ -109,6 +112,19 @@ async def _run(limit: int | None, dry_run: bool, user: UUID | None) -> list[dict
                             facts=facts,
                         )
                     )
+                    if publish:
+                        applied = await repo.apply(proposal, reviewer_id=user, now=now)
+                        await repo.save_review(
+                            dataclasses.replace(
+                                proposal,
+                                status="approved",
+                                reviewed_by=user,
+                                reviewed_at=now,
+                                review_note="Sourced web research, published",
+                                applied_id=applied,
+                            ),
+                            expected_lock=proposal.lock_version,
+                        )
             if dry_run:
                 await session.rollback()
             else:
@@ -125,8 +141,13 @@ def main() -> int:
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--limit", type=int, default=None)
     p.add_argument("--as-user", type=UUID, default=None)
+    p.add_argument(
+        "--publish",
+        action="store_true",
+        help="approve and publish the proposals (curator run)",
+    )
     a = p.parse_args()
-    out = asyncio.run(_run(a.limit, a.dry_run, a.as_user))
+    out = asyncio.run(_run(a.limit, a.dry_run, a.as_user, a.publish))
     json.dump(out, sys.stdout, indent=1, ensure_ascii=False)
     sys.stdout.write("\n")
     return 0

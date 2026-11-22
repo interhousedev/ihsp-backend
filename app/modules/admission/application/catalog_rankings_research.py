@@ -15,11 +15,14 @@ from pydantic import BaseModel, Field
 
 SYSTEM = (
     "You extract university facts from the web pages given. Use ONLY the pages. "
-    "Return subject rankings (system qs|the|arwu|usnews, subject slug such as "
+    "Return rankings (system qs|the|arwu|usnews; subject `overall` for the "
+    "institution's overall world ranking, or a slug such as "
     "computer_science, business, engineering, medicine, rank as a whole number or "
     "a band like 201-250, year, the page URL) and, only when a page supports it, "
     "1-5 ratings of social life, research and work-experience opportunities with a "
-    "short note in en, ru and uz. Leave anything unsupported out. Never guess."
+    "short note in en, ru and uz. Leave anything unsupported out. Never guess. "
+    'Answer with ONE JSON object {"rankings": [...], "experience": [...]}; '
+    "use empty lists when the pages support nothing."
 )
 
 
@@ -48,7 +51,7 @@ class ExperienceItem(BaseModel):
 class ResearchOut(BaseModel):
     """The structured answer."""
 
-    rankings: list[RankingItem] = Field(max_length=20)
+    rankings: list[RankingItem] = Field(max_length=10)
     experience: list[ExperienceItem] = Field(max_length=1)
 
 
@@ -109,8 +112,10 @@ async def research(
         ],
         schema_name="admission_catalog_research",
         schema=to_strict_schema(ResearchOut),
-        max_tokens=1500,
+        max_tokens=3000,
     )
+    if "rankings" not in result.data:  # cut-off answer: only a fragment parsed
+        return {}
     return facts_from(
         ResearchOut.model_validate(result.data), {p["url"] for p in pages}, year
     )

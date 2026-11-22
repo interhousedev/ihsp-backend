@@ -70,22 +70,27 @@ def _order(item: Mapping[str, Any]) -> tuple[int, float]:
 def relevant_rankings(
     value: Any, subjects: Sequence[str], limit: int = MAX_SHOWN
 ) -> list[dict[str, Any]]:
-    """The best ranking of each relevant subject, most relevant subject first.
+    """The overall ranking first, then the best ranking of each relevant subject.
 
-    Nothing when no stored ranking matches a subject; `overall` is never
-    relevant on its own.
+    The overall ranking (QS preferred) is shown whenever stored; subject
+    rankings follow, most relevant subject first, up to `limit` in total.
     """
     if not isinstance(value, list):
         return []
     out: list[dict[str, Any]] = []
+    overall = [
+        x for x in value if isinstance(x, dict) and x.get("subject") == "overall"
+    ]
+    if overall:
+        out.append(min(overall, key=_order))
     for subject in subjects:
+        if len(out) >= limit:
+            break
         if subject == "overall":
             continue
         rows = [x for x in value if isinstance(x, dict) and x.get("subject") == subject]
         if rows:
             out.append(min(rows, key=_order))
-        if len(out) >= limit:
-            break
     return out
 
 

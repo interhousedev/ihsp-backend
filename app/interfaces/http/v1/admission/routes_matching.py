@@ -6,7 +6,7 @@ from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
-from app.interfaces.http.v1.admission.routes_chooser import _description
+from app.interfaces.http.v1.admission.routes_chooser import RankingOut, _description
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.interfaces.http.v1.admission.schemas_focuses import FocusOut, focuses_out
 from app.modules.admission.application.matching import (
@@ -110,16 +110,6 @@ class NextDeadlineOut(BaseModel):
 
     date: dt.date
     round: str
-
-
-class RankingOut(BaseModel):
-    """A subject ranking relevant to the student's fields and professions."""
-
-    system: Literal["qs", "the", "arwu", "usnews"]
-    subject: str
-    rank: int | str
-    year: int
-    source_url: str
 
 
 class ExperienceOut(BaseModel):

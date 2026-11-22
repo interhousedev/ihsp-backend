@@ -58,13 +58,13 @@ def test_subjects_follow_fields_in_order() -> None:
 def test_rankings_are_relevant_only_best_system_first_max_two() -> None:
     out = relevant_rankings(RANKS, ["computer_science", "business", "law", "x"])
     assert [(r["subject"], r["system"]) for r in out] == [
+        ("overall", "qs"),
         ("business", "qs"),
-        ("law", "qs"),
     ]
     assert len(relevant_rankings(RANKS, ["business", "law", "law"], limit=1)) == 1
     both = relevant_rankings(RANKS, ["law", "business"])
-    assert [r["subject"] for r in both] == ["law", "business"]
-    assert relevant_rankings(RANKS, ["overall"]) == []
+    assert [r["subject"] for r in both] == ["overall", "law"]
+    assert [r["subject"] for r in relevant_rankings(RANKS, ["overall"])] == ["overall"]
     assert relevant_rankings(None, ["business"]) == []
 
 
@@ -140,7 +140,10 @@ def test_match_out_maps_card_details() -> None:
     m = MatchItem(_inst(), 80, Overlap(0, 0, ()), None, Decimal(50000), None)
     out = MatchOut.of(m, today=dt.date(2026, 1, 1), locale="ru", subjects=("business",))
     assert out.description == "Русский"
-    assert [r.system for r in out.rankings] == ["qs"]
+    assert [(r.system, r.subject) for r in out.rankings] == [
+        ("qs", "overall"),
+        ("qs", "business"),
+    ]
     assert (out.cost_usd, out.net_cost_usd, out.aid_estimate_usd) == (
         50000,
         38000,
@@ -149,7 +152,7 @@ def test_match_out_maps_card_details() -> None:
     assert [(e.key, e.score) for e in out.experience] == [("research", 5)]
     assert "Uni%2C+Leeds%2C+GB" in out.map_url
     bare = MatchOut.of(m, today=dt.date(2026, 1, 1), subjects=())
-    assert bare.rankings == []
+    assert [r.subject for r in bare.rankings] == ["overall"]
 
 
 def test_match_out_cost_from_intl_coa_fact_when_mirror_empty() -> None:

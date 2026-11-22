@@ -31,6 +31,7 @@ from app.modules.admission.domain.intl_fact_display import (
     detail_groups,
     importance_factors,
 )
+from app.modules.admission.domain.rankings import relevant_rankings
 from app.shared.clock import SystemClock, local_today
 
 from fastapi import APIRouter, Header, Query
@@ -62,7 +63,18 @@ class SourceOut(BaseModel):
     year: int | None
 
 
+MAX_DETAIL_RANKINGS = 6
 _PRIVATE_FACTS = ("deadlines", "focuses")
+
+
+class RankingOut(BaseModel):
+    """A ranking of the institution (overall or one subject)."""
+
+    system: Literal["qs", "the", "arwu", "usnews"]
+    subject: str
+    rank: int | str
+    year: int
+    source_url: str
 
 
 class HighlightOut(BaseModel):
@@ -212,6 +224,10 @@ class InstitutionOut(BaseModel):
     )
     details: list[DetailGroupOut] = []
     factors: list[ImportanceFactorOut] = []
+    rankings: list[RankingOut] = Field(
+        default=[],
+        description="Overall ranking first, then subject rankings; detail view only.",
+    )
 
     @classmethod
     def of(
@@ -222,6 +238,7 @@ class InstitutionOut(BaseModel):
         today: dt.date | None = None,
         detail: bool = False,
         fit: FitResult | None = None,
+        subjects: tuple[str, ...] = (),
     ) -> "InstitutionOut":
         """Map the domain institution; text is localized, notes are left out.
 
@@ -279,6 +296,18 @@ class InstitutionOut(BaseModel):
             ),
             factors=(
                 [ImportanceFactorOut(**f) for f in importance_factors(i, locale)]
+                if detail
+                else []
+            ),
+            rankings=(
+                [
+                    RankingOut(**x)
+                    for x in relevant_rankings(
+                        i.facts["rankings"].value if "rankings" in i.facts else None,
+                        subjects,
+                        limit=MAX_DETAIL_RANKINGS,
+                    )
+                ]
                 if detail
                 else []
             ),
@@ -592,6 +621,7 @@ async def get_institution(
         today=local_today(container.clock),
         detail=True,
         fit=fits.get(inst.id),
+        subjects=await container.admission.fit.ranking_subjects(ctx),
     )
 
 
