@@ -3,6 +3,7 @@
 from typing import Any
 from uuid import uuid4
 
+from app.modules.ai.domain.connectors import LANGFUSE_DEFAULT_HOST
 from app.modules.ai.infrastructure import langfuse_tracer
 from app.modules.ai.infrastructure.fake_llm import FakeLlmGateway
 from app.modules.ai.infrastructure.langfuse_tracer import (
@@ -13,7 +14,6 @@ from app.modules.ai.infrastructure.recording_gateways import (
     RecordingLlmGateway,
     UsageRecorder,
 )
-from app.settings import LangfuseSettings
 from app.shared.contracts.ai import LlmGateway, LlmTuning
 from app.shared.usage_context import UsageActor, _current, bind_ai_session
 from tests.fakes.clock import FixedClock
@@ -81,8 +81,14 @@ def test_disabled_creates_no_client(monkeypatch: pytest.MonkeyPatch) -> None:
         raise AssertionError("client must not be created")
 
     monkeypatch.setattr("langfuse.Langfuse", boom)
-    assert make_langfuse_tracer(LangfuseSettings()) is None
-    assert make_langfuse_tracer(LangfuseSettings(public_key="pk")) is None
+    for public_key, secret_key in (("", ""), ("pk", ""), ("", "sk"), ("pk", " ")):
+        tracer = make_langfuse_tracer(
+            public_key=public_key,
+            secret_key=secret_key,
+            host=LANGFUSE_DEFAULT_HOST,
+            capture_content=False,
+        )
+        assert tracer is None
 
 
 def test_enabled_creates_client(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -93,9 +99,18 @@ def test_enabled_creates_client(monkeypatch: pytest.MonkeyPatch) -> None:
             seen.update(kwargs)
 
     monkeypatch.setattr("langfuse.Langfuse", _Client)
-    tracer = make_langfuse_tracer(LangfuseSettings(public_key="pk", secret_key="sk"))
-    assert tracer is not None and seen["public_key"] == "pk"
-    assert seen["host"] == "https://cloud.langfuse.com"
+    tracer = make_langfuse_tracer(
+        public_key="pk",
+        secret_key="sk",
+        host="https://lf.example.com",
+        capture_content=False,
+    )
+    assert tracer is not None
+    assert seen == {
+        "public_key": "pk",
+        "secret_key": "sk",
+        "host": "https://lf.example.com",
+    }
 
 
 async def test_span_has_no_content_when_capture_off() -> None:

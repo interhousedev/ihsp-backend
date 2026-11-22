@@ -3,18 +3,17 @@
 The usage recorder opens a span when a call starts and ends it when the call ends.
 Tracing is best effort: no method raises, and the SDK exports in a background thread,
 so a Langfuse outage never delays or fails a request. Without keys no client exists.
-Prompts and answers are sent only with `LANGFUSE__CAPTURE_CONTENT`; the user is an
-opaque salted hash, never an id, email or name. A task with `private_content` never
-sends input, output or error text, whatever the switch says: its error becomes a
-fixed code and the metadata is the task and the role only.
+The project comes only from Administration ("Pipelines" -> "Langfuse tracing").
+Prompts and answers are sent only when the pipeline's content switch is on; the user
+is an opaque salted hash, never an id, email or name. A task with `private_content`
+never sends input, output or error text, whatever the switch says: its error becomes
+a fixed code and the metadata is the task and the role only.
 """
 
 import hashlib
 from collections.abc import Mapping
 from typing import Any, Protocol
 from uuid import UUID
-
-from app.settings import LangfuseSettings
 
 import structlog
 
@@ -261,22 +260,19 @@ class _SdkSpan:
         self._observation.end()
 
 
-def make_langfuse_tracer(settings: LangfuseSettings) -> LangfuseTracer | None:
-    """The tracer, or None (and no client at all) when the keys are not set."""
-    if not settings.enabled or settings.secret_key is None:
+def make_langfuse_tracer(
+    *, public_key: str, secret_key: str, host: str, capture_content: bool
+) -> LangfuseTracer | None:
+    """The tracer, or None (and no client at all) when a key is empty."""
+    if not public_key.strip() or not secret_key.strip():
         return None
     try:
         from langfuse import Langfuse
 
-        secret = settings.secret_key.get_secret_value()
-        client = Langfuse(
-            public_key=settings.public_key,
-            secret_key=secret,
-            host=settings.host,
-        )
+        client = Langfuse(public_key=public_key, secret_key=secret_key, host=host)
     except Exception:
         log.warning("langfuse_init_failed", exc_info=True)
         return None
     return LangfuseTracer(
-        SdkBackend(client), salt=secret, capture_content=settings.capture_content
+        SdkBackend(client), salt=secret_key, capture_content=capture_content
     )

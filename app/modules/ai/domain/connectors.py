@@ -20,7 +20,9 @@ from app.shared.ai_tasks import PIPELINE_OF, Pipeline, pipeline_of
 __all__ = [
     "BUILTIN_IDS",
     "EFFORTS",
+    "LANGFUSE_DEFAULT_HOST",
     "LANGFUSE_SECRET_ID",
+    "TRACING_CAPTURE_DEFAULT",
     "MODEL_KINDS",
     "PIPELINE_OF",
     "SEARCH_KINDS",
@@ -125,6 +127,10 @@ class TracingConfig:
 
 # Vault path of the Langfuse secret key; not a valid connector slug, so no clash.
 LANGFUSE_SECRET_ID: Final = "_langfuse"
+# Langfuse API root shown before Administration sets a project.
+LANGFUSE_DEFAULT_HOST: Final = "https://cloud.langfuse.com"
+# Content capture of a pipeline that set nothing: prompts and answers stay home.
+TRACING_CAPTURE_DEFAULT: Final = False
 # Pipelines that read essays and applicant profiles: untraced unless switched on.
 UNTRACED_BY_DEFAULT: Final = frozenset({Pipeline.ADMISSION})
 

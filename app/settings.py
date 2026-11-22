@@ -393,26 +393,6 @@ class EmisSettings(BaseModel):
     """Profiles kept in the in-process LFU cache of one process."""
 
 
-class LangfuseSettings(BaseModel):
-    """Langfuse tracing of the model calls; on only when both keys are set."""
-
-    public_key: str = ""
-    """Langfuse public key; empty keeps tracing off."""
-    secret_key: SecretStr | None = None
-    """Langfuse secret key; empty keeps tracing off."""
-    host: str = "https://cloud.langfuse.com"
-    """Langfuse API root (a self-hosted instance or a regional cloud)."""
-    capture_content: bool = False
-    """Send prompts and answers to Langfuse. Off: only task, model, tokens, latency,
-    an opaque user id and the chat id leave the system."""
-
-    @property
-    def enabled(self) -> bool:
-        """True when both keys are set."""
-        secret = self.secret_key.get_secret_value() if self.secret_key else ""
-        return bool(self.public_key.strip() and secret.strip())
-
-
 class OpenRouterSettings(BaseModel):
     """LLM gateway (connection only; models and parameters are in `AI__...`)."""
 
@@ -1478,7 +1458,6 @@ class Settings(BaseSettings):
     openrouter: OpenRouterSettings = Field(default_factory=OpenRouterSettings)
     anthropic: AnthropicSettings = Field(default_factory=AnthropicSettings)
     exa: ExaSettings = Field(default_factory=ExaSettings)
-    langfuse: LangfuseSettings = Field(default_factory=LangfuseSettings)
     parallel: ParallelSettings = Field(default_factory=ParallelSettings)
     notebooks: NotebooksSettings = Field(default_factory=NotebooksSettings)
     vectors: VectorsSettings = Field(default_factory=VectorsSettings)

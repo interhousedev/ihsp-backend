@@ -2,7 +2,7 @@
 
 The secret key goes to Vault first (`LANGFUSE_SECRET_ID`, the connector key store)
 and the row follows; the API, the database and the audit log hold only `has_secret`
-and the last four characters. Without a row the environment's `LANGFUSE__*` applies.
+and the last four characters. Without a row nothing is traced.
 Every process picks a change up with its next routing read (at most 30 s).
 """
 
@@ -13,7 +13,9 @@ from typing import Literal
 
 from app.modules.ai.application.routing import RouteService
 from app.modules.ai.domain.connectors import (
+    LANGFUSE_DEFAULT_HOST,
     LANGFUSE_SECRET_ID,
+    TRACING_CAPTURE_DEFAULT,
     TracingConfig,
     valid_base_url,
 )
@@ -34,13 +36,11 @@ _MAX_KEY = 255
 class TracingView:
     """The Langfuse project calls are traced to, without the secret key."""
 
-    source: Literal["runtime", "env", "none"]
+    source: Literal["runtime", "none"]
     host: str
     public_key: str | None
     has_secret: bool
     secret_last4: str | None
-    env_configured: bool
-    env_host: str
     capture_default: bool
     updated_at: datetime | None
 
@@ -55,23 +55,17 @@ class TracingAdmin:
         routing: RouteService,
         clock: Clock,
         *,
-        env_host: str,
-        env_configured: bool,
-        capture_default: bool,
         allow_plain_local_urls: bool,
     ) -> None:
-        """Keep the transaction factory, the key store, the router and the env."""
+        """Keep the transaction factory, the key store and the router."""
         self.uow_factory = uow_factory
         self.secrets = secrets
         self.routing = routing
         self.clock = clock
-        self._env_host = env_host
-        self._env_configured = env_configured
-        self._capture = capture_default
         self._plain_local = allow_plain_local_urls
 
     async def get(self, actor: Actor) -> TracingView:
-        """The stored project, else the environment's."""
+        """The stored project, if any."""
         async with self.uow_factory() as uow:
             config = await uow.tracing.get()
         return self._view(config)
@@ -132,7 +126,7 @@ class TracingAdmin:
         return self._view(config)
 
     async def delete(self, actor: Actor) -> TracingView:
-        """Remove the stored project and its key: the environment applies again."""
+        """Remove the stored project and its key: tracing stops."""
         async with self.uow_factory() as uow:
             current = await uow.tracing.get()
             if current is not None:
@@ -161,20 +155,16 @@ class TracingAdmin:
                 public_key=config.public_key,
                 has_secret=config.has_secret,
                 secret_last4=config.secret_last4,
-                env_configured=self._env_configured,
-                env_host=self._env_host,
-                capture_default=self._capture,
+                capture_default=TRACING_CAPTURE_DEFAULT,
                 updated_at=config.updated_at,
             )
         return TracingView(
-            source="env" if self._env_configured else "none",
-            host=self._env_host,
+            source="none",
+            host=LANGFUSE_DEFAULT_HOST,
             public_key=None,
             has_secret=False,
             secret_last4=None,
-            env_configured=self._env_configured,
-            env_host=self._env_host,
-            capture_default=self._capture,
+            capture_default=TRACING_CAPTURE_DEFAULT,
             updated_at=None,
         )
 

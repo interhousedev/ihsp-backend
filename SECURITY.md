@@ -42,7 +42,7 @@ In scope:
 - AI features: prompt injection that leads to data disclosure or to a data-changing tool call without approval, bypass of AI access revocation or limits, unsafe OpenUI output.
 - SSRF, upload validation, rate limit bypass, account enumeration, secret leakage, supply-chain issues in the build.
 
-Langfuse (optional) is a third-party processor of AI metadata: task, model, tokens, latency, a hashed user id and the chat id. Prompts and answers are sent only with `IHSP_LANGFUSE__CAPTURE_CONTENT=true` (default `false`). A tracing error never affects a request.
+Langfuse (optional) is a third-party processor of AI metadata: task, model, tokens, latency, a hashed user id and the chat id. It is configured only on the admin "Langfuse tracing" page (secret key in Vault). Prompts and answers are sent only when a pipeline's content switch is on (default off). A tracing error never affects a request.
 
 Out of scope:
 

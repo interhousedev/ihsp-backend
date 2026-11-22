@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- Production compose turns outbound mail on by default (api, worker) through the `IHSP_SMTP_OUT__*` relay, and passes `IHSP_ADMISSION__SCORECARD_API_KEY` (default `DEMO_KEY`).
+
+### Removed
+
+- `IHSP_LANGFUSE__*` settings: Langfuse is configured only in Administration, "Pipelines" -> "Langfuse tracing". `GET/PUT/DELETE /v1/admin/ai/tracing` drop `env_configured`, `env_host` and the `env` source.
+
 ## [1.11.0] - 2026-11-21
 
 ### Added

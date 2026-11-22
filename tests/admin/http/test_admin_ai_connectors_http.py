@@ -7,6 +7,7 @@ from app.interfaces.http.v1.admin_ai.connectors import router as connectors_rout
 from app.modules.ai.application.connectors import ConnectorAdmin, PipelineAdmin
 from app.modules.ai.application.routing import RouteService
 from app.modules.ai.application.tracing_admin import TracingAdmin
+from app.modules.ai.domain.connectors import LANGFUSE_SECRET_ID
 from app.modules.ai.infrastructure.connector_clients import EnvConnectorRuntime
 from app.modules.ai.infrastructure.connector_store import (
     SqlConnectorUnitOfWork,
@@ -79,9 +80,6 @@ def _services(
             secrets,
             routing,
             clock,
-            env_host="https://cloud.langfuse.com",
-            env_configured=False,
-            capture_default=False,
             allow_plain_local_urls=False,
         ),
     )
@@ -366,3 +364,48 @@ async def test_students_cannot_reach_connectors_or_pipelines(
     assert (
         await client.put(f"{PREFIX}/pipelines/chat", json={"model": "m"})
     ).status_code == 403
+
+
+async def test_tracing_comes_only_from_the_admin_page(
+    client: AsyncClient, world: World
+) -> None:
+    unset = await client.get(f"{PREFIX}/tracing")
+
+    assert unset.status_code == 200
+    assert unset.json() == {
+        "source": "none",
+        "host": "https://cloud.langfuse.com",
+        "public_key": None,
+        "has_secret": False,
+        "secret_last4": None,
+        "capture_default": False,
+        "updated_at": None,
+    }
+
+    saved = await client.put(
+        f"{PREFIX}/tracing",
+        json={
+            "host": "https://lf.example.com/",
+            "public_key": "pk-lf-1",
+            "secret_key": "sk-lf-secret-9876",
+        },
+    )
+
+    assert saved.status_code == 200
+    body = saved.json()
+    assert (body["source"], body["host"], body["public_key"]) == (
+        "runtime",
+        "https://lf.example.com",
+        "pk-lf-1",
+    )
+    assert (body["has_secret"], body["secret_last4"]) == (True, "9876")
+    assert "sk-lf-secret-9876" not in saved.text
+    assert await world.secrets.get(LANGFUSE_SECRET_ID) == {
+        "secret_key": "sk-lf-secret-9876"
+    }
+
+    removed = await client.delete(f"{PREFIX}/tracing")
+
+    assert removed.status_code == 200
+    assert removed.json()["source"] == "none"
+    assert await world.secrets.get(LANGFUSE_SECRET_ID) is None
