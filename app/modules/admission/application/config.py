@@ -1,7 +1,7 @@
 """`GET /v1/admission/config` and `GET /v1/admission/me`."""
 
 import datetime as dt
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Any, get_args
 
@@ -52,6 +52,7 @@ from app.modules.admission.domain.workflow import (
     ListStatus,
     Round,
 )
+from app.modules.admission.ports.unit_of_work import UowFactory
 from app.settings_admission import AdmissionSettings
 from app.shared.honor_categories import HONOR_CATEGORIES
 from app.shared.limits import LimitsProvider
@@ -144,6 +145,12 @@ class AdmissionConfig:
     workflow: WorkflowOptions
 
 
+def merge_countries(found: Sequence[str]) -> tuple[str, ...]:
+    """Catalog countries sorted first, then the remaining static codes."""
+    ours = sorted({c.upper() for c in found if len(c) == 2})
+    return (*ours, *(c for c in COUNTRIES if c not in ours))
+
+
 class GetConfig:
     """Builds the config from the environment and the runtime settings."""
 
@@ -153,9 +160,11 @@ class GetConfig:
         runtime: RuntimeSettingsService,
         limits: LimitsProvider,
         study_fields: Callable[[], tuple[str, ...]] = lambda: (),
+        uow_factory: UowFactory | None = None,
     ) -> None:
         """Keep the environment settings, the runtime snapshot and the limits."""
         self._study_fields = study_fields
+        self._uow = uow_factory
         self._settings = settings
         self._limits = limits
         self._runtime = runtime
@@ -168,6 +177,14 @@ class GetConfig:
         return bool(
             rs.get(ESTIMATES_STUDENT_VISIBLE, self._settings.estimates_student_visible)
         )
+
+    async def _countries(self) -> tuple[str, ...]:
+        """Every catalog country first (sorted), then the rest of the static list."""
+        if self._uow is None:
+            return COUNTRIES
+        async with self._uow() as uow:
+            found = await uow.catalog.countries()
+        return merge_countries(found)
 
     async def execute(self) -> AdmissionConfig:
         """Return the config; the wellbeing section is hidden unless enabled."""
@@ -183,7 +200,7 @@ class GetConfig:
             questions=questions,
             options={
                 **OPTION_LISTS,
-                "countries": COUNTRIES,
+                "countries": await self._countries(),
                 "fields": self._study_fields(),
                 "activity_categories": ACTIVITY_CATEGORIES,
                 "recognition_levels": RECOGNITION_LEVELS,
