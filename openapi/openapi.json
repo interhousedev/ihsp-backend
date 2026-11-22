@@ -2647,6 +2647,41 @@
         "title": "AlignmentOut",
         "type": "object"
       },
+      "AnalogOut": {
+        "description": "An existing project like the idea.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "where": {
+            "enum": [
+              "uzbekistan",
+              "abroad"
+            ],
+            "title": "Where",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "where",
+          "url"
+        ],
+        "title": "AnalogOut",
+        "type": "object"
+      },
       "AnalyticsOut": {
         "description": "Load per `grade:term` (\"10:fall\"; fall/spring/summer/any), coverage by field.",
         "properties": {
@@ -7441,6 +7476,72 @@
           "status"
         ],
         "title": "BriefBalanceOut",
+        "type": "object"
+      },
+      "BriefIn": {
+        "additionalProperties": false,
+        "description": "What the student tells about themselves.",
+        "properties": {
+          "budget_max_usd": {
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Budget Max Usd",
+            "type": "integer"
+          },
+          "budget_min_usd": {
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Budget Min Usd",
+            "type": "integer"
+          },
+          "experience": {
+            "default": "",
+            "maxLength": 1500,
+            "title": "Experience",
+            "type": "string"
+          },
+          "hours_per_day": {
+            "maximum": 16.0,
+            "minimum": 0.25,
+            "title": "Hours Per Day",
+            "type": "number"
+          },
+          "likes": {
+            "maxLength": 1500,
+            "minLength": 1,
+            "title": "Likes",
+            "type": "string"
+          },
+          "network": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Network",
+            "type": "string"
+          },
+          "teammates": {
+            "enum": [
+              "yes",
+              "maybe",
+              "no"
+            ],
+            "title": "Teammates",
+            "type": "string"
+          },
+          "teammates_note": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Teammates Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "likes",
+          "hours_per_day",
+          "teammates",
+          "budget_min_usd",
+          "budget_max_usd"
+        ],
+        "title": "BriefIn",
         "type": "object"
       },
       "BriefSuggestionOut": {
@@ -13851,6 +13952,233 @@
           "gap"
         ],
         "title": "CostToAttendOut",
+        "type": "object"
+      },
+      "CountryFactBody": {
+        "description": "One fact: a 1-5 score (5 is best for the student), values, text, sources.",
+        "properties": {
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "text": {
+            "$ref": "#/components/schemas/FactText"
+          },
+          "values": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "title": "CountryFactBody",
+        "type": "object"
+      },
+      "CountryFactsListOut": {
+        "description": "Facts of several countries; a country without facts is absent.",
+        "properties": {
+          "highlight": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Highlight",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CountryFactsOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CountryFactsListOut",
+        "type": "object"
+      },
+      "CountryFactsOut": {
+        "description": "The facts of one country.",
+        "properties": {
+          "as_of": {
+            "title": "As Of",
+            "type": "string"
+          },
+          "country": {
+            "title": "Country",
+            "type": "string"
+          },
+          "facts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CountryFactBody"
+            },
+            "title": "Facts",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "verified"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "verified": {
+            "title": "Verified",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "country",
+          "as_of",
+          "status",
+          "verified",
+          "facts",
+          "updated_at"
+        ],
+        "title": "CountryFactsOut",
+        "type": "object"
+      },
+      "CountryFactsPutIn": {
+        "description": "A curator's replacement of a country's facts.",
+        "properties": {
+          "as_of": {
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "title": "As Of",
+            "type": "string"
+          },
+          "facts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CountryFactBody"
+            },
+            "title": "Facts",
+            "type": "object"
+          },
+          "verified": {
+            "default": false,
+            "title": "Verified",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "as_of",
+          "facts"
+        ],
+        "title": "CountryFactsPutIn",
+        "type": "object"
+      },
+      "CountrySummaryListOut": {
+        "description": "Every country with its coverage.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CountrySummaryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CountrySummaryListOut",
+        "type": "object"
+      },
+      "CountrySummaryOut": {
+        "description": "One line of the staff country list.",
+        "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "country": {
+            "title": "Country",
+            "type": "string"
+          },
+          "coverage": {
+            "title": "Coverage",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "missing",
+              "draft",
+              "verified"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "country",
+          "status",
+          "coverage",
+          "as_of",
+          "updated_at"
+        ],
+        "title": "CountrySummaryOut",
         "type": "object"
       },
       "CountsResponse": {
@@ -23214,6 +23542,28 @@
         "title": "FactSpecPartOut",
         "type": "object"
       },
+      "FactText": {
+        "description": "A fact's description in the three languages (a missing one is empty).",
+        "properties": {
+          "en": {
+            "default": "",
+            "title": "En",
+            "type": "string"
+          },
+          "ru": {
+            "default": "",
+            "title": "Ru",
+            "type": "string"
+          },
+          "uz": {
+            "default": "",
+            "title": "Uz",
+            "type": "string"
+          }
+        },
+        "title": "FactText",
+        "type": "object"
+      },
       "FeedAction": {
         "description": "`POST .../feeds/{id}/{action}`; only enable and disable work without a sync.",
         "enum": [
@@ -26107,6 +26457,294 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HelperContacts": {
+        "additionalProperties": false,
+        "description": "How to reach a helper; at least one is set.",
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "telegram": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          }
+        },
+        "title": "HelperContacts",
+        "type": "object"
+      },
+      "HelperIn": {
+        "additionalProperties": false,
+        "description": "A curator's helper.",
+        "properties": {
+          "active": {
+            "default": true,
+            "title": "Active",
+            "type": "boolean"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "contacts": {
+            "$ref": "#/components/schemas/HelperContacts"
+          },
+          "description": {
+            "$ref": "#/components/schemas/HelperText"
+          },
+          "expertise_areas": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 12,
+            "title": "Expertise Areas",
+            "type": "array"
+          },
+          "help_types": {
+            "items": {
+              "enum": [
+                "venue",
+                "funding",
+                "consultations",
+                "expertise",
+                "mentoring",
+                "equipment_space"
+              ],
+              "type": "string"
+            },
+            "maxItems": 6,
+            "title": "Help Types",
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "person",
+              "organization"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "enum": [
+                "website_tech",
+                "business_growth",
+                "pitching",
+                "org_outreach",
+                "fundraising",
+                "product_dev"
+              ],
+              "type": "string"
+            },
+            "maxItems": 6,
+            "minItems": 1,
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "description",
+          "tags",
+          "help_types",
+          "expertise_areas",
+          "contacts"
+        ],
+        "title": "HelperIn",
+        "type": "object"
+      },
+      "HelperListOut": {
+        "description": "Helpers.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HelperOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "HelperListOut",
+        "type": "object"
+      },
+      "HelperOut": {
+        "additionalProperties": false,
+        "description": "A stored helper.",
+        "properties": {
+          "active": {
+            "default": true,
+            "title": "Active",
+            "type": "boolean"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "contacts": {
+            "$ref": "#/components/schemas/HelperContacts"
+          },
+          "description": {
+            "$ref": "#/components/schemas/HelperText"
+          },
+          "expertise_areas": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 12,
+            "title": "Expertise Areas",
+            "type": "array"
+          },
+          "help_types": {
+            "items": {
+              "enum": [
+                "venue",
+                "funding",
+                "consultations",
+                "expertise",
+                "mentoring",
+                "equipment_space"
+              ],
+              "type": "string"
+            },
+            "maxItems": 6,
+            "title": "Help Types",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "person",
+              "organization"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "enum": [
+                "website_tech",
+                "business_growth",
+                "pitching",
+                "org_outreach",
+                "fundraising",
+                "product_dev"
+              ],
+              "type": "string"
+            },
+            "maxItems": 6,
+            "minItems": 1,
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "description",
+          "tags",
+          "help_types",
+          "expertise_areas",
+          "contacts",
+          "id"
+        ],
+        "title": "HelperOut",
+        "type": "object"
+      },
+      "HelperText": {
+        "additionalProperties": false,
+        "description": "A description in the three languages (a missing one is empty).",
+        "properties": {
+          "en": {
+            "default": "",
+            "title": "En",
+            "type": "string"
+          },
+          "ru": {
+            "default": "",
+            "title": "Ru",
+            "type": "string"
+          },
+          "uz": {
+            "default": "",
+            "title": "Uz",
+            "type": "string"
+          }
+        },
+        "title": "HelperText",
         "type": "object"
       },
       "HideResourceBody": {
@@ -39961,6 +40599,29 @@
         "title": "NewPersonalTokenResponse",
         "type": "object"
       },
+      "NewProgramsOut": {
+        "description": "Programs published since the student last opened the block.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProgramOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "unseen": {
+            "minimum": 0.0,
+            "title": "Unseen",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "unseen",
+          "items"
+        ],
+        "title": "NewProgramsOut",
+        "type": "object"
+      },
       "NextActionOut": {
         "description": "A ranked next step.",
         "properties": {
@@ -46099,6 +46760,19 @@
             "maxLength": 6000,
             "title": "Body",
             "type": "string"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A creative theme key; used only when today has no entry yet.",
+            "title": "Theme"
           }
         },
         "required": [
@@ -47353,6 +48027,48 @@
         "title": "ProfilePutIn",
         "type": "object"
       },
+      "ProgramOut": {
+        "description": "A newly published program matching the student's fields.",
+        "properties": {
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "kind",
+          "provider",
+          "href"
+        ],
+        "title": "ProgramOut",
+        "type": "object"
+      },
       "ProgressOut": {
         "description": "Done and total steps.",
         "properties": {
@@ -47445,6 +48161,103 @@
         "title": "ProjectFileResponse",
         "type": "object"
       },
+      "ProjectIdeasOut": {
+        "description": "The newest run and the kept history.",
+        "properties": {
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/RunSummaryOut"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProjectRunOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "latest",
+          "history"
+        ],
+        "title": "ProjectIdeasOut",
+        "type": "object"
+      },
+      "ProjectOut": {
+        "description": "One suggested project.",
+        "properties": {
+          "analogs": {
+            "items": {
+              "$ref": "#/components/schemas/AnalogOut"
+            },
+            "title": "Analogs",
+            "type": "array"
+          },
+          "application_effect": {
+            "title": "Application Effect",
+            "type": "string"
+          },
+          "challenges": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Challenges",
+            "type": "array"
+          },
+          "first_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "First Steps",
+            "type": "array"
+          },
+          "help_tags": {
+            "items": {
+              "enum": [
+                "website_tech",
+                "business_growth",
+                "pitching",
+                "org_outreach",
+                "fundraising",
+                "product_dev"
+              ],
+              "type": "string"
+            },
+            "title": "Help Tags",
+            "type": "array"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "summary",
+          "analogs",
+          "challenges",
+          "application_effect",
+          "first_steps",
+          "help_tags"
+        ],
+        "title": "ProjectOut",
+        "type": "object"
+      },
       "ProjectPatchBody": {
         "description": "PATCH /v1/ai/projects/{id}: only the fields sent change.",
         "properties": {
@@ -47512,6 +48325,44 @@
           "updated_at"
         ],
         "title": "ProjectResponse",
+        "type": "object"
+      },
+      "ProjectRunOut": {
+        "description": "One generation of ideas.",
+        "properties": {
+          "brief": {
+            "$ref": "#/components/schemas/BriefIn"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectOut"
+            },
+            "title": "Projects",
+            "type": "array"
+          },
+          "search_used": {
+            "title": "Search Used",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "search_used",
+          "brief",
+          "projects"
+        ],
+        "title": "ProjectRunOut",
         "type": "object"
       },
       "PromptActiveOut": {
@@ -53307,6 +54158,46 @@
         "title": "RightsBoxSchema",
         "type": "object"
       },
+      "RoadmapNodeOut": {
+        "description": "A stop of the roadmap; the web names `key` in the student's language.",
+        "properties": {
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "state": {
+            "enum": [
+              "done",
+              "current",
+              "locked"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "state",
+          "href"
+        ],
+        "title": "RoadmapNodeOut",
+        "type": "object"
+      },
       "Role": {
         "description": "Global roles stored in users.roles.",
         "enum": [
@@ -53779,6 +54670,32 @@
           "output"
         ],
         "title": "RunOut",
+        "type": "object"
+      },
+      "RunSummaryOut": {
+        "description": "One earlier run in the history list.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "count"
+        ],
+        "title": "RunSummaryOut",
         "type": "object"
       },
       "RunSyncBody": {
@@ -68136,8 +69053,18 @@
             "title": "Next",
             "type": "array"
           },
+          "programs": {
+            "$ref": "#/components/schemas/NewProgramsOut"
+          },
           "readiness": {
             "$ref": "#/components/schemas/TodayReadinessOut"
+          },
+          "roadmap": {
+            "items": {
+              "$ref": "#/components/schemas/RoadmapNodeOut"
+            },
+            "title": "Roadmap",
+            "type": "array"
           },
           "season": {
             "$ref": "#/components/schemas/SeasonOut"
@@ -92648,6 +93575,116 @@
         ]
       }
     },
+    "/v1/admission/country-facts": {
+      "get": {
+        "description": "Facts of up to 30 countries; unverified ones are marked `verified: false`.",
+        "operationId": "admission_country_facts_read",
+        "parameters": [
+          {
+            "description": "Comma-separated ISO codes.",
+            "in": "query",
+            "name": "codes",
+            "required": true,
+            "schema": {
+              "description": "Comma-separated ISO codes.",
+              "title": "Codes",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The student's study field names.",
+            "in": "query",
+            "name": "fields",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 10,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The student's study field names.",
+              "title": "Fields"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryFactsListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Country Facts",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/country-facts/{country}": {
+      "get": {
+        "description": "The facts of one country.",
+        "operationId": "admission_country_facts_read_one",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "country",
+            "required": true,
+            "schema": {
+              "title": "Country",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryFactsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read One Country Facts",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/courses": {
       "get": {
         "description": "The caller's merged courses.",
@@ -93982,8 +95019,26 @@
     },
     "/v1/admission/essays/practice/today": {
       "get": {
-        "description": "Today's theme and my entry for it, if I started one.",
+        "description": "Today's theme (or the creative one asked for) and my entry, if I started one.",
         "operationId": "admission_essay_practice_today",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "theme",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Theme"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -93994,6 +95049,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Practice Today",
@@ -101686,6 +102751,184 @@
         ]
       }
     },
+    "/v1/admission/projects/helpers": {
+      "get": {
+        "description": "Active helpers that share a tag, best match first.",
+        "operationId": "admission_project_helpers_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 6,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tag"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelperListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Project Helpers",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/projects/ideas": {
+      "get": {
+        "description": "The newest run and the few before it.",
+        "operationId": "admission_project_ideas_list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectIdeasOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Project Ideas",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Suggest projects for the brief (counts against the weekly AI limit).",
+        "operationId": "admission_project_ideas_create",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BriefIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRunOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Project Ideas",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/projects/ideas/{run_id}": {
+      "get": {
+        "description": "One of the caller's own runs.",
+        "operationId": "admission_project_ideas_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRunOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Project Run",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/readiness": {
       "get": {
         "description": "My college readiness.",
@@ -103441,6 +104684,170 @@
         ]
       }
     },
+    "/v1/admission/staff/countries": {
+      "get": {
+        "description": "Every country with coverage and status, filterable (curators only).",
+        "operationId": "admission_staff_countries_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 20,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 8,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountrySummaryListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Staff Countries",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/countries/{country}": {
+      "put": {
+        "description": "Replace the facts of a country; `verified` publishes it as verified.",
+        "operationId": "admission_staff_countries_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "country",
+            "required": true,
+            "schema": {
+              "title": "Country",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CountryFactsPutIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryFactsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Staff Country",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/countries/{country}/verify": {
+      "post": {
+        "description": "Mark the stored facts of a country verified.",
+        "operationId": "admission_staff_countries_verify",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "country",
+            "required": true,
+            "schema": {
+              "title": "Country",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryFactsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Staff Country",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/staff/deadlines": {
       "get": {
         "description": "Live deadlines.",
@@ -105019,6 +106426,157 @@
           }
         },
         "summary": "Update Org",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/project-helpers": {
+      "get": {
+        "description": "Every helper, inactive ones too (curators only).",
+        "operationId": "admission_staff_project_helpers_list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelperListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Helpers",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Add a helper.",
+        "operationId": "admission_staff_project_helpers_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HelperIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelperOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Helper",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/project-helpers/{helper_id}": {
+      "delete": {
+        "description": "Delete a helper.",
+        "operationId": "admission_staff_project_helpers_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "helper_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Helper Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Helper",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Replace a helper.",
+        "operationId": "admission_staff_project_helpers_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "helper_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Helper Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HelperIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelperOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Helper",
         "tags": [
           "admission"
         ]
@@ -107643,6 +109201,21 @@
           }
         },
         "summary": "Get Today",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/today/programs/seen": {
+      "post": {
+        "description": "Mark the new programs as seen; the unseen count restarts from zero.",
+        "operationId": "admission_programs_seen",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Post Programs Seen",
         "tags": [
           "admission"
         ]

@@ -34,6 +34,7 @@ from app.modules.admission.application.chooser import CatalogService, ListServic
 from app.modules.admission.application.comments import CommentService
 from app.modules.admission.application.config import GetConfig
 from app.modules.admission.application.consultations import ConsultationService
+from app.modules.admission.application.country_facts import CountryFactsService
 from app.modules.admission.application.courses import CourseService
 from app.modules.admission.application.deadlines import DeadlineService
 from app.modules.admission.application.document_process import DocumentProcessService
@@ -90,6 +91,8 @@ from app.modules.admission.application.professions import ProfessionService
 from app.modules.admission.application.profile import ProfileService
 from app.modules.admission.application.profile_alignment import AlignmentService
 from app.modules.admission.application.profile_details import ProfileDetailsService
+from app.modules.admission.application.project_helpers import ProjectHelperService
+from app.modules.admission.application.project_ideas import ProjectIdeaService
 from app.modules.admission.application.prompt_studio import (
     CoreStudioRunner,
     PromptStudioService,
@@ -120,6 +123,9 @@ from app.modules.admission.infrastructure.calendar_repository import (
     SqlCalendarStore,
 )
 from app.modules.admission.infrastructure.catalog_data import study_fields as _fields
+from app.modules.admission.infrastructure.country_facts_repository import (
+    SqlCountryFactsRepository,
+)
 from app.modules.admission.infrastructure.essay_crypto import (
     CACHE_TTL_SECONDS,
     AesGcmEssayCipher,
@@ -136,6 +142,10 @@ from app.modules.admission.infrastructure.kb_repository import SqlKbRepository
 from app.modules.admission.infrastructure.media_mirror import build_media_mirror
 from app.modules.admission.infrastructure.professions_catalog import (
     JsonProfessionCatalog,
+)
+from app.modules.admission.infrastructure.project_repository import (
+    SqlHelperRepository,
+    SqlProjectRunRepository,
 )
 from app.modules.admission.infrastructure.prompt_vectors import EmbeddingPromptVectors
 from app.modules.admission.infrastructure.scorecard_client import (
@@ -265,6 +275,9 @@ class AdmissionServices:
     uni_chat: UniChatService
     uni_advice: UniAdviceService
     kb: KbService
+    country_facts: CountryFactsService
+    project_ideas: ProjectIdeaService
+    project_helpers: ProjectHelperService
     cipher: EssayCipher
     essay_reviews: EssayReviewService
     essay_invites: EssayInviteService
@@ -681,6 +694,27 @@ def build(
             ResolveAdmissionActor(uow_factory, membership, deps.clock, grades, runtime),
         ),
         kb=kb,
+        country_facts=CountryFactsService(
+            SqlCountryFactsRepository(deps.sessionmaker), curators.can_review
+        ),
+        project_ideas=ProjectIdeaService(
+            SqlProjectRunRepository(deps.sessionmaker),
+            access,
+            model,
+            consents,
+            texts,
+            deps.clock,
+            deps.rate_limiter,
+            _quota_of(deps, "admit_project_ideas_per_week"),
+            web_search=web_search,
+            profile_of=profile_of,
+        ),
+        project_helpers=ProjectHelperService(
+            SqlHelperRepository(deps.sessionmaker),
+            uow_factory,
+            curators.can_review,
+            deps.clock,
+        ),
         memory_notes=MemoryNoteService(uow_factory, access, deps.clock),
         application_data=UowAssistantData(uow_factory),
         calendar=calendar,
