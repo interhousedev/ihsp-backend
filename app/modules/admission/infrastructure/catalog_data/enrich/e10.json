@@ -38,6 +38,7 @@
     },
     {
       "slug": "kiut-uz",
+      "aliases": ["KIUT"],
       "name": "Kimyo International University in Tashkent (KIUT, formerly Yeoju Technical Institute)",
       "country": "UZ",
       "city": "Tashkent",
@@ -69,6 +70,7 @@
     },
     {
       "slug": "mrdi-uz",
+      "aliases": ["MRDI"],
       "name": "National Institute of Fine Arts and Design named after Kamoliddin Behzod (MRDI)",
       "country": "UZ",
       "city": "Tashkent",
@@ -225,6 +227,7 @@
     },
     {
       "slug": "tiiame-uz",
+      "aliases": ["TIIAME"],
       "name": "Tashkent Institute of Irrigation and Agricultural Mechanization Engineers National Research University",
       "country": "UZ",
       "city": "Tashkent",
@@ -240,6 +243,7 @@
     },
     {
       "slug": "ttysi-uz",
+      "aliases": ["TTYSI"],
       "name": "Tashkent Institute of Textile and Light Industry (TTYSI)",
       "country": "UZ",
       "city": "Tashkent",

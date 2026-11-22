@@ -133,6 +133,7 @@ class Institution(_Model):
     country: str = Field(pattern=r"^[A-Z]{2}$")
     city: str
     website_domain: str | None = None
+    aliases: list[str] = []  # official short names (MIT, UCLA); search matches them
     description: Description | None = None
     city_type: CityType | None = None
     institution_type: Literal["public", "private"] | None = None

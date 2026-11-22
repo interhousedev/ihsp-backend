@@ -17,6 +17,7 @@
     },
     {
       "slug": "postech-ac-kr",
+      "aliases": ["POSTECH"],
       "name": "Pohang University of Science and Technology (POSTECH)",
       "country": "KR",
       "city": "Pohang",
@@ -47,6 +48,7 @@
     },
     {
       "slug": "unist-ac-kr",
+      "aliases": ["UNIST"],
       "name": "Ulsan National Institute of Science and Technology (UNIST)",
       "country": "KR",
       "city": "Ulsan",
@@ -209,6 +211,7 @@
     },
     {
       "slug": "nus-edu-sg",
+      "aliases": ["NUS"],
       "name": "National University of Singapore (NUS)",
       "country": "SG",
       "city": "Singapore",
@@ -226,6 +229,7 @@
     },
     {
       "slug": "smu-edu-sg",
+      "aliases": ["SMU"],
       "name": "Singapore Management University (SMU)",
       "country": "SG",
       "city": "Singapore",
@@ -241,6 +245,7 @@
     },
     {
       "slug": "sutd-edu-sg",
+      "aliases": ["SUTD"],
       "name": "Singapore University of Technology and Design (SUTD)",
       "country": "SG",
       "city": "Singapore",

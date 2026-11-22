@@ -2,6 +2,7 @@
  "institutions": [
   {
    "slug": "tum",
+   "aliases": ["TUM", "TU Munich"],
    "name": "Technical University of Munich",
    "country": "DE",
    "city": "Munich",
@@ -358,6 +359,7 @@
   },
   {
    "slug": "kaist",
+   "aliases": ["Korea Advanced Institute of Science and Technology"],
    "name": "KAIST",
    "country": "KR",
    "city": "Daejeon",
@@ -426,6 +428,7 @@
   },
   {
    "slug": "snu",
+   "aliases": ["SNU"],
    "name": "Seoul National University",
    "country": "KR",
    "city": "Seoul",
@@ -504,6 +507,7 @@
   },
   {
    "slug": "utokyo",
+   "aliases": ["UTokyo"],
    "name": "University of Tokyo",
    "country": "JP",
    "city": "Tokyo",

@@ -62,6 +62,7 @@
     {
       "website_domain": "stevens.edu",
       "slug": "stevens-edu",
+      "aliases": ["Stevens"],
       "name": "Stevens Institute of Technology",
       "country": "US",
       "city": "Hoboken",
@@ -136,6 +137,7 @@
     {
       "website_domain": "osu.edu",
       "slug": "osu-edu",
+      "aliases": ["OSU"],
       "name": "The Ohio State University",
       "country": "US",
       "city": "Columbus",
@@ -311,6 +313,7 @@
     {
       "website_domain": "berkeley.edu",
       "slug": "berkeley-edu",
+      "aliases": ["UC Berkeley", "Berkeley", "Cal"],
       "name": "University of California, Berkeley",
       "country": "US",
       "city": "Berkeley",
@@ -363,6 +366,7 @@
     {
       "website_domain": "ucla.edu",
       "slug": "ucla-edu",
+      "aliases": ["UCLA"],
       "name": "University of California, Los Angeles",
       "country": "US",
       "city": "Los Angeles",
@@ -441,6 +445,7 @@
     {
       "website_domain": "ufl.edu",
       "slug": "ufl-edu",
+      "aliases": ["UF"],
       "name": "University of Florida",
       "country": "US",
       "city": "Gainesville",
@@ -479,6 +484,7 @@
     {
       "website_domain": "illinois.edu",
       "slug": "illinois-edu",
+      "aliases": ["UIUC"],
       "name": "University of Illinois Urbana-Champaign",
       "country": "US",
       "city": "Champaign",
@@ -515,6 +521,7 @@
     {
       "website_domain": "umn.edu",
       "slug": "umn-edu",
+      "aliases": ["UMN"],
       "name": "University of Minnesota–Twin Cities",
       "country": "US",
       "city": "Minneapolis",

@@ -85,6 +85,7 @@
     },
     {
       "slug": "kcl-ac-uk",
+      "aliases": ["KCL"],
       "name": "King's College London",
       "country": "GB",
       "city": "London",
@@ -104,6 +105,7 @@
     },
     {
       "slug": "lse-ac-uk",
+      "aliases": ["LSE"],
       "name": "London School of Economics and Political Science",
       "country": "GB",
       "city": "London",
@@ -123,6 +125,7 @@
     },
     {
       "slug": "ed-ac-uk",
+      "aliases": ["Edinburgh"],
       "name": "University of Edinburgh",
       "country": "GB",
       "city": "Edinburgh",
@@ -199,6 +202,7 @@
     },
     {
       "slug": "cityu-edu-hk",
+      "aliases": ["CityU"],
       "name": "City University of Hong Kong (CityU)",
       "country": "HK",
       "city": "Hong Kong",
@@ -215,6 +219,7 @@
     },
     {
       "slug": "ust-hk",
+      "aliases": ["HKUST"],
       "name": "Hong Kong University of Science and Technology (HKUST)",
       "country": "HK",
       "city": "Hong Kong",
@@ -234,6 +239,7 @@
     },
     {
       "slug": "cuhk-edu-hk",
+      "aliases": ["CUHK"],
       "name": "The Chinese University of Hong Kong (CUHK)",
       "country": "HK",
       "city": "Hong Kong",
@@ -259,6 +265,7 @@
     },
     {
       "slug": "polyu-edu-hk",
+      "aliases": ["PolyU"],
       "name": "The Hong Kong Polytechnic University (PolyU)",
       "country": "HK",
       "city": "Hong Kong",
@@ -278,6 +285,7 @@
     },
     {
       "slug": "hku-hk",
+      "aliases": ["HKU"],
       "name": "University of Hong Kong (HKU)",
       "country": "HK",
       "city": "Hong Kong",

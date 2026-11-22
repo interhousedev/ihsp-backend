@@ -2,6 +2,7 @@
   "institutions": [
     {
       "slug": "usc-edu",
+      "aliases": ["USC"],
       "name": "University of Southern California",
       "country": "US",
       "city": "Los Angeles",
@@ -26,6 +27,7 @@
     },
     {
       "slug": "utexas-edu",
+      "aliases": ["UT Austin"],
       "name": "University of Texas at Austin",
       "country": "US",
       "city": "Austin",
@@ -63,6 +65,7 @@
     },
     {
       "slug": "virginia-edu",
+      "aliases": ["UVA"],
       "name": "University of Virginia",
       "country": "US",
       "city": "Charlottesville",
@@ -93,6 +96,7 @@
     },
     {
       "slug": "washington-edu",
+      "aliases": ["UW"],
       "name": "University of Washington",
       "country": "US",
       "city": "Seattle",
@@ -121,6 +125,7 @@
     },
     {
       "slug": "wisc-edu",
+      "aliases": ["UW-Madison"],
       "name": "University of Wisconsin–Madison",
       "country": "US",
       "city": "Madison",
@@ -274,6 +279,7 @@
     },
     {
       "slug": "wustl-edu",
+      "aliases": ["WashU", "WUSTL"],
       "name": "Washington University in St. Louis",
       "country": "US",
       "city": "St. Louis",

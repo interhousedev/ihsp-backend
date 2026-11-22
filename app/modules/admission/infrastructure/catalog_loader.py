@@ -147,6 +147,8 @@ class _Loader:
             row = await self.s.get(InstitutionRow, owner)
             if row is not None and row.description is None:
                 row.description = d.get("description")
+            if row is not None:
+                row.aliases = _merge_aliases(row.aliases, d.get("aliases"))
             return
         org = self.media.get(normalize_domain(d.get("website_domain")) or "")
         logo = d.get("logo_url") or (org.logo_url if org else None)
@@ -154,9 +156,14 @@ class _Loader:
         if self.mirror is not None:
             logo = await self.mirror.mirror(logo) if logo else None
             cover = await self.mirror.mirror(cover) if cover else None
+        existing = await self.s.get(InstitutionRow, inst)
+        aliases = _merge_aliases(
+            existing.aliases if existing else None, d.get("aliases")
+        )
         await self.s.merge(
             InstitutionRow(
                 id=inst,
+                aliases=aliases,
                 slug=d["slug"],
                 name=d["name"],
                 country=d["country"],
@@ -383,6 +390,17 @@ async def load_catalog(
         await loader.program(p)
     await session.flush()
     return LoadReport(len(seed), loader.facts, schol + len(programs), enriched)
+
+
+def _merge_aliases(current: list[str] | None, seed: list[str] | None) -> list[str]:
+    """Union keeping every existing alias (curator-added included) first."""
+    out = list(current or [])
+    known = {a.casefold() for a in out}
+    for a in seed or []:
+        if a.casefold() not in known:
+            known.add(a.casefold())
+            out.append(a)
+    return out
 
 
 def _optional(d: dict[str, Any], key: str) -> dict[str, Any]:

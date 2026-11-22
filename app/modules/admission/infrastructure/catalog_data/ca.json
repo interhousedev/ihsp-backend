@@ -245,6 +245,7 @@
     },
     {
       "slug": "tmu",
+      "aliases": ["TMU", "Ryerson"],
       "name": "Toronto Metropolitan University",
       "country": "CA",
       "city": "Toronto",

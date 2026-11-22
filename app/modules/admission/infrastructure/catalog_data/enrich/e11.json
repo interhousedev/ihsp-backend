@@ -164,6 +164,7 @@
     {
       "name": "Uzbekistan State Institute of Arts and Culture (UzSIAC)",
       "slug": "dsmi-uz",
+      "aliases": ["UzSIAC"],
       "website_domain": "dsmi.uz",
       "country": "UZ",
       "city": "Tashkent",

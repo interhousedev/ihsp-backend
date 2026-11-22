@@ -473,6 +473,7 @@
     },
     {
       "slug": "rpi-edu",
+      "aliases": ["RPI"],
       "name": "Rensselaer Polytechnic Institute",
       "country": "US",
       "city": "Troy",
