@@ -7500,6 +7500,12 @@
             "title": "Experience",
             "type": "string"
           },
+          "future_interest": {
+            "default": "",
+            "maxLength": 1500,
+            "title": "Future Interest",
+            "type": "string"
+          },
           "hours_per_day": {
             "maximum": 16.0,
             "minimum": 0.25,
@@ -28352,6 +28358,15 @@
               }
             ],
             "title": "Next Deadline"
+          },
+          "rankings": {
+            "default": [],
+            "description": "Overall ranking first, then subject rankings; detail view only.",
+            "items": {
+              "$ref": "#/components/schemas/RankingOut"
+            },
+            "title": "Rankings",
+            "type": "array"
           },
           "scholarship_count": {
             "title": "Scholarship Count",
@@ -51062,7 +51077,7 @@
         "type": "object"
       },
       "RankingOut": {
-        "description": "A subject ranking relevant to the student's fields and professions.",
+        "description": "A ranking of the institution (overall or one subject).",
         "properties": {
           "rank": {
             "anyOf": [
@@ -72557,6 +72572,105 @@
         ],
         "title": "Visibility",
         "type": "string"
+      },
+      "VoiceFieldIn": {
+        "additionalProperties": false,
+        "description": "One field of the caller's form.",
+        "properties": {
+          "key": {
+            "pattern": "^[a-z][a-z0-9_]{0,39}$",
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "default": "text",
+            "enum": [
+              "text",
+              "number",
+              "choice"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "max_length": {
+            "default": 1500,
+            "maximum": 1500.0,
+            "minimum": 1.0,
+            "title": "Max Length",
+            "type": "integer"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 12,
+            "title": "Options",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "VoiceFieldIn",
+        "type": "object"
+      },
+      "VoiceFillIn": {
+        "additionalProperties": false,
+        "description": "What the person said and the fields to fill from it.",
+        "properties": {
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/VoiceFieldIn"
+            },
+            "maxItems": 16,
+            "minItems": 1,
+            "title": "Fields",
+            "type": "array"
+          },
+          "form": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Form",
+            "type": "string"
+          },
+          "transcript": {
+            "maxLength": 6000,
+            "minLength": 1,
+            "title": "Transcript",
+            "type": "string"
+          }
+        },
+        "required": [
+          "form",
+          "transcript",
+          "fields"
+        ],
+        "title": "VoiceFillIn",
+        "type": "object"
+      },
+      "VoiceFillOut": {
+        "description": "The values found; a field the person did not speak about is absent.",
+        "properties": {
+          "values": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "values"
+        ],
+        "title": "VoiceFillOut",
+        "type": "object"
       },
       "WebAuthnOptionsResponse": {
         "description": "PublicKeyCredentialCreationOptions / RequestOptions as JSON (base64url).",
@@ -109698,6 +109812,66 @@
           }
         },
         "summary": "Get University Chances",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/voice-fill": {
+      "post": {
+        "description": "Extract the field values from a transcript (soft limit: 60 per hour).",
+        "operationId": "admission_voice_fill",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceFillIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceFillOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Voice Fill",
         "tags": [
           "admission"
         ]
