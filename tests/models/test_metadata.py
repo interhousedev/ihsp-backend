@@ -269,6 +269,10 @@ EXPECTED_TABLES = {
     "admission.season_overrides",
     "admission.staff_pins",
     "admission.today_snoozes",
+    "admission.today_programs_seen",
+    "admission.project_idea_runs",
+    "admission.project_helpers",
+    "admission.country_facts",
     "ai.ai_requests",
     "ai.connectors",
     "ai.pipeline_routes",
@@ -277,10 +281,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """spec -> Models plus the later modules (249 tables)."""
+    """spec -> Models plus the later modules (253 tables)."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 249
+    assert len(EXPECTED_TABLES) == 253
     assert actual == EXPECTED_TABLES
 
 

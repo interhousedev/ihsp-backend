@@ -7,6 +7,7 @@ from app.modules.admission.infrastructure.orm.calendar import *  # noqa: F401,F4
 from app.modules.admission.infrastructure.orm.career import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.catalog import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.consultations import *  # noqa: F401,F403
+from app.modules.admission.infrastructure.orm.country_facts import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.essay_flow import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.essay_invites import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.essay_keys import *  # noqa: F401,F403
@@ -21,6 +22,7 @@ from app.modules.admission.infrastructure.orm.opp_social import *  # noqa: F401,
 from app.modules.admission.infrastructure.orm.opportunities import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.outcomes import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.profile import *  # noqa: F401,F403
+from app.modules.admission.infrastructure.orm.projects import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.student_chunks import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.supp_prompts import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.tasks import *  # noqa: F401,F403
