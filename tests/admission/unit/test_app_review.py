@@ -103,7 +103,12 @@ class Ai:
         else:
             doc["score"] = 6
             doc["findings"] = [
-                {"kind": "strength", "text": "Good", "evidence": ["item:1", "bogus"]}
+                {
+                    "kind": "strength",
+                    "text": "Good",
+                    "evidence": ["item:1", "bogus"],
+                    "link": {"kind": "activities", "ref": "1"},
+                }
             ]
         return doc, "m-lead" if task is LEAD else "m-section"
 

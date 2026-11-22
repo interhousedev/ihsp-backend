@@ -290,6 +290,14 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         False,
     ),
     (
+        (AiTask.ADMIT_APP_REVIEW_LEAD,),
+        "rules",
+        "Admission: full application review, rules and never-say list "
+        "(appended to every section and lead prompt)",
+        admit_review.RULES,
+        False,
+    ),
+    (
         _CHAT_TASKS,
         "data_rules",
         "How the assistant treats data",

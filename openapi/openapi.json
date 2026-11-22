@@ -52365,6 +52365,13 @@
             "title": "Kind",
             "type": "string"
           },
+          "link": {
+            "$ref": "#/components/schemas/ReviewLinkOut",
+            "default": {
+              "kind": "none",
+              "ref": ""
+            }
+          },
           "text": {
             "title": "Text",
             "type": "string"
@@ -52376,6 +52383,35 @@
           "evidence"
         ],
         "title": "ReviewFindingOut",
+        "type": "object"
+      },
+      "ReviewLinkOut": {
+        "description": "The screen a finding or subsection opens; `ref` is empty for a whole screen.",
+        "properties": {
+          "kind": {
+            "default": "none",
+            "enum": [
+              "profile",
+              "activities",
+              "honors",
+              "essay",
+              "list_entry",
+              "survey",
+              "grades",
+              "tests",
+              "recommendations",
+              "none"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "ref": {
+            "default": "",
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "title": "ReviewLinkOut",
         "type": "object"
       },
       "ReviewOut": {
@@ -52583,6 +52619,11 @@
       "ReviewSectionOut": {
         "description": "One section agent's report; `pending`/`running` until it finishes.",
         "properties": {
+          "ao_view": {
+            "default": "",
+            "title": "Ao View",
+            "type": "string"
+          },
           "findings": {
             "default": [],
             "items": {
@@ -52633,6 +52674,14 @@
             ],
             "title": "Status",
             "type": "string"
+          },
+          "subsections": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ReviewSubsectionOut"
+            },
+            "title": "Subsections",
+            "type": "array"
           },
           "summary": {
             "default": "",
@@ -52752,6 +52801,56 @@
           "today_seconds"
         ],
         "title": "ReviewStatsResponse",
+        "type": "object"
+      },
+      "ReviewSubsectionOut": {
+        "description": "One real part of a section (an essay, an activity, a list entry...).",
+        "properties": {
+          "ao_view": {
+            "default": "",
+            "title": "Ao View",
+            "type": "string"
+          },
+          "finding_indexes": {
+            "default": [],
+            "items": {
+              "type": "integer"
+            },
+            "title": "Finding Indexes",
+            "type": "array"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "link": {
+            "$ref": "#/components/schemas/ReviewLinkOut",
+            "default": {
+              "kind": "none",
+              "ref": ""
+            }
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "strong",
+              "mixed",
+              "weak",
+              "missing"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "verdict"
+        ],
+        "title": "ReviewSubsectionOut",
         "type": "object"
       },
       "ReviseSlidesBody": {

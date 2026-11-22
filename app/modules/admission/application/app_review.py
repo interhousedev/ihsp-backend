@@ -70,6 +70,66 @@ def _refs(values: Any, known: frozenset[str]) -> list[str]:
     return [str(v) for v in (values or []) if str(v) in known][:6]
 
 
+_ID_PREFIX: Final = {
+    "essay": "essay:",
+    "list_entry": "entry:",
+    "activities": "item:",
+    "honors": "item:",
+    "survey": "answer:",
+    "grades": "course:",
+}
+_SCREEN_KINDS: Final = frozenset(prompt.LINK_KINDS) - {"none"}
+_VERDICTS: Final = frozenset({"strong", "mixed", "weak", "missing"})
+
+
+def clean_link(kind: str, ref: str, known: frozenset[str]) -> dict[str, str]:
+    """A link to a screen; a ref that was not in the input becomes kind none."""
+    ref = ref.strip()
+    if kind not in _SCREEN_KINDS:
+        return {"kind": "none", "ref": ""}
+    if not ref:
+        return {"kind": kind, "ref": ""}
+    prefix = _ID_PREFIX.get(kind)
+    if prefix is None or f"{prefix}{ref}" not in known:
+        return {"kind": "none", "ref": ""}
+    return {"kind": kind, "ref": ref}
+
+
+def section_view(out: prompt.SectionReport, known: frozenset[str]) -> dict[str, Any]:
+    """The cleaned findings, subsections and AO view of one section report."""
+    kept = [i for i, f in enumerate(out.findings) if f.text.strip()]
+    position = {orig: new for new, orig in enumerate(kept)}
+    findings = [
+        {
+            "kind": f.kind,
+            "text": _clean(f.text),
+            "evidence": _refs(f.evidence, known),
+            "link": clean_link(f.link.kind, f.link.ref, known),
+        }
+        for f in out.findings
+        if f.text.strip()
+    ]
+    subsections = [
+        {
+            "key": _clean(s.key, 40),
+            "title": _clean(s.title, 120),
+            "verdict": s.verdict if s.verdict in _VERDICTS else "mixed",
+            "ao_view": _clean(s.ao_view, prompt.VIEW_MAX),
+            "finding_indexes": sorted(
+                {position[i] for i in s.finding_indexes if i in position}
+            ),
+            "link": clean_link(s.link.kind, s.link.ref, known),
+        }
+        for s in out.subsections
+        if s.title.strip()
+    ]
+    return {
+        "ao_view": _clean(out.ao_view, prompt.VIEW_MAX),
+        "subsections": subsections,
+        "findings": findings,
+    }
+
+
 def section_lines(key: str, data: ReviewInputs) -> list[tuple[str, str]]:
     """The data one section agent reads; empty means the section is skipped."""
     words = [("words", "Profile words: " + ", ".join(data.words))] if data.words else []
@@ -119,6 +179,14 @@ class AppReviewService:
         self._prompts = prompts
         self._kicker = kicker
         self._limits = limits
+
+    async def _system(self, task: AiTask, locale: str) -> str:
+        """The task's system prompt followed by the editable rules slot."""
+        lead = AiTask.ADMIT_APP_REVIEW_LEAD
+        return prompt.with_rules(
+            await self._prompts.text(task, "system", locale),
+            await self._prompts.text(lead, "rules", locale),
+        )
 
     async def _has_consent(self, student_id: UUID) -> bool:
         granted = (await self._consents.granted([student_id])).get(
@@ -295,7 +363,7 @@ class AppReviewService:
         body = [f"Locale: {locale}"] + [f"[{ref}] {text}" for ref, text in lines]
         raw, model = await self._ai.json(
             task=task,
-            system=with_brand(await self._prompts.text(task, "system", locale)),
+            system=with_brand(await self._system(task, locale)),
             user=delimit(body),
             schema_name=prompt.SECTION_SCHEMA_NAME,
             schema=prompt.SECTION_SCHEMA,
@@ -308,15 +376,7 @@ class AppReviewService:
             "status": "done",
             "score": out.score,
             "summary": _clean(out.summary),
-            "findings": [
-                {
-                    "kind": f.kind,
-                    "text": _clean(f.text),
-                    "evidence": _refs(f.evidence, known),
-                }
-                for f in out.findings
-                if f.text.strip()
-            ],
+            **section_view(out, known),
             "next_actions": [_clean(a, 200) for a in out.next_actions if a.strip()],
             "injection_suspected": out.injection_suspected,
             "model": model,
@@ -339,7 +399,7 @@ class AppReviewService:
             body += [f"- action: {a}" for a in s["next_actions"]]
         raw, model = await self._ai.json(
             task=task,
-            system=with_brand(await self._prompts.text(task, "system", locale)),
+            system=with_brand(await self._system(task, locale)),
             user=delimit(body),
             schema_name=prompt.LEAD_SCHEMA_NAME,
             schema=prompt.LEAD_SCHEMA,
