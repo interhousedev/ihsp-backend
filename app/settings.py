@@ -1331,6 +1331,9 @@ class LimitsSettings(BaseModel):
     """Admission app: AI suggestions for the university list per week. -1 means no
     cap."""
 
+    admit_project_ideas_per_week: int = Field(default=5, ge=-1)
+    """Admission app: AI project-idea generations per week. -1 means no cap."""
+
     admit_tasks_suggest_per_week: int = Field(default=5, ge=-1)
     """Admission app: AI task suggestions per week. -1 means no cap."""
 

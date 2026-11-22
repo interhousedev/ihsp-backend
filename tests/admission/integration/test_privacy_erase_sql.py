@@ -40,6 +40,7 @@ NOT_STUDENT_DATA = frozenset(
         "career_majors",
         "career_questions",
         "costs_of_attendance",
+        "country_facts",  # per-country reference facts; verified_by is a staff id
         "deadlines",
         "eligibility_rules",
         "exam_dates",
@@ -55,6 +56,7 @@ NOT_STUDENT_DATA = frozenset(
         "programs",
         "requirements",
         "routes",
+        "project_helpers",  # staff-curated helper organizations and mentors
         "runtime_settings",
         "safety_facts",
         "scholarships",

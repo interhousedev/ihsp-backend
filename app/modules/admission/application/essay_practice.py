@@ -14,14 +14,15 @@ from app.modules.admission.application.essay_prompts import FlowGate
 from app.modules.admission.application.words import delimit
 from app.modules.admission.domain.errors import EssayTooShortError
 from app.modules.admission.domain.essay_flow import (
+    CREATIVE_THEMES,
     PRACTICE_HISTORY,
     PRACTICE_KEYS,
     PRACTICE_MAX,
     PRACTICE_MIN_WORDS,
-    PRACTICE_THEMES,
     PracticeEntry,
     PracticeEvaluation,
     PracticeScore,
+    practice_prompt,
     practice_streak,
     theme_for,
 )
@@ -115,21 +116,25 @@ class EssayPracticeService:
         self._limit = daily_limit
         self._prompts = prompts
 
-    async def today(self, ctx: AdmissionContext) -> PracticeToday:
-        """The theme of the local day and my entry for it."""
+    async def today(
+        self, ctx: AdmissionContext, theme: str | None = None
+    ) -> PracticeToday:
+        """The theme of the local day (or a creative one picked) and my entry."""
         await self._gate.owner(ctx)
         day = local_today(self._clock)
         async with self._uow() as uow:
             entry = await uow.practice.get(ctx.user_id, day)
             streak = await self._streak(uow, ctx, day)
-        return self._view(day, entry, streak)
+        return self._view(day, entry, streak, theme)
 
-    async def save(self, ctx: AdmissionContext, body: str) -> PracticeToday:
+    async def save(
+        self, ctx: AdmissionContext, body: str, theme: str | None = None
+    ) -> PracticeToday:
         """Write today's entry; a changed text drops the stale evaluation."""
         await self._gate.owner(ctx)
         body = body[:PRACTICE_MAX]
         day = local_today(self._clock)
-        theme = theme_for(day)
+        picked = theme if theme in CREATIVE_THEMES else None
         now = self._clock.now()
         async with self._uow() as uow:
             old = await uow.practice.get(ctx.user_id, day)
@@ -142,7 +147,7 @@ class EssayPracticeService:
                     id=old.id if old else new_id(),
                     student_id=ctx.user_id,
                     day=day,
-                    theme=theme,
+                    theme=old.theme if old else (picked or theme_for(day)),
                     body=body,
                     created_at=old.created_at if old else now,
                     updated_at=now,
@@ -181,7 +186,7 @@ class EssayPracticeService:
             user=delimit(
                 [
                     f"Language: {locale}",
-                    f"Theme: {PRACTICE_THEMES.get(entry.theme, entry.theme)}",
+                    f"Theme: {practice_prompt(entry.theme)}",
                     f"Entry:\n{entry.body}",
                 ]
             ),
@@ -227,7 +232,15 @@ class EssayPracticeService:
 
     @staticmethod
     def _view(
-        day: dt.date, entry: PracticeEntry | None, streak: int = 0
+        day: dt.date,
+        entry: PracticeEntry | None,
+        streak: int = 0,
+        picked: str | None = None,
     ) -> PracticeToday:
-        theme = theme_for(day)
-        return PracticeToday(day, theme, PRACTICE_THEMES[theme], entry, streak)
+        """An entry keeps its theme; with none, a creative pick beats the daily."""
+        theme = (
+            entry.theme
+            if entry
+            else picked if picked in CREATIVE_THEMES else theme_for(day)
+        )
+        return PracticeToday(day, theme, practice_prompt(theme), entry, streak)

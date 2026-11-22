@@ -89,6 +89,22 @@ PRACTICE_THEMES: Final[dict[str, str]] = {
 }
 """Daily practice themes (English for the model; the web shows its own copy)."""
 
+CREATIVE_THEMES: Final[dict[str, str]] = {
+    "my_day": "Write about your day: one moment from it that you want to remember.",
+    "essay_idea": "A new idea or topic for your essay: something only you could write.",
+    "five_senses": "Describe a place you were in today using all five senses.",
+    "overheard": "A line you overheard this week and the story behind it.",
+    "tomorrow": "A small thing you want to do tomorrow, and why it matters to you.",
+    "thanks": "Someone you forgot to thank, and what you would tell them.",
+}
+"""Creative prompts a student picks from Today; they never rotate daily."""
+
+
+def practice_prompt(theme: str) -> str:
+    """The English prompt of a daily or creative theme, else the key itself."""
+    return PRACTICE_THEMES.get(theme) or CREATIVE_THEMES.get(theme) or theme
+
+
 PracticeKey = Literal["imagery", "voice", "structure", "originality"]
 PRACTICE_KEYS: Final[tuple[PracticeKey, ...]] = (
     "imagery",

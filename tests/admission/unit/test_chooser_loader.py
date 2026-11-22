@@ -20,6 +20,10 @@ class _Session:
         self.rows[(type(obj), obj.id)] = obj
         return obj
 
+    def add(self, obj: Any) -> None:
+        # Country-facts rows are keyed by their country code, not an id.
+        self.rows[(type(obj), getattr(obj, "id", None) or obj.country)] = obj
+
     async def get(self, model: type, key: Any) -> Any:
         return self.rows.get((model, key))
 

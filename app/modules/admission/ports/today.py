@@ -50,3 +50,11 @@ class TodayRepository(Protocol):
     async def clear_pin(self, student_id: UUID) -> bool:
         """Remove the pin; return whether there was one."""
         ...
+
+    async def programs_seen_at(self, student_id: UUID) -> dt.datetime | None:
+        """When the student last opened the new-programs block, if ever."""
+        ...
+
+    async def mark_programs_seen(self, student_id: UUID, at: dt.datetime) -> None:
+        """Remember that the student has seen every program published up to `at`."""
+        ...

@@ -8,6 +8,7 @@ from uuid import UUID
 from app.modules.admission.domain.today import Pin, SeasonKey
 from app.modules.admission.infrastructure.orm.today import (
     ActivityDayRow,
+    ProgramsSeenRow,
     SeasonOverrideRow,
     StaffPinRow,
     TodaySnoozeRow,
@@ -130,3 +131,19 @@ class SqlTodayRepository:
             delete(StaffPinRow).where(StaffPinRow.student_id == student_id)
         )
         return bool(result.rowcount)  # type: ignore[attr-defined]
+
+    async def programs_seen_at(self, student_id: UUID) -> dt.datetime | None:
+        """When the student last opened the new-programs block, if ever."""
+        row = await self._s.get(ProgramsSeenRow, student_id)
+        return row.seen_at if row is not None else None
+
+    async def mark_programs_seen(self, student_id: UUID, at: dt.datetime) -> None:
+        """Remember that the student has seen every program published up to `at`."""
+        await self._s.execute(
+            insert(ProgramsSeenRow)
+            .values(student_id=student_id, seen_at=at)
+            .on_conflict_do_update(
+                index_elements=[ProgramsSeenRow.student_id],
+                set_={"seen_at": at, "updated_at": func.now()},
+            )
+        )

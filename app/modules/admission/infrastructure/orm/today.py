@@ -15,7 +15,13 @@ from app.shared.db.base import Base
 from sqlalchemy import Date, DateTime, SmallInteger, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
-__all__ = ["ActivityDayRow", "SeasonOverrideRow", "StaffPinRow", "TodaySnoozeRow"]
+__all__ = [
+    "ActivityDayRow",
+    "ProgramsSeenRow",
+    "SeasonOverrideRow",
+    "StaffPinRow",
+    "TodaySnoozeRow",
+]
 
 
 class ActivityDayRow(CreatedMixin, UpdatedMixin, Base):
@@ -63,3 +69,13 @@ class StaffPinRow(CreatedMixin, UpdatedMixin, Base):
     pinned_by: Mapped[UUID] = mapped_column(Uuid)
     pinned_by_name: Mapped[str] = mapped_column(String(160))
     expires_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ProgramsSeenRow(CreatedMixin, UpdatedMixin, Base):
+    """When the student last opened the new-programs block on Today."""
+
+    __tablename__ = "today_programs_seen"
+    __table_args__ = (S,)
+
+    student_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    seen_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
