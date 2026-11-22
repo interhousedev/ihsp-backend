@@ -1,6 +1,7 @@
 """Preferences, matches and swipe decisions (`/preferences`, `/matches`)."""
 
 import datetime as dt
+from decimal import Decimal
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
@@ -17,7 +18,11 @@ from app.modules.admission.domain.admit_rate import intl_admission_rate
 from app.modules.admission.domain.budget import estimated_aid
 from app.modules.admission.domain.chooser import next_deadline_round
 from app.modules.admission.domain.fit import FitResult
-from app.modules.admission.domain.matching import MAJOR_MAX, REGION_MAX
+from app.modules.admission.domain.matching import (
+    MAJOR_MAX,
+    REGION_MAX,
+)
+from app.modules.admission.domain.matching import cost_usd as sticker_usd
 from app.modules.admission.domain.rankings import (
     experience_meters,
     map_url,
@@ -175,8 +180,19 @@ class MatchOut(BaseModel):
         """Map the application result."""
         i = m.institution
         aid = i.aid_profile
-        aid_usd = estimated_aid(i.coa_total, i.coa_currency, aid)
-        gross = i.coa_total if i.coa_currency == "USD" else None
+        gross = sticker_usd(i)
+        if gross is None:
+            fact = i.fact("intl_coa_usd")
+            val = fact.value if fact and isinstance(fact.value, dict) else {}
+            raw = val.get("value")
+            if (
+                val.get("currency", "USD") == "USD"
+                and isinstance(raw, int | float)
+                and not isinstance(raw, bool)
+                and raw > 0
+            ):
+                gross = Decimal(str(raw))
+        aid_usd = estimated_aid(gross, "USD", aid) if gross is not None else None
         ranks = i.fact("rankings")
         exp = i.fact("experience_scores")
         link = i.fact("map_url")

@@ -1,5 +1,6 @@
 """Ranking subjects, relevant rankings, experience meters, map links, MatchOut."""
 
+import dataclasses
 import datetime as dt
 from decimal import Decimal
 
@@ -149,3 +150,23 @@ def test_match_out_maps_card_details() -> None:
     assert "Uni%2C+Leeds%2C+GB" in out.map_url
     bare = MatchOut.of(m, today=dt.date(2026, 1, 1), subjects=())
     assert bare.rankings == []
+
+
+def test_match_out_cost_from_intl_coa_fact_when_mirror_empty() -> None:
+    base = _inst()
+    fact = FactView(
+        {"value": 48000, "currency": "USD"}, "https://x.org", 2026, None, False
+    )
+    inst = dataclasses.replace(
+        base,
+        coa_total=None,
+        coa_currency=None,
+        facts={**base.facts, "intl_coa_usd": fact},
+    )
+    m = MatchItem(inst, 80, Overlap(0, 0, ()), None, None, None)
+    out = MatchOut.of(m, today=dt.date(2026, 1, 1))
+    assert (out.cost_usd, out.net_cost_usd, out.aid_estimate_usd) == (
+        48000,
+        36000,
+        12000,
+    )
