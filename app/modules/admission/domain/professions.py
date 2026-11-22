@@ -21,6 +21,8 @@ SalaryBand = Literal["low", "medium", "high"]
 LANGS: Final = ("en", "ru", "uz")
 
 PROFESSIONS_MAX: Final = 5
+TITLE_MAX: Final = 80
+CUSTOM_ID_PREFIX: Final = "c-"
 IKIGAI_ITEMS_MAX: Final = 8
 CHIP_MAX: Final = 60
 SCORE_MAX: Final = 0.7
@@ -92,17 +94,58 @@ class Profession:
     related_fields: tuple[str, ...]
     salary_band: SalaryBand | None = None
     sources: tuple[Source, ...] = ()
+    descriptions: dict[str, str] = field(default_factory=dict)
+    tags: tuple[str, ...] = ()
+    custom: bool = False
+    """True for a title the student typed; its card was filled by the model."""
+    isco_id: str | None = None
+    """Closest ISCO-08 code of a custom profession."""
 
     def name(self, locale: str) -> str:
         """Name in the locale; uz falls back to ru, anything else to en."""
         return self.names.get(locale) or self.names.get("ru") or self.names["en"]
 
+    def description(self, locale: str) -> str | None:
+        """Description in the locale, falling back like `name`; None when absent."""
+        d = self.descriptions
+        return d.get(locale) or d.get("ru") or d.get("en") or None
+
+    def rank(self, needle: str) -> int | None:
+        """How well the needle matches, 0 best; None when it does not match.
+
+        Every word of the needle must be found. 0: the id; 1: the names;
+        2: the ISCO group, related fields or tags; 3: the description.
+        """
+        tokens = needle.casefold().split()
+        if not tokens:
+            return 0
+        if needle.strip().casefold() in self.id:
+            return 0
+        names = " ".join(self.names.values()).casefold()
+        groups = MAJOR_GROUPS.get(self.group, {})
+        meta = " ".join(
+            [
+                *groups.values(),
+                *(f.replace("_", " ") for f in self.related_fields),
+                *self.tags,
+            ]
+        ).casefold()
+        desc = " ".join(self.descriptions.values()).casefold()
+        worst = 1
+        for t in tokens:
+            if t in names:
+                continue
+            if t in meta:
+                worst = max(worst, 2)
+            elif t in desc:
+                worst = 3
+            else:
+                return None
+        return worst
+
     def matches(self, needle: str) -> bool:
-        """True when the needle is part of any language's name or the id."""
-        n = needle.strip().casefold()
-        return (
-            not n or n in self.id or any(n in v.casefold() for v in self.names.values())
-        )
+        """True when `rank` finds the needle."""
+        return self.rank(needle) is not None
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,6 +173,8 @@ class ProfessionPlan:
     student_id: UUID
     chosen: tuple[ChosenProfession, ...] = ()
     ikigai: Ikigai = field(default_factory=Ikigai)
+    custom: tuple[Profession, ...] = ()
+    """Professions the student typed in; picked ones are ranked in `chosen`."""
 
 
 def clean_chips(name: str, raw: list[str]) -> tuple[str, ...]:
@@ -163,3 +208,13 @@ def clean_choice(
         seen.add(pid)
     ordered = sorted(items, key=lambda it: it[1])
     return tuple(ChosenProfession(pid, i + 1) for i, (pid, _) in enumerate(ordered))
+
+
+def clean_title(raw: str) -> str:
+    """The typed profession title, trimmed; empty or too long ones are refused."""
+    title = " ".join(raw.split())
+    if not title:
+        raise InvalidAnswerError(params={"question": "title"})
+    if len(title) > TITLE_MAX:
+        raise CharLimitError(params={"field": "title", "limit": TITLE_MAX})
+    return title

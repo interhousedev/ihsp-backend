@@ -69,6 +69,15 @@ class SqlCatalogRepository:
         rows = (await self._s.scalars(q.order_by(InstitutionRow.name))).all()
         return await self._build(rows)
 
+    async def countries(self) -> list[str]:
+        """Return the distinct upper-case country codes of non-archived institutions."""
+        rows = await self._s.scalars(
+            select(func.upper(InstitutionRow.country))
+            .where(InstitutionRow.status != "archived")
+            .distinct()
+        )
+        return sorted(rows.all())
+
     async def institution(self, institution_id: UUID) -> CatalogInstitution | None:
         """Return one non-archived institution."""
         row = await self._s.get(InstitutionRow, institution_id)

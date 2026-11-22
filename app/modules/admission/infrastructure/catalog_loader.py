@@ -29,6 +29,7 @@ from app.modules.admission.infrastructure.orm.catalog import (
     ScholarshipRow,
     SourceRow,
 )
+from app.modules.admission.ports.media_mirror import MediaMirror
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -61,8 +62,13 @@ class LoadReport:
 
 class _Loader:
     def __init__(
-        self, session: AsyncSession, now: dt.datetime, media: dict[str, OrgMedia]
+        self,
+        session: AsyncSession,
+        now: dt.datetime,
+        media: dict[str, OrgMedia],
+        mirror: MediaMirror | None = None,
     ) -> None:
+        self.mirror = mirror
         self.s = session
         self.now = now
         self.media = media
@@ -141,11 +147,23 @@ class _Loader:
             row = await self.s.get(InstitutionRow, owner)
             if row is not None and row.description is None:
                 row.description = d.get("description")
+            if row is not None:
+                row.aliases = _merge_aliases(row.aliases, d.get("aliases"))
             return
         org = self.media.get(normalize_domain(d.get("website_domain")) or "")
+        logo = d.get("logo_url") or (org.logo_url if org else None)
+        cover = d.get("cover_url") or (org.cover_url if org else None)
+        if self.mirror is not None:
+            logo = await self.mirror.mirror(logo) if logo else None
+            cover = await self.mirror.mirror(cover) if cover else None
+        existing = await self.s.get(InstitutionRow, inst)
+        aliases = _merge_aliases(
+            existing.aliases if existing else None, d.get("aliases")
+        )
         await self.s.merge(
             InstitutionRow(
                 id=inst,
+                aliases=aliases,
                 slug=d["slug"],
                 name=d["name"],
                 country=d["country"],
@@ -153,8 +171,8 @@ class _Loader:
                 website_domain=normalize_domain(d.get("website_domain")),
                 kind="university",
                 status="published" if verified else "provisional",
-                logo_url=d.get("logo_url") or (org.logo_url if org else None),
-                cover_url=d.get("cover_url") or (org.cover_url if org else None),
+                logo_url=logo,
+                cover_url=cover,
                 **_optional(d, "description"),
             )
         )
@@ -202,6 +220,7 @@ class _Loader:
             )
         await put("intl_acceptance_rate", d.get("intl_acceptance_rate"), unit="percent")
         await put("test_policy", d.get("test_policy"))
+        await put("focuses", d.get("focuses"))
         for key in ("intl_tuition_usd", "intl_coa_usd"):
             f = d.get(key)
             await put(key, f, (f or {}).get("currency", "USD"))
@@ -346,14 +365,17 @@ class _Loader:
         return owner
 
 
-async def load_catalog(session: AsyncSession, now: dt.datetime) -> LoadReport:
+async def load_catalog(
+    session: AsyncSession, now: dt.datetime, mirror: MediaMirror | None = None
+) -> LoadReport:
     """Upsert the seed institutions and national programmes; the caller commits.
 
     A seed institution whose website domain belongs to another row (typically one
     created by staff) is not duplicated: its facts, scholarships and description
-    are added to that row, and nothing already there is overwritten.
+    are added to that row, and nothing already there is overwritten. With a
+    `mirror`, logos and covers are copied into our storage first.
     """
-    loader = _Loader(session, now, by_domain(load_org_media()))
+    loader = _Loader(session, now, by_domain(load_org_media()), mirror)
     schol = enriched = 0
     seed = load_seed()
     for d in seed:
@@ -368,6 +390,17 @@ async def load_catalog(session: AsyncSession, now: dt.datetime) -> LoadReport:
         await loader.program(p)
     await session.flush()
     return LoadReport(len(seed), loader.facts, schol + len(programs), enriched)
+
+
+def _merge_aliases(current: list[str] | None, seed: list[str] | None) -> list[str]:
+    """Union keeping every existing alias (curator-added included) first."""
+    out = list(current or [])
+    known = {a.casefold() for a in out}
+    for a in seed or []:
+        if a.casefold() not in known:
+            known.add(a.casefold())
+            out.append(a)
+    return out
 
 
 def _optional(d: dict[str, Any], key: str) -> dict[str, Any]:

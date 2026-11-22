@@ -26,6 +26,7 @@ from app.modules.admission.domain.essay_categories import (
     Category,
     ShortAnswer,
     classify_group,
+    is_university_specific,
 )
 from app.modules.admission.domain.essay_flow import (
     GroupLabel,
@@ -153,9 +154,11 @@ class EssayPromptMap:
         found = await self._vectors.of_texts([r.prompt for r in refs])
         available = found is not None and len(found.vectors) == len(refs)
         if found is None or not available:
-            pmap = build_map(refs, None, model=NO_MODEL)
+            pmap = build_map(refs, None, model=NO_MODEL, isolate=is_university_specific)
         else:
-            pmap = build_map(refs, found.vectors, model=found.model)
+            pmap = build_map(
+                refs, found.vectors, model=found.model, isolate=is_university_specific
+            )
         groups = [
             g
             for g in pmap.groups

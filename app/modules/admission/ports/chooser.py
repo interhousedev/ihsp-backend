@@ -24,6 +24,10 @@ class CatalogRepository(Protocol):
         """Return one non-archived institution."""
         ...
 
+    async def countries(self) -> list[str]:
+        """Return the distinct upper-case country codes of non-archived institutions."""
+        ...
+
     async def scholarships(
         self,
         *,

@@ -29,12 +29,42 @@ SectionKeyOut = Literal[
 ]
 
 
+class ReviewLinkOut(BaseModel):
+    """The screen a finding or subsection opens; `ref` is empty for a whole screen."""
+
+    kind: Literal[
+        "profile",
+        "activities",
+        "honors",
+        "essay",
+        "list_entry",
+        "survey",
+        "grades",
+        "tests",
+        "recommendations",
+        "none",
+    ] = "none"
+    ref: str = ""
+
+
 class ReviewFindingOut(BaseModel):
     """One finding of a section with the references of its evidence."""
 
     kind: Literal["strength", "risk", "gap"]
     text: str
     evidence: list[str]
+    link: ReviewLinkOut = ReviewLinkOut()
+
+
+class ReviewSubsectionOut(BaseModel):
+    """One real part of a section (an essay, an activity, a list entry...)."""
+
+    key: str
+    title: str
+    verdict: Literal["strong", "mixed", "weak", "missing"]
+    ao_view: str = ""
+    finding_indexes: list[int] = []
+    link: ReviewLinkOut = ReviewLinkOut()
 
 
 class ReviewSectionOut(BaseModel):
@@ -44,6 +74,8 @@ class ReviewSectionOut(BaseModel):
     status: Literal["pending", "running", "done", "failed", "skipped"]
     score: int | None = None
     summary: str = ""
+    ao_view: str = ""
+    subsections: list[ReviewSubsectionOut] = []
     findings: list[ReviewFindingOut] = []
     next_actions: list[str] = []
 

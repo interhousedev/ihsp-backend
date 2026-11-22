@@ -145,6 +145,13 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         False,
     ),
     (
+        (AiTask.ADMIT_PROFESSION_FILL,),
+        "system",
+        "Admission career: card of a profession the student typed",
+        admit_career.PROFESSION_FILL,
+        False,
+    ),
+    (
         (AiTask.ADMIT_CAREER_MAJORS,),
         "system",
         "Admission career: fit of majors and minors",
@@ -280,6 +287,14 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         "system",
         "Admission: full application review, lead merge",
         admit_review.LEAD_SYSTEM,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_APP_REVIEW_LEAD,),
+        "rules",
+        "Admission: full application review, rules and never-say list "
+        "(appended to every section and lead prompt)",
+        admit_review.RULES,
         False,
     ),
     (

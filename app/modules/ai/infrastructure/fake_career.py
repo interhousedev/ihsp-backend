@@ -11,6 +11,8 @@ from typing import Any
 PROFESSIONS_SCHEMA = "career_professions"
 MAJORS_SCHEMA = "career_majors"
 SPIKE_SCHEMA = "career_spike"
+PROFESSION_FILL_SCHEMA = "career_profession_fill"
+_TITLE = re.compile(r"^\[title\] (.+)$", re.MULTILINE)
 
 _MAJOR = re.compile(r"^\[major\] ([a-z0-9_]+)", re.MULTILINE)
 _ITEM = re.compile(r"^\[item:([0-9a-f-]{36})\]", re.MULTILINE)
@@ -32,6 +34,21 @@ def build_career_document(
     if schema_name == PROFESSIONS_SCHEMA:
         return {
             "professions": [{"title": t, "reason": r} for t, r in _PROFESSIONS],
+        }
+    if schema_name == PROFESSION_FILL_SCHEMA:
+        found = _TITLE.search(_text(messages))
+        title = found.group(1) if found else "Profession"
+        return {
+            "name_en": title,
+            "name_ru": title,
+            "name_uz": title,
+            "description_en": f"{title}: a role that combines skills and judgment.",
+            "description_ru": f"{title}: роль, сочетающая навыки и суждение.",
+            "description_uz": f"{title}: koʻnikma va mulohazani birlashtiruvchi kasb.",
+            "isco_id": "2512",
+            "related_fields": ["computer_science"],
+            "ai_exposure": 0.4,
+            "salary_band": "high",
         }
     if schema_name == MAJORS_SCHEMA:
         codes = list(dict.fromkeys(_MAJOR.findall(_text(messages))))[:5]

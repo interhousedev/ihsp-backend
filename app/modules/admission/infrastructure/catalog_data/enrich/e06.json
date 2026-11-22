@@ -114,6 +114,7 @@
     },
     {
       "slug": "bu-edu",
+      "aliases": ["BU"],
       "name": "Boston University",
       "country": "US",
       "city": "Boston",
@@ -266,6 +267,7 @@
     },
     {
       "slug": "caltech-edu",
+      "aliases": ["Caltech", "CIT"],
       "name": "California Institute of Technology",
       "country": "US",
       "city": "Pasadena",

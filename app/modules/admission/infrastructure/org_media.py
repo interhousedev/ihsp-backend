@@ -16,8 +16,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from app.modules.admission.domain.errors import MediaUnreachableError
 from app.modules.admission.infrastructure.orm.catalog import InstitutionRow
 from app.modules.admission.infrastructure.orm.opportunities import OpportunityRow
+from app.modules.admission.ports.media_mirror import MediaMirror
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -115,8 +117,16 @@ def by_alias(media: list[OrgMedia]) -> dict[str, OrgMedia]:
     return out
 
 
+async def _stored(mirror: MediaMirror | None, url: str) -> str:
+    """The storage copy of `url` when a mirror is given, else `url`."""
+    return await mirror.mirror(url) if mirror is not None else url
+
+
 async def _apply_institutions(
-    session: AsyncSession, domains: dict[str, OrgMedia], dry_run: bool
+    session: AsyncSession,
+    domains: dict[str, OrgMedia],
+    dry_run: bool,
+    mirror: MediaMirror | None,
 ) -> tuple[int, int]:
     """Fill empty institution logos and covers from their website domain."""
     logo = cover = 0
@@ -130,16 +140,19 @@ async def _apply_institutions(
         if org.logo_url and row.logo_url is None:
             logo += 1
             if not dry_run:
-                row.logo_url = org.logo_url
+                row.logo_url = await _stored(mirror, org.logo_url)
         if org.cover_url and row.cover_url is None:
             cover += 1
             if not dry_run:
-                row.cover_url = org.cover_url
+                row.cover_url = await _stored(mirror, org.cover_url)
     return logo, cover
 
 
 async def _apply_opportunities(
-    session: AsyncSession, aliases: dict[str, OrgMedia], dry_run: bool
+    session: AsyncSession,
+    aliases: dict[str, OrgMedia],
+    dry_run: bool,
+    mirror: MediaMirror | None,
 ) -> int:
     """Fill empty opportunity logos from the provider's organisation."""
     count = 0
@@ -154,12 +167,19 @@ async def _apply_opportunities(
             continue
         count += 1
         if not dry_run:
-            opp.payload = {**payload, "logo_url": org.logo_url}
+            opp.payload = {
+                **payload,
+                "logo_url": await _stored(mirror, org.logo_url),
+            }
     return count
 
 
 async def apply_org_media(
-    session: AsyncSession, media: list[OrgMedia], *, dry_run: bool = False
+    session: AsyncSession,
+    media: list[OrgMedia],
+    *,
+    dry_run: bool = False,
+    mirror: MediaMirror | None = None,
 ) -> ApplyReport:
     """Fill empty institution and opportunity logos and covers; the caller commits.
 
@@ -167,7 +187,80 @@ async def apply_org_media(
     but the counts are the ones a real run would report.
     """
     inst_logo, inst_cover = await _apply_institutions(
-        session, by_domain(media), dry_run
+        session, by_domain(media), dry_run, mirror
     )
-    opp_logo = await _apply_opportunities(session, by_alias(media), dry_run)
+    opp_logo = await _apply_opportunities(session, by_alias(media), dry_run, mirror)
     return ApplyReport(inst_logo, inst_cover, opp_logo)
+
+
+@dataclass(frozen=True, slots=True)
+class MirrorReport:
+    """Result of `mirror_existing_media`; `failed` lists `table:id:field: url`."""
+
+    institutions: int
+    opportunities: int
+    failed: list[str]
+
+
+async def _mirror_institutions(
+    session: AsyncSession,
+    mirror: MediaMirror,
+    own: str,
+    dry_run: bool,
+    failed: list[str],
+) -> int:
+    """Mirror the logo and cover URLs of institutions; the count of URLs tried."""
+    count = 0
+    for row in await session.scalars(select(InstitutionRow)):
+        for field in ("logo_url", "cover_url"):
+            url = getattr(row, field)
+            if not url or url.startswith(own):
+                continue
+            count += 1
+            if dry_run:
+                continue
+            try:
+                setattr(row, field, await mirror.mirror(url))
+            except MediaUnreachableError:
+                failed.append(f"institution:{row.id}:{field}: {url}")
+    return count
+
+
+async def _mirror_opportunities(
+    session: AsyncSession,
+    mirror: MediaMirror,
+    own: str,
+    dry_run: bool,
+    failed: list[str],
+) -> int:
+    """Mirror the logo URLs of opportunities; the count of URLs tried."""
+    count = 0
+    for item in await session.scalars(select(OpportunityRow)):
+        payload = item.payload or {}
+        url = payload.get("logo_url")
+        if not isinstance(url, str) or not url or url.startswith(own):
+            continue
+        count += 1
+        if dry_run:
+            continue
+        try:
+            item.payload = {**payload, "logo_url": await mirror.mirror(url)}
+        except MediaUnreachableError:
+            failed.append(f"opportunity:{item.id}:logo_url: {url}")
+    return count
+
+
+async def mirror_existing_media(
+    session: AsyncSession, mirror: MediaMirror, *, dry_run: bool = False
+) -> MirrorReport:
+    """Replace every external institution and opportunity logo or cover URL.
+
+    Unreachable URLs stay as they are and are listed in the report; the caller
+    commits. In dry-run nothing is downloaded or changed and the counts are the
+    URLs a real run would try.
+    """
+    own = mirror.own_prefix
+    failed: list[str] = []
+    inst = await _mirror_institutions(session, mirror, own, dry_run, failed)
+    opp = await _mirror_opportunities(session, mirror, own, dry_run, failed)
+    return MirrorReport(inst, opp, failed)

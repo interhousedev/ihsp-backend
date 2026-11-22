@@ -43,6 +43,7 @@ from app.modules.admission.domain.errors import (
 )
 from app.modules.admission.domain.essay_flow import PromptTarget
 from app.modules.admission.domain.essay_reviews import StoredReview
+from app.modules.admission.domain.essay_search import EssayHit, find
 from app.modules.admission.domain.essays import (
     KINDS,
     LINK_KINDS,
@@ -110,12 +111,17 @@ class EssayService:
     """The student's essays; staff read shared versions in scope."""
 
     def __init__(
-        self, uow_factory: UowFactory, access: AccessPolicy, clock: Clock
+        self,
+        uow_factory: UowFactory,
+        access: AccessPolicy,
+        clock: Clock,
+        limiter: RateLimiter | None = None,
     ) -> None:
-        """Keep the transaction factory, the access policy and the clock."""
+        """Keep the transaction factory, access policy, clock and limiter."""
         self._uow = uow_factory
         self._access = access
         self._clock = clock
+        self._limiter = limiter
 
     async def _owner(self, ctx: AdmissionContext) -> None:
         res = await self._access.resolve(ctx, ctx.user_id)
@@ -164,7 +170,21 @@ class EssayService:
         """Return the owner's essays."""
         await self._owner(ctx)
         async with self._uow() as uow:
-            return await uow.essays.list_for(ctx.user_id)
+            return await uow.essays.list_for(ctx.user_id, include_unreadable=True)
+
+    async def search(
+        self, ctx: AdmissionContext, query: str, limit: int
+    ) -> list[EssayHit]:
+        """Find the query in the owner's own essays (decrypted in memory only)."""
+        await self._owner(ctx)
+        if self._limiter is not None:
+            await self._limiter.hit(
+                f"admission:essay_search:{ctx.user_id}", limit=60, window_seconds=60
+            )
+        async with self._uow() as uow:
+            rows = await uow.essays.list_for(ctx.user_id, include_unreadable=False)
+        hits = (find(query, e) for e in rows if not e.unreadable)
+        return [h for h in hits if h is not None][:limit]
 
     async def get(self, ctx: AdmissionContext, essay_id: UUID) -> Essay:
         """Return one of the owner's essays."""
@@ -185,7 +205,10 @@ class EssayService:
             **values,
         )
         async with self._uow() as uow:
-            if len(await uow.essays.list_for(ctx.user_id)) >= MAX_ESSAYS:
+            if (
+                len(await uow.essays.list_for(ctx.user_id, include_unreadable=True))
+                >= MAX_ESSAYS
+            ):
                 raise ItemLimitError(params={"kind": "essay", "limit": MAX_ESSAYS})
             await self._check(uow, ctx, essay)
             saved = await uow.essays.add(essay)
@@ -237,7 +260,8 @@ class EssayService:
         """Delete the essay and its versions; its ideas stay, unlinked."""
         await self._owner(ctx)
         async with self._uow() as uow:
-            await self._own(uow, ctx, essay_id)
+            if await uow.essays.owner_of(essay_id) != ctx.user_id:
+                raise AdmissionNotFoundError()
             await uow.essays.delete(essay_id)
             await uow.commit()
 

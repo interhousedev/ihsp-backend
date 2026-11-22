@@ -184,16 +184,18 @@ def _field_ids(inst: CatalogInstitution) -> set[str]:
 
 
 def search_rank(inst: CatalogInstitution, q: str) -> int | None:
-    """Rank of a text match (0 best), None when nothing matches.
+    """Rank of a text match (-1 best), None when nothing matches.
 
-    Name equal or prefix, then a name word prefix, name contains, alias or local
-    name, city, country, field.
+    Exact name, alias or acronym, name prefix, a name word prefix, name contains,
+    alias or local name contains, city, country, field.
     """
     needle = q.strip().casefold()
     if not needle:
         return 0
     name = inst.name.casefold()
-    if name == needle or name.startswith(needle):
+    if name == needle or needle in _exact_names(inst):
+        return -1
+    if name.startswith(needle):
         return 0
     named = _name_rank(inst, name, needle)
     if named is not None:
@@ -208,6 +210,13 @@ def search_rank(inst: CatalogInstitution, q: str) -> int | None:
     ):
         return 7
     return None
+
+
+def _exact_names(inst: CatalogInstitution) -> set[str]:
+    """Casefolded aliases, local name and acronym: an exact hit ranks first."""
+    return {
+        a.casefold() for a in (inst.name_local, *inst.aliases, _acronym(inst.name)) if a
+    }
 
 
 def _name_rank(inst: CatalogInstitution, name: str, needle: str) -> int | None:

@@ -98,7 +98,7 @@ async def test_readiness_for_limited_student_is_without_the_essay_key(
         assert (await client.get(path)).status_code == 404
 
 
-async def test_essay_list_leaves_out_a_row_that_does_not_open(
+async def test_essay_list_flags_a_row_that_does_not_open(
     make_container: ContainerFactory,
     overrides_cleaned: list[FastAPI],  # noqa: F811
 ) -> None:
@@ -125,4 +125,8 @@ async def test_essay_list_leaves_out_a_row_that_does_not_open(
             )
         listed = await client.get(f"{BASE}/essays")
         assert listed.status_code == 200, listed.text
-        assert [e["title"] for e in listed.json()["items"]] == ["Mine"]
+        items = listed.json()["items"]
+        assert sorted((e["title"], e["unreadable"]) for e in items) == [
+            ("", True),
+            ("Mine", False),
+        ]

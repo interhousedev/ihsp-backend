@@ -90,7 +90,10 @@ from app.modules.admin.wiring import build as build_admin
 from app.modules.admission.application.student_search import StudentSearchService
 from app.modules.admission.infrastructure.ai.prompt_source import RegistryPrompts
 from app.modules.admission.infrastructure.ai_gateway import GatewayStructuredAi
-from app.modules.admission.infrastructure.essay_crypto import essay_cipher
+from app.modules.admission.infrastructure.essay_crypto import (
+    AesGcmEssayCipher,
+    essay_key_store,
+)
 from app.modules.admission.infrastructure.student_chunks_repository import (
     SqlChunkCollector,
     SqlChunkStore,
@@ -300,7 +303,8 @@ class _Assembler:
         self.deps = make_deps(container)
         self.prompts = build_prompts(self.deps, prompt_slots(), declared_requests())
         # Built before privacy and admission: erasure shreds the essay data key.
-        self.essay_cipher = essay_cipher(container.settings)
+        self.essay_key_store = essay_key_store(container.settings)
+        self.essay_cipher = AesGcmEssayCipher(self.essay_key_store)
 
     def add_closer(self, closer: Callable[[], Awaitable[None]]) -> None:
         """Register something to close with the container."""
@@ -660,6 +664,7 @@ class _Assembler:
                 else None
             ),
             cipher=self.essay_cipher,
+            essay_keys=self.essay_key_store,
             studio_admin=AiPromptStudioAdmin(self.prompts.admin),
             embeddings=lambda: self.embedding_index,
         )

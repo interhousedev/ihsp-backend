@@ -12,14 +12,43 @@ from app.shared.ai_tasks import AiTask
 
 from pydantic import BaseModel, Field
 
-PROMPT_VERSION: Final = "app_review@1"
+PROMPT_VERSION: Final = "app_review@2"
 SECTION_SCHEMA_NAME: Final = "app_review_section"
 LEAD_SCHEMA_NAME: Final = "app_review_lead"
 MAX_FINDINGS: Final = 8
+MAX_SUBSECTIONS: Final = 8
+VIEW_MAX: Final = 600
+REF_MAX: Final = 64
 MAX_SECTION_ACTIONS: Final = 4
 MAX_POINTS: Final = 6
 MAX_LEAD_ACTIONS: Final = 6
 TEXT_MAX: Final = 400
+
+LinkKind = Literal[
+    "profile",
+    "activities",
+    "honors",
+    "essay",
+    "list_entry",
+    "survey",
+    "grades",
+    "tests",
+    "recommendations",
+    "none",
+]
+LINK_KINDS: Final[tuple[str, ...]] = (
+    "profile",
+    "activities",
+    "honors",
+    "essay",
+    "list_entry",
+    "survey",
+    "grades",
+    "tests",
+    "recommendations",
+    "none",
+)
+Verdict = Literal["strong", "mixed", "weak", "missing"]
 
 SectionKey = Literal[
     "profile",
@@ -63,8 +92,20 @@ _SECTION_RULES: Final = (
     "a risk or a gap, in at most 300 characters, and cite in evidence only the "
     "references shown in square brackets in the data, exactly as written (for "
     "example item:..., answer:q20, essay:...). Give at most 4 small, concrete next "
-    "actions. Write in the language of the locale line of the data. Plain text "
-    "only: no markdown, no links.\n" + SAFETY
+    "actions. Write ao_view in 2 to 4 hedged sentences: how one reader in an "
+    'admissions office may read this section ("a reader may notice..."), never '
+    'what "admissions officers think". Split the section into subsections for its '
+    "real parts (at most 8: for example each essay, each activity or each list "
+    "entry), each with a short key, a title, a verdict (strong, mixed, weak or "
+    "missing), its own hedged ao_view of 1 to 3 sentences, finding_indexes (the "
+    "zero-based positions of the findings that belong to it) and a link. Every "
+    "finding and subsection carries a link: kind is one of profile, activities, "
+    "honors, essay, list_entry, survey, grades, tests, recommendations or none, and "
+    "ref is the id that follows the colon in a reference shown in the data (the "
+    "part after item:, essay:, entry: or answer:), or an empty string when the link "
+    "points to the whole screen or to nothing. Never invent a ref. Write in the "
+    "language of the locale line of the data. Plain text only: no markdown, no "
+    "links.\n" + SAFETY
 )
 
 _FOCUS: Final[dict[str, str]] = {
@@ -107,7 +148,75 @@ LEAD_SYSTEM: Final = (
     "language of the locale line. Plain text only: no markdown, no links.\n" + SAFETY
 )
 
+RULES: Final = (
+    "Rules for every part of this review.\n"
+    "1. No guarantees or predictions: never promise or forecast an admission "
+    "outcome and never give a percentage chance. Say what the application shows, "
+    "not whether it gets in; rejection often means too many qualified applicants "
+    "for too few places.\n"
+    "2. Offer one reader's view, not a verdict of all colleges: readers differ by "
+    'college. Write "a reader may notice", never "admissions officers will '
+    'think". Priorities of a college are never fully known; say so when it '
+    "matters.\n"
+    "3. Never state how long or how an admissions office reads every file. Some "
+    "colleges read quickly, so clarity and a scannable order help; present this as "
+    "a practitioner's claim, not a fact.\n"
+    "4. Hooks (legacy, athlete, donor, first generation, geography) are "
+    "institutional priorities, not guarantees; tell the student not to worry about "
+    "what they cannot change.\n"
+    "5. Never suggest that a person's race, ethnicity, nationality or gender "
+    "helps or hurts. A student may describe their own lived experience as a "
+    "personal story; never suggest it as a strategy. No stereotypes about a "
+    "country, a school type or a group.\n"
+    "6. Authorship: give feedback on structure, clarity, specifics and the why; "
+    "never write or rewrite essay text in the student's voice and never suggest "
+    "letting an AI write a draft. Advice should keep the voice human and the work "
+    "the student's own.\n"
+    "7. Never invent, inflate or pad: do not suggest made-up activities, "
+    "numbers, awards or recommendations. Planned metrics are plans, not "
+    "achievements. Writing a recommender's letter for them is never acceptable.\n"
+    "8. Depth over prestige and quantity: sustained involvement, initiative and "
+    "impact count more than a famous name or a paid summer programme; never say a "
+    "programme will help the student get in.\n"
+    "9. Read grades and activities in the student's own context and school; do not "
+    "compare with students of another country and do not convert grades.\n"
+    "10. Do not rank hardship and never push the student to dramatise a hard "
+    "story.\n"
+    "11. Scores: an essay or an activity never makes up for weak grades or test "
+    "scores, and tests are never the only factor; a small score difference rarely "
+    "matters.\n"
+    "12. Majors and lists: an oversubscribed major can be a risk to weigh, never a "
+    "rule about the student's ability. Do not call a university safe or reach "
+    "without data. Mention that early decision binds and that aid needs matter "
+    "before advising an early round. Need-blind does not mean easier.\n"
+    "13. Additional materials are not a tactic to tip a decision.\n"
+    "14. Separate what a university states itself from your inference; label "
+    "inference as inferred. Internal scores are this tool's own scale, never an "
+    "official rating of any college.\n"
+    "15. The student decides together with their counselor; you are not an "
+    "admissions officer or a counselor of record.\n"
+    'Never say: "you will get in", "this guarantees", "you have a N% '
+    'chance", "colleges always...", "colleges want students from X", '
+    '"mention your race to boost your chances", "write about trauma", '
+    '"let AI draft it", "this programme will get you in", "your score is '
+    'fine so the rest does not matter", any invented quote or statistic, and '
+    "any quote attributed to a named admissions officer or other real person."
+)
+
+
+def with_rules(system: str, rules: str) -> str:
+    """The section or lead prompt followed by the editable rules."""
+    return f"{system}\n\n{rules}" if rules.strip() else system
+
+
 SECTION_SYSTEMS: Final[dict[str, str]] = {k: section_system(k) for k in SECTION_KEYS}
+
+
+class Link(BaseModel):
+    """Where the web opens the thing a finding talks about."""
+
+    kind: LinkKind
+    ref: str = Field(max_length=REF_MAX)
 
 
 class Finding(BaseModel):
@@ -116,6 +225,18 @@ class Finding(BaseModel):
     kind: Literal["strength", "risk", "gap"]
     text: str = Field(max_length=TEXT_MAX)
     evidence: list[str] = Field(max_length=6)
+    link: Link
+
+
+class Subsection(BaseModel):
+    """One real part of a section (an essay, an activity, a list entry...)."""
+
+    key: str = Field(max_length=40)
+    title: str = Field(max_length=120)
+    verdict: Verdict
+    ao_view: str = Field(max_length=VIEW_MAX)
+    finding_indexes: list[int] = Field(max_length=MAX_FINDINGS)
+    link: Link
 
 
 class SectionReport(BaseModel):
@@ -123,6 +244,8 @@ class SectionReport(BaseModel):
 
     score: int = Field(ge=0, le=10)
     summary: str = Field(max_length=TEXT_MAX)
+    ao_view: str = Field(max_length=VIEW_MAX)
+    subsections: list[Subsection] = Field(max_length=MAX_SUBSECTIONS)
     findings: list[Finding] = Field(max_length=MAX_FINDINGS)
     next_actions: list[str] = Field(max_length=MAX_SECTION_ACTIONS)
     injection_suspected: bool

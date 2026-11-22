@@ -10,6 +10,7 @@ from app.modules.admission.domain.chooser import (
     check_affordability,
     matches,
     needs_affordability_gate,
+    rank_hits,
 )
 from app.modules.admission.domain.estimates import estimate
 from app.shared.ids import new_id
@@ -94,3 +95,17 @@ def test_budget_bands_and_gate() -> None:
     assert needs_affordability_gate("ED", "gap")
     assert not needs_affordability_gate("RD", "gap")
     assert not needs_affordability_gate("ED2", "signed_off")
+
+
+def test_exact_alias_ranks_before_name_prefix() -> None:
+    def inst(name: str, *aliases: str) -> CatalogInstitution:
+        return CatalogInstitution(
+            new_id(), "x", name, "US", "C", "published", {}, aliases=aliases
+        )
+
+    mit = inst("Massachusetts Institute of Technology", "MIT")
+    mitchell = inst("Mitchell College")
+    other = inst("Harvard University")
+    hits = [m for m in (mitchell, other, mit) if matches(m, CatalogFilters(q="mit"))]
+    assert other not in hits
+    assert rank_hits(hits, "mit")[0] is mit

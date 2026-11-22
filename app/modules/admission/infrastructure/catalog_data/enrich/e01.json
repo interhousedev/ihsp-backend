@@ -17,6 +17,7 @@
     },
     {
       "slug": "utoronto-ca",
+      "aliases": ["UofT"],
       "name": "University of Toronto",
       "country": "CA",
       "city": "Toronto",
@@ -39,6 +40,7 @@
     },
     {
       "slug": "uwaterloo-ca",
+      "aliases": ["UW"],
       "name": "University of Waterloo",
       "country": "CA",
       "city": "Waterloo",
@@ -122,6 +124,7 @@
     },
     {
       "slug": "ethz-ch",
+      "aliases": ["ETH", "ETHZ"],
       "name": "ETH Zurich",
       "country": "CH",
       "city": "Zurich",
@@ -167,6 +170,7 @@
     },
     {
       "slug": "uzh-ch",
+      "aliases": ["UZH"],
       "name": "University of Zurich",
       "country": "CH",
       "city": "Zurich",
@@ -182,6 +186,7 @@
     },
     {
       "slug": "unil-ch",
+      "aliases": ["UNIL"],
       "name": "Université de Lausanne (UNIL)",
       "country": "CH",
       "city": "Lausanne",
@@ -240,6 +245,7 @@
     },
     {
       "slug": "shanghai-nyu-edu",
+      "aliases": ["NYU Shanghai"],
       "name": "NYU Shanghai",
       "country": "CN",
       "city": "Shanghai",
@@ -255,6 +261,7 @@
     },
     {
       "slug": "pku-edu-cn",
+      "aliases": ["PKU"],
       "name": "Peking University",
       "country": "CN",
       "city": "Beijing",
@@ -270,6 +277,7 @@
     },
     {
       "slug": "sjtu-edu-cn",
+      "aliases": ["SJTU"],
       "name": "Shanghai Jiao Tong University (SJTU)",
       "country": "CN",
       "city": "Shanghai",
@@ -315,6 +323,7 @@
     },
     {
       "slug": "zju-edu-cn",
+      "aliases": ["ZJU"],
       "name": "Zhejiang University",
       "country": "CN",
       "city": "Hangzhou",

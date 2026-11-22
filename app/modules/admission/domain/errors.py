@@ -109,6 +109,13 @@ class InvalidMediaUrlError(ValidationFailedError):
     message_key = "admission-invalid-media-url"
 
 
+class MediaUnreachableError(ValidationFailedError):
+    """A logo or cover URL could not be fetched as an allowed image."""
+
+    code = "admission/media_unreachable"
+    message_key = "admission-media-unreachable"
+
+
 class ProofSourceError(ValidationFailedError):
     """A proof needs exactly one of link, file or pasted text."""
 
@@ -217,6 +224,7 @@ ALL_ERRORS: tuple[type[BaseError], ...] = (
     ProofSourceError,
     InvalidProofUrlError,
     InvalidMediaUrlError,
+    MediaUnreachableError,
     InvalidTransitionError,
     PickupNotSetError,
     UndoExpiredError,
@@ -280,6 +288,14 @@ class CatalogFactInvalidError(ValidationFailedError):
     message_key = "admission-catalog-fact-invalid"
 
 
+class ScorecardUnavailableError(BaseError):
+    """The College Scorecard service did not answer usefully."""
+
+    code = "admission/scorecard_unavailable"
+    status = 502
+    message_key = "admission-scorecard-unavailable"
+
+
 class CatalogDuplicateError(ConflictError):
     """The school or a pending proposal exists. Params: institution_id, proposal_id."""
 
@@ -329,6 +345,37 @@ class EssayKeyUnavailableError(BaseError):
     code = "admission/essay_key_unavailable"
     status = 503
     message_key = "admission-essay-key-unavailable"
+
+
+class EssayUnreadableError(GoneError, ValueError):
+    """Sealed essay text no longer opens (its key changed or the blob is damaged).
+
+    Also a ValueError, so readers that skip unreadable rows keep catching it.
+    """
+
+    code = "admission/essay_unreadable"
+    message_key = "admission-essay-unreadable"
+
+
+class EssayKeysBackupTakenError(ConflictError):
+    """The backup of this key generation was already downloaded once."""
+
+    code = "admission/essay_keys_backup_taken"
+    message_key = "admission-essay-keys-backup-taken"
+
+
+class EssayKeysBackupInvalidError(ValidationFailedError):
+    """The backup file is damaged, not ours, or the passphrase is wrong."""
+
+    code = "admission/essay_keys_backup_invalid"
+    message_key = "admission-essay-keys-backup-invalid"
+
+
+class EssayKeysRotationRunningError(ConflictError):
+    """A key rotation is still running; backup and a second rotation wait."""
+
+    code = "admission/essay_keys_rotation_running"
+    message_key = "admission-essay-keys-rotation-running"
 
 
 class CatalogCycleError(ValidationFailedError):

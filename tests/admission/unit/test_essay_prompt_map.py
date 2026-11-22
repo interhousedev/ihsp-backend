@@ -10,6 +10,7 @@ from app.modules.admission.domain.errors import (
     ConsentRequiredError,
     InvalidAnswerError,
 )
+from app.modules.admission.domain.essay_categories import is_university_specific
 from app.modules.admission.domain.essay_flow import (
     PromptRef,
     PromptTarget,
@@ -164,3 +165,35 @@ async def test_fit_is_cached_and_cache_only_never_calls_model() -> None:
     again = await svc.fit(ctx, TEXT)
     assert again.cached and again.available
     assert [f.score for f in again.items] == [f.score for f in first.items]
+
+
+def test_why_us_prompts_are_never_grouped() -> None:
+    why = "why this university is the right place for you"
+    refs = [
+        _ref(UNI_A, 0, why),
+        _ref(UNI_B, 0, why),
+        _ref(UNI_A, 1, TEXT),
+        _ref(UNI_B, 1, TEXT),
+    ]
+    vecs = [[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]]
+    m = build_map(refs, vecs, model="fake/embedding-v1", isolate=is_university_specific)
+    shared = [g for g in m.groups if g.kind == "shared"]
+    assert len(shared) == 1
+    assert {p.prompt for p in shared[0].prompts} == {TEXT}
+    assert [g.kind for g in m.groups if why in g.prompts[0].prompt] == ["unique"] * 2
+
+
+def test_prompt_naming_its_university_is_isolated() -> None:
+    ref = PromptRef(
+        prompt_key(UNI_A, 0), UNI_A, "Stanford", 0, "Tell Stanford more", 250
+    )
+    assert is_university_specific(ref)
+    assert not is_university_specific(_ref(UNI_A, 1, TEXT))
+
+
+def test_near_members_are_marked_similar() -> None:
+    refs = [_ref(UNI_A, 0, "a"), _ref(UNI_B, 0, "b"), _ref(new_id(), 0, "c")]
+    vecs = [[1.0, 0.0], [1.0, 0.0], [1.0, 1.5]]
+    m = build_map(refs, vecs, model="fake/embedding-v1")
+    (g,) = [g for g in m.groups if g.kind == "shared"]
+    assert g.similar == (refs[2].key,)

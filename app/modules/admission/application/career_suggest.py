@@ -13,6 +13,10 @@ from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import AdmissionContext
 from app.modules.admission.application.career import owner_plan
 from app.modules.admission.application.items import items_summary
+from app.modules.admission.application.profession_fill import (
+    build_custom,
+    field_vocabulary,
+)
 from app.modules.admission.application.review_checks import nfc
 from app.modules.admission.application.student_context import student_block
 from app.modules.admission.application.words import delimit, plain
@@ -34,9 +38,11 @@ from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     ConsentRequiredError,
 )
+from app.modules.admission.domain.professions import Profession as IscoProfession
 from app.modules.admission.infrastructure.ai.prompts import career as prompt
 from app.modules.admission.ports.ai import PromptSource, QuotaOf, StructuredAi
 from app.modules.admission.ports.consent import AI, PurposeConsents
+from app.modules.admission.ports.fit import ProfessionCatalog
 from app.modules.admission.ports.student_search import StudentDataSearch
 from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork, UowFactory
 from app.shared.ai_tasks import AiTask
@@ -111,8 +117,10 @@ class CareerSuggester:
         weekly_limit: QuotaOf,
         prompts: PromptSource,
         search: StudentDataSearch | None = None,
+        professions: ProfessionCatalog | None = None,
     ) -> None:
         """Keep the collaborators and the reader of the soft weekly limit."""
+        self._catalog = professions
         self._uow = uow_factory
         self._access = access
         self._ai = ai
@@ -176,6 +184,9 @@ class CareerSuggester:
                 lines.append(f"Answer: {answer}")
         lines += [f"[item:{i['id']}] {i}" for i in summary]
         lines += [f"[shortlisted] {p.title}" for p in plan.shortlist]
+        ikigai = (await uow.profession_plans.get(plan.student_id)).ikigai
+        for circle in ("love", "good_at", "needs", "paid"):
+            lines += [f"[ikigai:{circle}] {chip}" for chip in getattr(ikigai, circle)]
         queries = [str(a) for a in plan.answers.values()][:2]
         queries += [p.title for p in plan.shortlist][:1]
         queries.append("interests and strengths")
@@ -206,6 +217,24 @@ class CareerSuggester:
         return await self._store(
             ctx, plan, professions=(kept + fresh)[: PROFESSIONS_MAX + len(kept)]
         )
+
+    async def profession_card(
+        self, ctx: AdmissionContext, title: str, locale: str
+    ) -> IscoProfession:
+        """Draft the card of a typed-in profession; the caller stores it."""
+        if self._catalog is None:
+            raise AdmissionForbiddenError(params={"permission": "professions:fill"})
+        await self._guard(ctx)
+        lines = [f"Language: {locale}", f"[title] {title}"]
+        lines += [f"[field] {f}" for f in field_vocabulary(self._catalog)]
+        data = await self._ask(
+            ctx,
+            AiTask.ADMIT_PROFESSION_FILL,
+            lines,
+            (prompt.PROFESSION_FILL_SCHEMA_NAME, prompt.PROFESSION_FILL_SCHEMA),
+            locale,
+        )
+        return build_custom(data, title, self._catalog)
 
     async def majors_fit(self, ctx: AdmissionContext, locale: str) -> CareerPlan:
         """Rank majors of the taxonomy for the student."""

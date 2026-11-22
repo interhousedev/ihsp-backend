@@ -133,6 +133,7 @@ class Institution(_Model):
     country: str = Field(pattern=r"^[A-Z]{2}$")
     city: str
     website_domain: str | None = None
+    aliases: list[str] = []  # official short names (MIT, UCLA); search matches them
     description: Description | None = None
     city_type: CityType | None = None
     institution_type: Literal["public", "private"] | None = None
@@ -140,6 +141,7 @@ class Institution(_Model):
     acceptance_rate: RangeFact | None = None  # percent
     intl_acceptance_rate: Fact | None = None  # value: percent
     test_policy: Fact | None = None  # value: TestPolicy
+    focuses: Fact | None = None  # value: list of focus items (see domain/focuses)
     intl_tuition_usd: Money | None = None
     intl_coa_usd: Money | None = None
     aid: Aid = Aid()

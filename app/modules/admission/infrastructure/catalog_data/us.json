@@ -26,6 +26,21 @@
     "English",
     "Environmental Science"
    ],
+   "focuses": {
+    "value": [
+     {
+      "text": {
+       "en": "Beyond grades: community, leadership, activities and character",
+       "ru": "Помимо оценок: вклад в сообщество, лидерство, занятия и личные качества",
+       "uz": "Baholardan tashqari: jamoaga hissa, yetakchilik, faoliyat va shaxsiy fazilatlar"
+      },
+      "quote": "Academic accomplishment in high school is important, but the Admissions Committee also considers many other criteria, such as community involvement, leadership and distinction in extracurricular activities, and personal qualities and character.",
+      "source_url": "https://college.harvard.edu/admissions",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "verified": true
+     }
+    ]
+   },
    "source_url": "https://college.harvard.edu/admissions",
    "year": 2026,
    "acceptance_rate": {
@@ -87,6 +102,7 @@
   },
   {
    "slug": "mit",
+   "aliases": ["MIT"],
    "name": "Massachusetts Institute of Technology",
    "country": "US",
    "city": "Cambridge, MA",
@@ -110,6 +126,54 @@
     "Humanities & Social Sciences",
     "Music & Theater Arts"
    ],
+   "focuses": {
+    "value": [
+     {
+      "text": {
+       "en": "A mission to use science and technology to make the world better",
+       "ru": "Миссия — использовать науку и технологии, чтобы сделать мир лучше",
+       "uz": "Fan va texnologiyadan dunyoni yaxshilash uchun foydalanish maqsadi"
+      },
+      "quote": "MIT’s mission is to use science, technology, and other areas of scholarship to make the world better.",
+      "source_url": "https://mitadmissions.org/apply/process/what-we-look-for/",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "verified": true
+     },
+     {
+      "text": {
+       "en": "Collaboration and cooperation are at the core of the community",
+       "ru": "Сообщество строится на сотрудничестве и взаимопомощи",
+       "uz": "Hamjamiyat hamkorlik va oʼzaro yordamga asoslanadi"
+      },
+      "quote": "The core of the MIT community is collaboration and cooperation; you can see it all over the Institute.",
+      "source_url": "https://mitadmissions.org/apply/process/what-we-look-for/",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "verified": true
+     },
+     {
+      "text": {
+       "en": "Applicants who plan to succeed but are not afraid to fail",
+       "ru": "Абитуриенты, которые стремятся к успеху, но не боятся неудач",
+       "uz": "Muvaffaqiyatga intiladigan, ammo muvaffaqiyatsizlikdan qoʼrqmaydigan abituriyentlar"
+      },
+      "quote": "We want to admit applicants who are not only planning to succeed but who are also not afraid to fail",
+      "source_url": "https://mitadmissions.org/apply/process/what-we-look-for/",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "verified": true
+     },
+     {
+      "text": {
+       "en": "Not a long list of activities: depth over quantity",
+       "ru": "Не длинный список занятий: важна глубина, а не количество",
+       "uz": "Faoliyatlar roʼyxati emas: miqdor emas, chuqurlik muhim"
+      },
+      "quote": "We don’t expect applicants to do a million things.",
+      "source_url": "https://mitadmissions.org/apply/process/what-we-look-for/",
+      "fetched_at": "2026-11-22T00:00:00+00:00",
+      "verified": true
+     }
+    ]
+   },
    "source_url": "https://mitadmissions.org",
    "year": 2026,
    "acceptance_rate": {
@@ -472,6 +536,7 @@
   },
   {
    "slug": "upenn",
+   "aliases": ["UPenn", "Penn"],
    "name": "University of Pennsylvania",
    "country": "US",
    "city": "Philadelphia, PA",
@@ -679,6 +744,7 @@
   },
   {
    "slug": "jhu",
+   "aliases": ["JHU", "Johns Hopkins"],
    "name": "Johns Hopkins University",
    "country": "US",
    "city": "Baltimore, MD",
@@ -738,6 +804,7 @@
   },
   {
    "slug": "nyu",
+   "aliases": ["NYU"],
    "name": "New York University",
    "country": "US",
    "city": "New York",
@@ -805,6 +872,7 @@
   },
   {
    "slug": "cmu",
+   "aliases": ["CMU"],
    "name": "Carnegie Mellon University",
    "country": "US",
    "city": "Pittsburgh",
@@ -888,6 +956,7 @@
   },
   {
    "slug": "gatech",
+   "aliases": ["Georgia Tech", "GT"],
    "name": "Georgia Institute of Technology",
    "country": "US",
    "city": "Atlanta",
@@ -977,6 +1046,7 @@
   },
   {
    "slug": "umich",
+   "aliases": ["UMich", "Michigan"],
    "name": "University of Michigan",
    "country": "US",
    "city": "Ann Arbor",

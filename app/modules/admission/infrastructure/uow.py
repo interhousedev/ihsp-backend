@@ -7,6 +7,9 @@ from app.modules.admission.domain.calendar import TASHKENT
 from app.modules.admission.infrastructure.career_repository import (
     SqlCareerRepository,
 )
+from app.modules.admission.infrastructure.catalog_card_repository import (
+    SqlCatalogCardRepository,
+)
 from app.modules.admission.infrastructure.catalog_proposals_repository import (
     SqlCatalogProposalRepository,
 )
@@ -131,6 +134,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     catalog: SqlCatalogRepository
     catalog_proposals: SqlCatalogProposalRepository
     catalog_staff: SqlCatalogStaffRepository
+    catalog_card: SqlCatalogCardRepository
     shortlist: SqlListRepository
     courses: SqlCourseRepository
     runtime_settings: SqlRuntimeSettingsRepository
@@ -185,6 +189,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     ) -> None:
         """Keep the essay cipher, the clock and the outbox that can cancel."""
         super().__init__(*args, **kwargs)
+        self._raw_cipher = cipher
         self._cipher = cipher
         self._clock = clock
         self._notification_outbox = notification_outbox
@@ -214,11 +219,15 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         await super().commit()
 
     def _init_repos(self) -> None:
-        """Create the repositories on the open session."""
+        """Create the repositories on the open session (seals take the key fence)."""
+        from app.modules.admission.infrastructure.essay_keys_sql import fenced_cipher
+
+        self._cipher = fenced_cipher(self.session, self._raw_cipher)
         self.access = SqlAccessRepository(self.session)
         self.catalog = SqlCatalogRepository(self.session)
         self.catalog_proposals = SqlCatalogProposalRepository(self.session)
         self.catalog_staff = SqlCatalogStaffRepository(self.session)
+        self.catalog_card = SqlCatalogCardRepository(self.session)
         self.shortlist = SqlListRepository(self.session)
         self.courses = SqlCourseRepository(self.session)
         self.runtime_settings = SqlRuntimeSettingsRepository(self.session)

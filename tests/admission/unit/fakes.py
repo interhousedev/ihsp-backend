@@ -46,6 +46,7 @@ class FakeStore:
         self.proposals: dict[UUID, CatalogProposal] = {}
         self.applied: list[CatalogProposal] = []
         self.known_targets: set[UUID] = set()
+        self.website_domains: dict[UUID, str] = {}
         self.institution_names: dict[str, UUID] = {}
         """Casefolded name, alias or domain of a known institution -> its id."""
         self.logos: dict[UUID, tuple[float | None, str | None]] = {}
@@ -62,6 +63,7 @@ class FakeStore:
         self.list_entries: dict[UUID, ListEntry] = {}
         self.checks: dict[UUID, AffordabilityCheck] = {}
         self.budget_bands: dict[UUID, str] = {}
+        self.decisions: dict[tuple[UUID, UUID], str] = {}
         self.profiles: dict[UUID, AdmissionProfile] = {}
         self.words: dict[UUID, WordsState] = {}
         self.words_history: list[WordsState] = []
@@ -248,6 +250,9 @@ class _Catalog:
     async def institution(self, institution_id: UUID) -> CatalogInstitution | None:
         return self.s.institutions.get(institution_id)
 
+    async def countries(self) -> list[str]:
+        return sorted({i.country.upper() for i in self.s.institutions.values()})
+
     async def scholarships(
         self,
         *,
@@ -264,6 +269,14 @@ class _Catalog:
             and basis in (None, x.basis)
             and (coverage_min is None or (x.coverage_max or 0) >= coverage_min)
         ]
+
+
+class _Decisions:
+    def __init__(self, s: FakeStore) -> None:
+        self.s = s
+
+    async def delete(self, student_id: UUID, institution_id: UUID) -> None:
+        self.s.decisions.pop((student_id, institution_id), None)
 
 
 class _Shortlist:
@@ -455,6 +468,9 @@ class _CatalogProposals:
     async def target_exists(self, kind: str, target_id: UUID) -> bool:
         return target_id in self.s.known_targets
 
+    async def website_domain(self, institution_id: UUID) -> str | None:
+        return self.s.website_domains.get(institution_id)
+
     async def set_logo(
         self, institution_id: UUID, *, zoom: float | None, fit: str | None
     ) -> bool:
@@ -492,6 +508,15 @@ class _CatalogProposals:
     ) -> UUID:
         self.s.applied.append(proposal)
         return proposal.target_id or new_id()
+
+    async def apply_facts(
+        self,
+        institution_id: UUID,
+        facts: Any,
+        reviewer_id: UUID,
+        now: dt.datetime,
+    ) -> None:
+        return None
 
     async def save_review(
         self, proposal: CatalogProposal, *, expected_lock: int
@@ -575,6 +600,7 @@ class FakeUow:
         self.catalog = _Catalog(s)
         self.catalog_proposals = _CatalogProposals(s)
         self.shortlist = _Shortlist(s)
+        self.decisions: Any = _Decisions(s)
         self.profiles = _Profiles(s)
         self.reviews = _Reviews(s)
         self.staff = _Staff(s)

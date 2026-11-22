@@ -5,6 +5,10 @@ from typing import cast
 from uuid import UUID
 
 from app.modules.admission.domain.essay_invites import Audience, EssayInvite, Feedback
+from app.modules.admission.infrastructure.essay_unreadable import (
+    readable,
+    readable_one,
+)
 from app.modules.admission.infrastructure.orm.essay_invites import (
     EssayFeedbackRow,
     EssayInviteRow,
@@ -176,7 +180,7 @@ class SqlEssayFeedbackRepository:
     async def get(self, feedback_id: UUID) -> Feedback | None:
         """Return a comment by id."""
         row = await self._s.get(EssayFeedbackRow, feedback_id)
-        return None if row is None else await self._item(row)
+        return await readable_one(row, self._item, "essay_feedback")
 
     async def _list(self, *where: object) -> list[Feedback]:
         rows = await self._s.scalars(
@@ -184,7 +188,7 @@ class SqlEssayFeedbackRepository:
             .where(*where)  # type: ignore[arg-type]
             .order_by(EssayFeedbackRow.created_at, EssayFeedbackRow.id)
         )
-        return [await self._item(r) for r in rows]
+        return await readable(rows, self._item, "essay_feedback")
 
     async def list_for_essay(self, essay_id: UUID) -> list[Feedback]:
         """Return every comment of an essay, oldest first."""

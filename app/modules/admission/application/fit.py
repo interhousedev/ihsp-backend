@@ -18,6 +18,7 @@ from app.modules.admission.domain.fit import (
     default_ratings,
 )
 from app.modules.admission.domain.professions import Profession
+from app.modules.admission.domain.rankings import subjects_for
 from app.modules.admission.ports.fit import ProfessionCatalog
 from app.modules.admission.ports.unit_of_work import UowFactory
 
@@ -68,15 +69,33 @@ class FitService:
             if saved is None
             else view_of(default_ratings() | saved[0], True, saved[1])
         )
+        custom = {p.id: p for p in plan.custom}
         chosen: list[Profession] = []
         for c in sorted(plan.chosen, key=lambda c: c.rank):
-            p = self._professions.get(c.profession_id)
+            p = self._professions.get(c.profession_id) or custom.get(c.profession_id)
             if p is not None:
                 chosen.append(p)
         student = StudentFit(
             prefs.ratings, band, tuple(chosen), focus.field_ids, bool(scores)
         )
         return student, prefs.weights
+
+    async def budget_band(self, ctx: AdmissionContext) -> str | None:
+        """The caller's stated yearly budget band (survey Q32), if any."""
+        if not ctx.admission.is_applicant:
+            return None
+        student, _ = await self._student(ctx.user_id)
+        return student.budget_band
+
+    async def ranking_subjects(self, ctx: AdmissionContext) -> tuple[str, ...]:
+        """Ranking subjects of the caller's focus fields and chosen professions."""
+        if not ctx.admission.is_applicant:
+            return ()
+        student, _ = await self._student(ctx.user_id)
+        ids = [*student.focus_fields]
+        for p in student.professions:
+            ids.extend(p.related_fields)
+        return subjects_for(ids)
 
     async def fits_for(
         self,

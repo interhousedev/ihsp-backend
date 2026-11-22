@@ -99,7 +99,7 @@ async def test_student_cannot_replace() -> None:
     assert w.store.audit == []
 
 
-@pytest.mark.parametrize("role", [Role.TEACHER, Role.COUNSELOR])
+@pytest.mark.parametrize("role", [Role.TEACHER, Role.MENTOR])
 async def test_replace_needs_a_live_curate_grant(role: Role) -> None:
     w = World()
     inst = new_id()

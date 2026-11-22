@@ -296,6 +296,7 @@
     },
     {
       "slug": "ubc-ca",
+      "aliases": ["UBC"],
       "name": "University of British Columbia",
       "country": "CA",
       "city": "Vancouver",

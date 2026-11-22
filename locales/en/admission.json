@@ -17,6 +17,7 @@
   "admission-eligibility-unknown": "Eligibility cannot be determined yet.",
   "admission-invalid-proof-url": "The link to the proof is not valid.",
   "admission-invalid-media-url": "The image link must be a valid https address.",
+  "admission-media-unreachable": "The image could not be downloaded. Check the link or upload a PNG, JPEG, WebP or GIF up to 5 MB.",
   "admission-test-score-invalid": "This test entry is not valid. Check the scores, dates and required fields.",
   "admission-invalid-transition": "This step is not allowed in the current state.",
   "admission-pickup-not-set": "The pickup location has not been set yet.",
@@ -54,5 +55,10 @@
   "admission-exemplar-duplicate": "This exemplar essay is already in the library.",
   "admission-kb-body-invalid": "The article body is not accepted. Use at most 3 OpenUI blocks of up to 6000 characters each, and only https, mailto or relative links.",
   "admission-essay-key-unavailable": "Your essays are temporarily unavailable. Try again later or contact support.",
-  "admission-catalog-cycle": "The cycle must be the current or the next admission cycle, written as 2026-27 (cycle: {cycle})."
+  "admission-essay-unreadable": "This essay can no longer be opened: its encryption key has changed. You can delete it and start again.",
+  "admission-essay-keys-backup-taken": "The key backup of this generation was already downloaded. Rotate the keys to make a new backup.",
+  "admission-essay-keys-backup-invalid": "The backup file could not be opened. Check the file and the passphrase.",
+  "admission-essay-keys-rotation-running": "A key rotation is running. Wait until it finishes and try again.",
+  "admission-catalog-cycle": "The cycle must be the current or the next admission cycle, written as 2026-27 (cycle: {cycle}).",
+  "admission-scorecard-unavailable": "College Scorecard is unavailable right now. Try again later."
 }

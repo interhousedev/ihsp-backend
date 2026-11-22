@@ -1,5 +1,6 @@
 """Builds the admission module (container.admission)."""
 
+import asyncio
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from functools import cache
@@ -19,10 +20,14 @@ from app.modules.admission.application.calendar import (
 )
 from app.modules.admission.application.career import CareerService
 from app.modules.admission.application.career_suggest import CareerSuggester
+from app.modules.admission.application.catalog_card import CatalogCardService
 from app.modules.admission.application.catalog_proposals import (
     CatalogProposalService,
 )
 from app.modules.admission.application.catalog_research import CatalogResearch
+from app.modules.admission.application.catalog_scorecard import (
+    CatalogScorecardService,
+)
 from app.modules.admission.application.catalog_staff import CatalogStaffService
 from app.modules.admission.application.chances import ChancesService
 from app.modules.admission.application.chooser import CatalogService, ListService
@@ -37,6 +42,7 @@ from app.modules.admission.application.essay_deep_read import EssayDeepReadServi
 from app.modules.admission.application.essay_gallery import EssayGalleryService
 from app.modules.admission.application.essay_group_labels import GroupLabeler
 from app.modules.admission.application.essay_invites import EssayInviteService
+from app.modules.admission.application.essay_keys import EssayKeyAdmin
 from app.modules.admission.application.essay_match import EssayMatchService
 from app.modules.admission.application.essay_practice import EssayPracticeService
 from app.modules.admission.application.essay_prompt_map import EssayPromptMap
@@ -62,6 +68,7 @@ from app.modules.admission.application.item_opportunity import ItemOpportunitySe
 from app.modules.admission.application.items import ItemService
 from app.modules.admission.application.kb import KbService
 from app.modules.admission.application.list_plan import ListPlanService
+from app.modules.admission.application.maps_settings import MapsSettingsService
 from app.modules.admission.application.matching import MatchService
 from app.modules.admission.application.memory_notes import MemoryNoteService
 from app.modules.admission.application.mentoring import MentoringService
@@ -114,14 +121,26 @@ from app.modules.admission.infrastructure.calendar_repository import (
 )
 from app.modules.admission.infrastructure.catalog_data import study_fields as _fields
 from app.modules.admission.infrastructure.essay_crypto import (
+    CACHE_TTL_SECONDS,
     AesGcmEssayCipher,
     MemoryEssayKeyStore,
 )
+from app.modules.admission.infrastructure.essay_key_backup import (
+    ScryptAesGcmBackupCodec,
+)
+from app.modules.admission.infrastructure.essay_keys_sql import (
+    SqlEssayKeyLedger,
+    SqlEssayResealer,
+)
 from app.modules.admission.infrastructure.kb_repository import SqlKbRepository
+from app.modules.admission.infrastructure.media_mirror import build_media_mirror
 from app.modules.admission.infrastructure.professions_catalog import (
     JsonProfessionCatalog,
 )
 from app.modules.admission.infrastructure.prompt_vectors import EmbeddingPromptVectors
+from app.modules.admission.infrastructure.scorecard_client import (
+    HttpScorecardClient,
+)
 from app.modules.admission.infrastructure.uni_chat_repository import (
     SqlUniChatRepository,
 )
@@ -133,8 +152,9 @@ from app.modules.admission.ports.consent import (
     PurposeConsentStore,
 )
 from app.modules.admission.ports.courses import CourseSources
-from app.modules.admission.ports.essay_crypto import EssayCipher
+from app.modules.admission.ports.essay_crypto import EssayCipher, EssayKeyStore
 from app.modules.admission.ports.essays import EssayReader
+from app.modules.admission.ports.media_mirror import MediaMirror
 from app.modules.admission.ports.prompt_studio import PromptStudioAdmin
 from app.modules.admission.ports.staff import StaffDirectory
 from app.modules.admission.ports.student_search import StudentDataSearch
@@ -175,6 +195,7 @@ class AdmissionServices:
     access: AccessPolicy
     runtime: RuntimeSettingsService
     school_grades: SchoolGradesService
+    maps_settings: MapsSettingsService
     config: GetConfig
     courses: CourseService
     staff: StaffService
@@ -214,6 +235,8 @@ class AdmissionServices:
     opportunities: OpportunityService
     opportunities_staff: OpportunityStaffService
     catalog_staff: CatalogStaffService
+    catalog_card: CatalogCardService
+    catalog_scorecard: CatalogScorecardService
     orgs: OrgService
     opportunity_comments: OppCommentService
     opportunity_planner: OpportunityPlanner
@@ -253,6 +276,7 @@ class AdmissionServices:
     essay_match: EssayMatchService
     essay_short_answers: EssayShortAnswers
     essay_deep_read: EssayDeepReadService
+    essay_keys: EssayKeyAdmin
 
 
 @dataclass(frozen=True, slots=True)
@@ -287,13 +311,16 @@ def build(
     uni_web: WebSearchApi | None = None,
     uni_pages: UniPageReader | None = None,
     cipher: EssayCipher | None = None,
+    essay_keys: EssayKeyStore | None = None,
     studio_admin: PromptStudioAdmin,
     certificates: CertificateDirectory | None = None,
     embeddings: Callable[[], EmbeddingIndex | None] = lambda: None,
+    media_mirror: MediaMirror | None = None,
 ) -> AdmissionServices:
     """Wire the module; without `purpose_consents` they live in process memory."""
     over = overrides or AdmissionOverrides()
-    cipher = cipher or AesGcmEssayCipher(MemoryEssayKeyStore())
+    key_store = essay_keys or MemoryEssayKeyStore()
+    cipher = cipher or AesGcmEssayCipher(key_store)
     uow_factory = over.uow_factory or _sql_uow_factory(deps, cipher)
     settings = deps.settings.admission
     grades = settings.eligible_grades
@@ -321,6 +348,7 @@ def build(
     opportunities = OpportunityService(
         uow_factory, access, deps.clock, lms_courses, deps.rate_limiter, org_exists
     )
+    mirror = media_mirror or build_media_mirror(deps.settings)
     curators = CatalogProposalService(uow_factory, deps.clock)
     intake = OpportunityIntake(
         model, texts, web_search=web_search, profile_of=profile_of
@@ -408,6 +436,17 @@ def build(
     readiness = ReadinessService(
         uow_factory, access, runtime, settings.readiness, deps.clock, list_plan
     )
+    career_ai = CareerSuggester(
+        uow_factory,
+        access,
+        model,
+        consents,
+        deps.rate_limiter,
+        _quota_of(deps, "admit_career_ai_per_week"),
+        texts,
+        student_search,
+        JsonProfessionCatalog(),
+    )
     return AdmissionServices(
         actor=ResolveAdmissionActor(
             uow_factory, membership, deps.clock, grades, runtime
@@ -415,7 +454,8 @@ def build(
         access=access,
         runtime=runtime,
         school_grades=SchoolGradesService(uow_factory, runtime, grades),
-        config=GetConfig(settings, runtime, limits, cache(_fields)),
+        maps_settings=MapsSettingsService(uow_factory, runtime),
+        config=GetConfig(settings, runtime, limits, cache(_fields), uow_factory),
         courses=CourseService(uow_factory, access, course_sources),
         staff=staff,
         staff_timeline=StaffTimelineService(
@@ -438,6 +478,7 @@ def build(
             deps.clock,
             deps.rate_limiter,
             settings.catalog_proposals_per_day,
+            mirror,
         ),
         supp_prompts=SuppPromptService(
             uow_factory, CatalogProposalService(uow_factory, deps.clock).can_review
@@ -499,7 +540,7 @@ def build(
             texts,
             student_search,
         ),
-        essays=EssayService(uow_factory, access, deps.clock),
+        essays=EssayService(uow_factory, access, deps.clock, deps.rate_limiter),
         essay_coach=EssayCoach(
             uow_factory,
             access,
@@ -539,7 +580,17 @@ def build(
         opportunities_staff=OpportunityStaffService(
             uow_factory, curators.can_review, lms_courses, org_exists
         ),
-        catalog_staff=CatalogStaffService(uow_factory, curators.can_review),
+        catalog_staff=CatalogStaffService(uow_factory, curators.can_review, mirror),
+        catalog_card=CatalogCardService(uow_factory, curators.can_review, deps.clock),
+        catalog_scorecard=CatalogScorecardService(
+            uow_factory,
+            HttpScorecardClient(
+                settings.scorecard_api_key.get_secret_value(),
+                deps.clock.now().year,
+            ),
+            curators.can_review,
+            deps.clock,
+        ),
         orgs=OrgService(uow_factory, opportunities, deps.clock),
         opportunity_comments=OppCommentService(
             uow_factory, opportunities, deps.clock, identity
@@ -569,16 +620,7 @@ def build(
             limits,
         ),
         career=CareerService(uow_factory, access, deps.clock),
-        career_ai=CareerSuggester(
-            uow_factory,
-            access,
-            model,
-            consents,
-            deps.rate_limiter,
-            _quota_of(deps, "admit_career_ai_per_week"),
-            texts,
-            student_search,
-        ),
+        career_ai=career_ai,
         voice=(
             VoiceService(
                 uow_factory,
@@ -600,7 +642,9 @@ def build(
         matching=MatchService(uow_factory, chooser, deps.clock),
         readiness=readiness,
         fit_preferences=FitPreferenceService(uow_factory),
-        professions=ProfessionService(uow_factory, JsonProfessionCatalog()),
+        professions=ProfessionService(
+            uow_factory, JsonProfessionCatalog(), career_ai.profession_card
+        ),
         fit=fit_service,
         fit_analysis=fit_analysis,
         today=TodayService(
@@ -685,6 +729,15 @@ def build(
             texts,
             cipher,
             essay_reviews,
+        ),
+        essay_keys=EssayKeyAdmin(
+            key_store,
+            SqlEssayKeyLedger(deps.sessionmaker),
+            ScryptAesGcmBackupCodec(),
+            SqlEssayResealer(deps.sessionmaker),
+            deps.kicker,
+            deps.clock,
+            settle=lambda: asyncio.sleep(CACHE_TTL_SECONDS + 5),
         ),
     )
 

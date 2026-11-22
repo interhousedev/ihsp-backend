@@ -25,6 +25,10 @@ from app.modules.admission.domain.essays import (
     PlanSection,
     VersionSource,
 )
+from app.modules.admission.infrastructure.essay_unreadable import (
+    readable,
+    readable_one,
+)
 from app.modules.admission.infrastructure.orm.profile import (
     EssayIdeaRow,
     EssayRow,
@@ -177,12 +181,33 @@ class SqlEssayRepository:
         row.status = idea.status
         row.sort_order = idea.sort_order
 
-    async def list_for(self, student_id: UUID) -> list[Essay]:
+    def _stub(self, row: EssayRow) -> Essay:
+        """An essay whose sealed text is gone: only the plain columns, no text."""
+        return Essay(
+            id=row.id,
+            student_id=row.student_id,
+            kind=cast(EssayKind, row.kind),
+            word_limit=row.word_limit,
+            list_entry_id=row.list_entry_id,
+            forked_from=row.forked_from,
+            status=cast(EssayStatus, row.status),
+            current_version=row.current_version,
+            last_snapshot_at=row.last_snapshot_at,
+            lock_version=row.lock_version,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+            unreadable=True,
+        )
+
+    async def list_for(
+        self, student_id: UUID, *, include_unreadable: bool = False
+    ) -> list[Essay]:
         """Return the essays, newest edit first.
 
-        A row that does not open under the owner's key (tampered, or sealed by a
-        key that no longer exists) is logged and left out, so one bad row never
-        blanks the student's whole essay list. A missing key still raises.
+        A row that does not open (tampered, or sealed by a key that is lost or
+        changed) is logged once and left out, or, with `include_unreadable`,
+        returned as a text-less stub flagged `unreadable`, so one bad row never
+        blanks the student's whole essay list.
         """
         rows = await self._s.scalars(
             select(EssayRow)
@@ -191,11 +216,16 @@ class SqlEssayRepository:
         )
         essays: list[Essay] = []
         for row in rows:
-            try:
-                essays.append(await self._essay(row))
-            except ValueError:
-                log.error("essay_unreadable", essay_id=str(row.id))
+            opened = await readable_one(row, self._essay, "essay")
+            if opened is not None:
+                essays.append(opened)
+            elif include_unreadable:
+                essays.append(self._stub(row))
         return essays
+
+    async def owner_of(self, essay_id: UUID) -> UUID | None:
+        """Return the owner of an essay without opening its text."""
+        return await self._owner(essay_id)
 
     async def statuses(self, student_id: UUID) -> list[str]:
         """Return the status of each essay; nothing is decrypted."""
@@ -245,7 +275,7 @@ class SqlEssayRepository:
             .where(EssayVersionRow.essay_id == essay_id)
             .order_by(EssayVersionRow.version.desc())
         )
-        return [await self._version(owner, r) for r in rows]
+        return await readable(rows, lambda r: self._version(owner, r), "essay_version")
 
     async def version(self, essay_id: UUID, version: int) -> EssayVersion | None:
         """Return one version."""
@@ -308,7 +338,7 @@ class SqlEssayRepository:
             .where(EssayIdeaRow.student_id == student_id)
             .order_by(EssayIdeaRow.sort_order, EssayIdeaRow.created_at)
         )
-        return [await self._idea(r) for r in rows]
+        return await readable(rows, self._idea, "essay_idea")
 
     async def get_idea(self, idea_id: UUID) -> EssayIdea | None:
         """Return one idea."""

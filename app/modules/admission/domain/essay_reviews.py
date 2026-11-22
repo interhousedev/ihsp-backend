@@ -118,6 +118,15 @@ class GoalAlignment:
 
 
 @dataclass(frozen=True, slots=True)
+class AoReaction:
+    """How an admissions officer of the university may react to the essay."""
+
+    summary: str
+    likely_positive: tuple[str, ...]
+    likely_concerns: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class UniReview:
     """The review of the essay for one university; `alignment` is 0 to 100."""
 
@@ -129,6 +138,7 @@ class UniReview:
     supplement_tips: tuple[str, ...]
     risks: tuple[str, ...]
     sourced: bool
+    ao_reaction: AoReaction | None = None
 
 
 @dataclass(frozen=True, slots=True)

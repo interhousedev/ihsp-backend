@@ -91,6 +91,16 @@ def classify_prompt(prompt: PromptRef, label: str = "") -> Category:
     return "other"
 
 
+def is_university_specific(prompt: PromptRef) -> bool:
+    """A "Why us" prompt or one naming its own university: never shared."""
+    if prompt.institution_id is None:
+        return False
+    if classify_prompt(prompt) == "why_us":
+        return True
+    name = prompt.institution_name.strip().lower()
+    return len(name) > 2 and name in prompt.prompt.lower()
+
+
 def classify_group(prompts: Sequence[PromptRef], label: str = "") -> Category:
     """The commonest category among the members; a tie goes to the earlier one."""
     if not prompts:

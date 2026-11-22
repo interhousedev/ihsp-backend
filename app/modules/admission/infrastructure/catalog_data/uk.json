@@ -25,6 +25,7 @@
   },
   {
    "slug": "imperial",
+   "aliases": ["Imperial"],
    "name": "Imperial College London",
    "country": "GB",
    "city": "London",
@@ -114,6 +115,7 @@
   },
   {
    "slug": "ucl",
+   "aliases": ["UCL"],
    "name": "University College London",
    "country": "GB",
    "city": "London",

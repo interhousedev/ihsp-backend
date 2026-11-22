@@ -260,6 +260,8 @@ scripts/style_check.sh      # black --check, isort --check-only, flake8, mypy, t
 scripts/test.sh             # pytest with coverage
 ```
 
+The dev Vault keeps its data on the `vault_data` volume; `vault-init` initialises it once (unseal key and root token in the git-ignored `materials/dev-keys/vault-init.json`), unseals it on every start and keeps the token `dev-root`. `docker compose down -v` wipes it (delete `vault-init.json` too).
+
 `tests/deploy` parses the Dockerfiles, nginx templates and compose files and runs `docker compose config` and `nginx -t`, so it needs Docker.
 
 ## Documentation site

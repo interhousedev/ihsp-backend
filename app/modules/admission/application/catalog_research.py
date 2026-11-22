@@ -5,6 +5,7 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.admission.domain.errors import AdmissionNotFoundError
+from app.modules.admission.domain.focuses import served_focuses
 from app.modules.admission.ports.ai import PromptSource
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.modules.notebooks.application.llm import NotebookLlm
@@ -50,8 +51,18 @@ class CatalogResearch:
         facts = {
             k: {"value": f.value, "source_url": f.source_url, "year": f.year}
             for k, f in inst.facts.items()
-            if f.value is not None
+            if f.value is not None and k != "focuses"
         }
+        focuses = served_focuses(
+            inst.facts["focuses"].value if "focuses" in inst.facts else None,
+            inst.website_domain,
+        )
+        if focuses:
+            facts["focuses"] = {
+                "value": focuses,
+                "source_url": focuses[0]["source_url"],
+                "year": None,
+            }
         payload = {"name": inst.name, "country": inst.country, "facts": facts}
         result = await self._llm.json(
             task=AiTask.ADMIT_UNIVERSITY_RESEARCH,

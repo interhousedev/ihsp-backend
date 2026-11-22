@@ -1,8 +1,8 @@
 """Port: staff catalog proposals and applying an approved one."""
 
 import datetime as dt
-from collections.abc import Sequence
-from typing import Literal, Protocol
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal, Protocol
 from uuid import UUID
 
 from app.modules.admission.domain.catalog_proposals import CatalogProposal
@@ -27,6 +27,10 @@ class CatalogProposalRepository(Protocol):
 
     async def target_exists(self, kind: str, target_id: UUID) -> bool:
         """Return whether the institution or scholarship to edit exists."""
+        ...
+
+    async def website_domain(self, institution_id: UUID) -> str | None:
+        """The website domain of an institution; None when unknown or unset."""
         ...
 
     async def set_logo(
@@ -56,6 +60,16 @@ class CatalogProposalRepository(Protocol):
         self, proposal: CatalogProposal, *, reviewer_id: UUID, now: dt.datetime
     ) -> UUID:
         """Create or update the catalog row and its facts, publish, return its id."""
+        ...
+
+    async def apply_facts(
+        self,
+        institution_id: UUID,
+        facts: Mapping[str, Mapping[str, Any]],
+        reviewer_id: UUID,
+        now: dt.datetime,
+    ) -> None:
+        """Upsert sourced facts `{key: {value, source_url, year, note}}` in place."""
         ...
 
     async def save_review(

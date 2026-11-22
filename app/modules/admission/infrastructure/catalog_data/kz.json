@@ -2,6 +2,7 @@
   "institutions": [
     {
       "slug": "nu-kz",
+      "aliases": ["NU"],
       "name": "Nazarbayev University",
       "country": "KZ",
       "city": "Astana",

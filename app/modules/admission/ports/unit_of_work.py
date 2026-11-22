@@ -5,6 +5,7 @@ from types import TracebackType
 from typing import Protocol, Self
 
 from app.modules.admission.ports.career import CareerRepository
+from app.modules.admission.ports.catalog_card import CatalogCardRepository
 from app.modules.admission.ports.catalog_proposals import CatalogProposalRepository
 from app.modules.admission.ports.catalog_staff import CatalogStaffRepository
 from app.modules.admission.ports.chooser import CatalogRepository, ListRepository
@@ -86,6 +87,11 @@ class AdmissionUnitOfWork(Protocol):
     @property
     def catalog_proposals(self) -> CatalogProposalRepository:
         """Staff proposals to change the catalog."""
+        ...
+
+    @property
+    def catalog_card(self) -> CatalogCardRepository:
+        """Facts, scholarships and description of one institution for curators."""
         ...
 
     @property

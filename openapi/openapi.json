@@ -3102,6 +3102,36 @@
         "title": "AnswersIn",
         "type": "object"
       },
+      "AoReactionOut": {
+        "description": "How an admissions officer of the university may react (patterns only).",
+        "properties": {
+          "likely_concerns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Likely Concerns",
+            "type": "array"
+          },
+          "likely_positive": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Likely Positive",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary",
+          "likely_positive",
+          "likely_concerns"
+        ],
+        "title": "AoReactionOut",
+        "type": "object"
+      },
       "AppMapItem": {
         "description": "One page of an app (or a bot command, which has no URL).",
         "properties": {
@@ -5548,6 +5578,129 @@
           "traits"
         ],
         "title": "AxisWeightsOut",
+        "type": "object"
+      },
+      "BackupCipher": {
+        "description": "Cipher of a backup file.",
+        "properties": {
+          "name": {
+            "maxLength": 32,
+            "title": "Name",
+            "type": "string"
+          },
+          "nonce": {
+            "maxLength": 32,
+            "title": "Nonce",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "nonce"
+        ],
+        "title": "BackupCipher",
+        "type": "object"
+      },
+      "BackupDocument": {
+        "description": "The JSON object of a backup file, with every size bounded.",
+        "properties": {
+          "cipher": {
+            "$ref": "#/components/schemas/BackupCipher"
+          },
+          "ciphertext": {
+            "maxLength": 8388608,
+            "title": "Ciphertext",
+            "type": "string"
+          },
+          "count": {
+            "maximum": 20000.0,
+            "minimum": 0.0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "created_at": {
+            "maxLength": 64,
+            "title": "Created At",
+            "type": "string"
+          },
+          "format": {
+            "maxLength": 64,
+            "title": "Format",
+            "type": "string"
+          },
+          "generation": {
+            "minimum": 1.0,
+            "title": "Generation",
+            "type": "integer"
+          },
+          "kdf": {
+            "$ref": "#/components/schemas/BackupKdf"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "format",
+          "version",
+          "generation",
+          "created_at",
+          "count",
+          "kdf",
+          "cipher",
+          "ciphertext"
+        ],
+        "title": "BackupDocument",
+        "type": "object"
+      },
+      "BackupKdf": {
+        "description": "Key derivation of a backup file (only the parameters the server writes).",
+        "properties": {
+          "length": {
+            "maximum": 64.0,
+            "minimum": 16.0,
+            "title": "Length",
+            "type": "integer"
+          },
+          "n": {
+            "maximum": 1048576.0,
+            "minimum": 2.0,
+            "title": "N",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 16,
+            "title": "Name",
+            "type": "string"
+          },
+          "p": {
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "P",
+            "type": "integer"
+          },
+          "r": {
+            "maximum": 32.0,
+            "minimum": 1.0,
+            "title": "R",
+            "type": "integer"
+          },
+          "salt": {
+            "maxLength": 64,
+            "title": "Salt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "n",
+          "r",
+          "p",
+          "length",
+          "salt"
+        ],
+        "title": "BackupKdf",
         "type": "object"
       },
       "BalanceOut": {
@@ -8224,6 +8377,213 @@
         "title": "CardBody",
         "type": "object"
       },
+      "CardDescriptionIn": {
+        "additionalProperties": false,
+        "description": "Description per locale (uz, ru, en); empty text clears a locale.",
+        "properties": {
+          "description": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Description",
+            "type": "object"
+          },
+          "lock_version": {
+            "title": "Lock Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lock_version",
+          "description"
+        ],
+        "title": "CardDescriptionIn",
+        "type": "object"
+      },
+      "CardFactIn": {
+        "additionalProperties": false,
+        "description": "A fact to upsert; the value follows the key's kind.",
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "source_url": {
+            "maxLength": 2000,
+            "title": "Source Url",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "verified": {
+            "default": true,
+            "title": "Verified",
+            "type": "boolean"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value",
+          "source_url",
+          "year"
+        ],
+        "title": "CardFactIn",
+        "type": "object"
+      },
+      "CardFactOut": {
+        "description": "A stored fact in the editor's input shape.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "verified": {
+            "title": "Verified",
+            "type": "boolean"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "key",
+          "value",
+          "source_url",
+          "year",
+          "note",
+          "verified"
+        ],
+        "title": "CardFactOut",
+        "type": "object"
+      },
+      "CardFactsPutIn": {
+        "additionalProperties": false,
+        "description": "Facts to upsert and keys to delete under the institution's lock.",
+        "properties": {
+          "facts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CardFactIn"
+            },
+            "default": {},
+            "title": "Facts",
+            "type": "object"
+          },
+          "lock_version": {
+            "title": "Lock Version",
+            "type": "integer"
+          },
+          "remove": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Remove",
+            "type": "array"
+          }
+        },
+        "required": [
+          "lock_version"
+        ],
+        "title": "CardFactsPutIn",
+        "type": "object"
+      },
+      "CardLockOut": {
+        "description": "The institution's lock after a write.",
+        "properties": {
+          "lock_version": {
+            "title": "Lock Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lock_version"
+        ],
+        "title": "CardLockOut",
+        "type": "object"
+      },
+      "CardOut": {
+        "description": "Facts, scholarships and description of one institution.",
+        "properties": {
+          "description": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Description",
+            "type": "object"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/CardFactOut"
+            },
+            "title": "Facts",
+            "type": "array"
+          },
+          "lock_version": {
+            "title": "Lock Version",
+            "type": "integer"
+          },
+          "scholarships": {
+            "items": {
+              "$ref": "#/components/schemas/CardScholarshipOut"
+            },
+            "title": "Scholarships",
+            "type": "array"
+          }
+        },
+        "required": [
+          "lock_version",
+          "facts",
+          "scholarships",
+          "description"
+        ],
+        "title": "CardOut",
+        "type": "object"
+      },
       "CardResponse": {
         "description": "One card of FlashcardSetDetail.",
         "properties": {
@@ -8280,6 +8640,253 @@
           "hardness"
         ],
         "title": "CardResponse",
+        "type": "object"
+      },
+      "CardScholarshipIn": {
+        "additionalProperties": false,
+        "description": "Scholarship fields; a create needs name, provider and basis.",
+        "properties": {
+          "basis": {
+            "anyOf": [
+              {
+                "enum": [
+                  "merit",
+                  "need",
+                  "government",
+                  "sports",
+                  "work_study"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Basis"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "maxLength": 2,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "coverage_pct_max": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage Pct Max"
+          },
+          "coverage_pct_min": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage Pct Min"
+          },
+          "covers": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Covers"
+          },
+          "cycle": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cycle"
+          },
+          "lock_version": {
+            "title": "Lock Version",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "enum": [
+                  "institution",
+                  "government",
+                  "foundation"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "lock_version"
+        ],
+        "title": "CardScholarshipIn",
+        "type": "object"
+      },
+      "CardScholarshipOut": {
+        "description": "A scholarship of the institution.",
+        "properties": {
+          "basis": {
+            "enum": [
+              "merit",
+              "need",
+              "government",
+              "sports",
+              "work_study"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "coverage_pct_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage Pct Max"
+          },
+          "coverage_pct_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage Pct Min"
+          },
+          "covers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Covers",
+            "type": "array"
+          },
+          "cycle": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cycle"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "provider": {
+            "enum": [
+              "institution",
+              "government",
+              "foundation"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "basis",
+          "country",
+          "coverage_pct_min",
+          "coverage_pct_max",
+          "covers",
+          "url",
+          "cycle"
+        ],
+        "title": "CardScholarshipOut",
         "type": "object"
       },
       "CardStatsResponse": {
@@ -16008,6 +16615,22 @@
         "title": "CustomFieldValuesResponse",
         "type": "object"
       },
+      "CustomProfessionIn": {
+        "description": "A profession title the student typed.",
+        "properties": {
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "CustomProfessionIn",
+        "type": "object"
+      },
       "DashboardResponse": {
         "description": "The layout; version 0 is the default one (never saved).",
         "properties": {
@@ -19260,6 +19883,62 @@
         "title": "EssayIn",
         "type": "object"
       },
+      "EssayKeysStatusResponse": {
+        "description": "Keys, generation, backup and rotation.",
+        "properties": {
+          "exported_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exported At"
+          },
+          "exported_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exported By"
+          },
+          "generation": {
+            "title": "Generation",
+            "type": "integer"
+          },
+          "rotation": {
+            "$ref": "#/components/schemas/RotationResponse"
+          },
+          "students_with_keys": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Students With Keys"
+          }
+        },
+        "required": [
+          "students_with_keys",
+          "generation",
+          "exported_at",
+          "exported_by",
+          "rotation"
+        ],
+        "title": "EssayKeysStatusResponse",
+        "type": "object"
+      },
       "EssayLinkIO": {
         "description": "A link to an item id or a profile question id.",
         "properties": {
@@ -19677,6 +20356,71 @@
         "title": "EssayReviewsOut",
         "type": "object"
       },
+      "EssaySearchHitOut": {
+        "description": "One of my essays that contains the query, with a highlighted snippet.",
+        "properties": {
+          "essay_id": {
+            "format": "uuid",
+            "title": "Essay Id",
+            "type": "string"
+          },
+          "field": {
+            "enum": [
+              "title",
+              "prompt",
+              "body",
+              "notes"
+            ],
+            "title": "Field",
+            "type": "string"
+          },
+          "match_end": {
+            "description": "End (exclusive) of the match inside `snippet`.",
+            "title": "Match End",
+            "type": "integer"
+          },
+          "match_start": {
+            "description": "Start of the match inside `snippet`.",
+            "title": "Match Start",
+            "type": "integer"
+          },
+          "snippet": {
+            "title": "Snippet",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "essay_id",
+          "title",
+          "field",
+          "snippet",
+          "match_start",
+          "match_end"
+        ],
+        "title": "EssaySearchHitOut",
+        "type": "object"
+      },
+      "EssaySearchOut": {
+        "description": "Matches in the caller's own essays.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EssaySearchHitOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "EssaySearchOut",
+        "type": "object"
+      },
       "EssaySummaryOut": {
         "description": "A row of the essays list.",
         "properties": {
@@ -19761,6 +20505,12 @@
             ],
             "description": "The one score shown everywhere: deep-read uniqueness 0-100.",
             "title": "Uniqueness"
+          },
+          "unreadable": {
+            "default": false,
+            "description": "The sealed text is lost (key gone or changed): no text, only deletion is possible.",
+            "title": "Unreadable",
+            "type": "boolean"
           },
           "updated_at": {
             "anyOf": [
@@ -21617,6 +22367,43 @@
           }
         },
         "title": "ExerciseOptions",
+        "type": "object"
+      },
+      "ExperienceOut": {
+        "description": "One 1..5 rating of the campus experience with its short note.",
+        "properties": {
+          "key": {
+            "enum": [
+              "social",
+              "research",
+              "work"
+            ],
+            "title": "Key",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "score": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "score"
+        ],
+        "title": "ExperienceOut",
         "type": "object"
       },
       "ExportBody": {
@@ -23722,6 +24509,33 @@
         "title": "FlashcardsOptions",
         "type": "object"
       },
+      "FocusOut": {
+        "description": "One verified focus: a paraphrase, the university's own sentence and its page.",
+        "properties": {
+          "quote": {
+            "description": "The exact English sentence on the page.",
+            "title": "Quote",
+            "type": "string"
+          },
+          "source_url": {
+            "description": "The page, on the university's own site.",
+            "title": "Source Url",
+            "type": "string"
+          },
+          "text": {
+            "description": "Short paraphrase in the request language.",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "quote",
+          "source_url"
+        ],
+        "title": "FocusOut",
+        "type": "object"
+      },
       "ForkIn": {
         "description": "The prompt of the group the new essay takes (`null` owner: Common App).",
         "properties": {
@@ -24269,8 +25083,23 @@
         "type": "object"
       },
       "GroupCritiqueIn": {
-        "description": "`refresh` ignores stored reviews and reviews again.",
+        "description": "`refresh` ignores stored reviews and reviews again.\n\n`institution_ids` limits the review to those targets (all when omitted).",
         "properties": {
+          "institution_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Ids"
+          },
           "refresh": {
             "default": false,
             "title": "Refresh",
@@ -26790,6 +27619,15 @@
             ],
             "description": "Fit for the caller (as /list/fit); null when not computable.",
             "title": "Fit Total"
+          },
+          "focuses": {
+            "default": [],
+            "description": "What the university says it looks for; verified items only.",
+            "items": {
+              "$ref": "#/components/schemas/FocusOut"
+            },
+            "title": "Focuses",
+            "type": "array"
           },
           "highlights": {
             "items": {
@@ -34981,7 +35819,7 @@
           "restore": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/RestoreResponse"
+                "$ref": "#/components/schemas/app__interfaces__http__v1__id__login__schemas__RestoreResponse"
               },
               {
                 "type": "null"
@@ -35521,6 +36359,51 @@
         "title": "ManualCourseIn",
         "type": "object"
       },
+      "MapsUrlIn": {
+        "description": "An https template with one `{query}`; null restores the default.",
+        "properties": {
+          "template": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template"
+          }
+        },
+        "title": "MapsUrlIn",
+        "type": "object"
+      },
+      "MapsUrlOut": {
+        "description": "The stored template (null: default) and the default.",
+        "properties": {
+          "default": {
+            "default": "https://www.google.com/maps/search/?api=1&query={query}",
+            "title": "Default",
+            "type": "string"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template"
+          }
+        },
+        "required": [
+          "template"
+        ],
+        "title": "MapsUrlOut",
+        "type": "object"
+      },
       "MarkItem": {
         "description": "One mark.",
         "properties": {
@@ -35902,6 +36785,17 @@
             ],
             "title": "Admission Rate"
           },
+          "aid_estimate_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aid Estimate Usd"
+          },
           "avg_aid_intl": {
             "anyOf": [
               {
@@ -35913,6 +36807,22 @@
             ],
             "description": "Average aid for international students, USD.",
             "title": "Avg Aid Intl"
+          },
+          "budget_fit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fits",
+                  "above"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Net (else sticker) price against the student's budget; null when the budget or the price is unknown.",
+            "title": "Budget Fit"
           },
           "city": {
             "anyOf": [
@@ -35936,6 +36846,18 @@
             ],
             "title": "Cost After Aid Usd"
           },
+          "cost_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Yearly sticker price.",
+            "title": "Cost Usd"
+          },
           "country": {
             "title": "Country",
             "type": "string"
@@ -35951,6 +36873,34 @@
             ],
             "title": "Cover Url"
           },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "In the request language, else English.",
+            "title": "Description"
+          },
+          "experience": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ExperienceOut"
+            },
+            "title": "Experience",
+            "type": "array"
+          },
+          "fields": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
           "fit_total": {
             "anyOf": [
               {
@@ -35963,6 +36913,15 @@
               }
             ],
             "title": "Fit Total"
+          },
+          "focuses": {
+            "default": [],
+            "description": "What the university says it looks for; verified items only.",
+            "items": {
+              "$ref": "#/components/schemas/FocusOut"
+            },
+            "title": "Focuses",
+            "type": "array"
           },
           "institution_type": {
             "anyOf": [
@@ -36012,6 +36971,10 @@
             ],
             "title": "Logo Url"
           },
+          "map_url": {
+            "title": "Map Url",
+            "type": "string"
+          },
           "match_pct": {
             "maximum": 100.0,
             "minimum": 0.0,
@@ -36033,6 +36996,18 @@
             "title": "Name",
             "type": "string"
           },
+          "net_cost_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Sticker price minus the average aid, an estimate.",
+            "title": "Net Cost Usd"
+          },
           "next_deadline": {
             "anyOf": [
               {
@@ -36045,6 +37020,15 @@
           },
           "overlap": {
             "$ref": "#/components/schemas/OverlapOut"
+          },
+          "rankings": {
+            "default": [],
+            "description": "At most two, relevant to the student; else empty.",
+            "items": {
+              "$ref": "#/components/schemas/RankingOut"
+            },
+            "title": "Rankings",
+            "type": "array"
           },
           "status": {
             "anyOf": [
@@ -36079,7 +37063,8 @@
           "cost_after_aid_usd",
           "match_pct",
           "overlap",
-          "status"
+          "status",
+          "map_url"
         ],
         "title": "MatchOut",
         "type": "object"
@@ -38439,6 +39424,22 @@
             "title": "Ai Risk",
             "type": "string"
           },
+          "custom": {
+            "default": false,
+            "title": "Custom",
+            "type": "boolean"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
           "group": {
             "title": "Group",
             "type": "string"
@@ -38450,6 +39451,17 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "isco_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isco Id"
           },
           "name": {
             "title": "Name",
@@ -43093,6 +44105,22 @@
         "title": "PasskeyResponse",
         "type": "object"
       },
+      "PassphraseBody": {
+        "description": "The passphrase that seals the backup (kept by the admin, never stored).",
+        "properties": {
+          "passphrase": {
+            "maxLength": 1024,
+            "minLength": 12,
+            "title": "Passphrase",
+            "type": "string"
+          }
+        },
+        "required": [
+          "passphrase"
+        ],
+        "title": "PassphraseBody",
+        "type": "object"
+      },
       "PasswordChangeResponse": {
         "description": "The password was set by an administrator: send a new one with the ticket.",
         "properties": {
@@ -46902,6 +47930,14 @@
             "title": "Short Answers",
             "type": "array"
           },
+          "similar_keys": {
+            "description": "Keys of member prompts that only resemble the rest: shown as `similar`, the others are exact matches.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Similar Keys",
+            "type": "array"
+          },
           "spread": {
             "title": "Spread",
             "type": "number"
@@ -46914,6 +47950,7 @@
           "category",
           "short_answers",
           "spread",
+          "similar_keys",
           "prompts",
           "covered",
           "essay_ids",
@@ -49173,6 +50210,53 @@
         "title": "RankingItem",
         "type": "object"
       },
+      "RankingOut": {
+        "description": "A subject ranking relevant to the student's fields and professions.",
+        "properties": {
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Rank"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "system": {
+            "enum": [
+              "qs",
+              "the",
+              "arwu",
+              "usnews"
+            ],
+            "title": "System",
+            "type": "string"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "system",
+          "subject",
+          "rank",
+          "year",
+          "source_url"
+        ],
+        "title": "RankingOut",
+        "type": "object"
+      },
       "Rating": {
         "description": "Answer buttons.",
         "enum": [
@@ -49259,6 +50343,46 @@
           }
         },
         "title": "RatingsBody",
+        "type": "object"
+      },
+      "ReadHistoryItemOut": {
+        "description": "One past deep read: when, how long the essay was, the gist, the unis.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "universities": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Universities",
+            "type": "array"
+          },
+          "words": {
+            "title": "Words",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "words",
+          "summary",
+          "universities"
+        ],
+        "title": "ReadHistoryItemOut",
         "type": "object"
       },
       "ReadinessComponentOut": {
@@ -51344,28 +52468,6 @@
         "title": "ResponseOut",
         "type": "object"
       },
-      "RestoreBody": {
-        "description": "POST /v1/id/login/restore and /login/restore/decline.",
-        "properties": {
-          "login_challenge": {
-            "minLength": 1,
-            "title": "Login Challenge",
-            "type": "string"
-          },
-          "ticket": {
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Ticket",
-            "type": "string"
-          }
-        },
-        "required": [
-          "login_challenge",
-          "ticket"
-        ],
-        "title": "RestoreBody",
-        "type": "object"
-      },
       "RestoreIn": {
         "description": "The `lock_version` of the essay the client read.",
         "properties": {
@@ -51379,26 +52481,6 @@
           "lock_version"
         ],
         "title": "RestoreIn",
-        "type": "object"
-      },
-      "RestoreResponse": {
-        "description": "The account is scheduled for deletion on ``deletes_on``: restore or decline.",
-        "properties": {
-          "deletes_on": {
-            "format": "date",
-            "title": "Deletes On",
-            "type": "string"
-          },
-          "ticket": {
-            "title": "Ticket",
-            "type": "string"
-          }
-        },
-        "required": [
-          "ticket",
-          "deletes_on"
-        ],
-        "title": "RestoreResponse",
         "type": "object"
       },
       "RestoreRevisionBody": {
@@ -51525,6 +52607,13 @@
             "title": "Kind",
             "type": "string"
           },
+          "link": {
+            "$ref": "#/components/schemas/ReviewLinkOut",
+            "default": {
+              "kind": "none",
+              "ref": ""
+            }
+          },
           "text": {
             "title": "Text",
             "type": "string"
@@ -51536,6 +52625,35 @@
           "evidence"
         ],
         "title": "ReviewFindingOut",
+        "type": "object"
+      },
+      "ReviewLinkOut": {
+        "description": "The screen a finding or subsection opens; `ref` is empty for a whole screen.",
+        "properties": {
+          "kind": {
+            "default": "none",
+            "enum": [
+              "profile",
+              "activities",
+              "honors",
+              "essay",
+              "list_entry",
+              "survey",
+              "grades",
+              "tests",
+              "recommendations",
+              "none"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "ref": {
+            "default": "",
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "title": "ReviewLinkOut",
         "type": "object"
       },
       "ReviewOut": {
@@ -51743,6 +52861,11 @@
       "ReviewSectionOut": {
         "description": "One section agent's report; `pending`/`running` until it finishes.",
         "properties": {
+          "ao_view": {
+            "default": "",
+            "title": "Ao View",
+            "type": "string"
+          },
           "findings": {
             "default": [],
             "items": {
@@ -51793,6 +52916,14 @@
             ],
             "title": "Status",
             "type": "string"
+          },
+          "subsections": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ReviewSubsectionOut"
+            },
+            "title": "Subsections",
+            "type": "array"
           },
           "summary": {
             "default": "",
@@ -51912,6 +53043,56 @@
           "today_seconds"
         ],
         "title": "ReviewStatsResponse",
+        "type": "object"
+      },
+      "ReviewSubsectionOut": {
+        "description": "One real part of a section (an essay, an activity, a list entry...).",
+        "properties": {
+          "ao_view": {
+            "default": "",
+            "title": "Ao View",
+            "type": "string"
+          },
+          "finding_indexes": {
+            "default": [],
+            "items": {
+              "type": "integer"
+            },
+            "title": "Finding Indexes",
+            "type": "array"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "link": {
+            "$ref": "#/components/schemas/ReviewLinkOut",
+            "default": {
+              "kind": "none",
+              "ref": ""
+            }
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "strong",
+              "mixed",
+              "weak",
+              "missing"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "verdict"
+        ],
+        "title": "ReviewSubsectionOut",
         "type": "object"
       },
       "ReviseSlidesBody": {
@@ -52418,6 +53599,67 @@
           "subgroup"
         ],
         "title": "RosterStudentResponse",
+        "type": "object"
+      },
+      "RotationResponse": {
+        "description": "Progress of the last (or running) rotation.",
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "state": {
+            "enum": [
+              "idle",
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "unreadable": {
+            "title": "Unreadable",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "state",
+          "total",
+          "done",
+          "unreadable",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "RotationResponse",
         "type": "object"
       },
       "RoundOptionOut": {
@@ -54053,6 +55295,101 @@
           "verified"
         ],
         "title": "ScoreVerifyIn",
+        "type": "object"
+      },
+      "ScorecardAttachIn": {
+        "description": "The Scorecard `UNITID` to attach.",
+        "properties": {
+          "unitid": {
+            "maximum": 99999999.0,
+            "minimum": 1.0,
+            "title": "Unitid",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "unitid"
+        ],
+        "title": "ScorecardAttachIn",
+        "type": "object"
+      },
+      "ScorecardSchoolOut": {
+        "description": "A Scorecard school with the facts it would fill.",
+        "properties": {
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "facts": {
+            "additionalProperties": true,
+            "description": "Fact key to value, e.g. `acceptance_rate` {min, max}.",
+            "title": "Facts",
+            "type": "object"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "unitid": {
+            "title": "Unitid",
+            "type": "integer"
+          },
+          "website_domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website Domain"
+          }
+        },
+        "required": [
+          "unitid",
+          "name",
+          "city",
+          "state",
+          "website_domain",
+          "facts"
+        ],
+        "title": "ScorecardSchoolOut",
+        "type": "object"
+      },
+      "ScorecardSearchOut": {
+        "description": "Up to ten candidates.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScorecardSchoolOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ScorecardSearchOut",
         "type": "object"
       },
       "SearchHitResponse": {
@@ -59865,6 +61202,36 @@
           "by_scope"
         ],
         "title": "StorageUsage",
+        "type": "object"
+      },
+      "StoredReadOut": {
+        "description": "One past deep read, read-only; `latest` when no newer read exists.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "latest": {
+            "title": "Latest",
+            "type": "boolean"
+          },
+          "read": {
+            "$ref": "#/components/schemas/DeepReadBodyOut"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "latest",
+          "read"
+        ],
+        "title": "StoredReadOut",
         "type": "object"
       },
       "StreakOut": {
@@ -67910,6 +69277,16 @@
             "title": "Alignment",
             "type": "integer"
           },
+          "ao_reaction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AoReactionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "fit_summary": {
             "title": "Fit Summary",
             "type": "string"
@@ -71695,6 +73072,54 @@
         "title": "SyncRunItemResponse",
         "type": "object"
       },
+      "app__interfaces__http__v1__admin_users__essay_keys__schemas__RestoreBody": {
+        "description": "The backup file (its JSON object) and its passphrase.",
+        "properties": {
+          "backup": {
+            "$ref": "#/components/schemas/BackupDocument"
+          },
+          "passphrase": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Passphrase",
+            "type": "string"
+          }
+        },
+        "required": [
+          "backup",
+          "passphrase"
+        ],
+        "title": "RestoreBody",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__admin_users__essay_keys__schemas__RestoreResponse": {
+        "description": "Keys written, keys already present, students whose stored key differs.",
+        "properties": {
+          "conflicts": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Conflicts",
+            "type": "array"
+          },
+          "restored": {
+            "title": "Restored",
+            "type": "integer"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "restored",
+          "skipped",
+          "conflicts"
+        ],
+        "title": "RestoreResponse",
+        "type": "object"
+      },
       "app__interfaces__http__v1__admin_users__schemas__AdminUserResponse": {
         "description": "AdminUser.",
         "properties": {
@@ -72743,6 +74168,22 @@
             "title": "Ai Risk",
             "type": "string"
           },
+          "custom": {
+            "default": false,
+            "title": "Custom",
+            "type": "boolean"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
           "group": {
             "title": "Group",
             "type": "string"
@@ -72754,6 +74195,17 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "isco_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isco Id"
           },
           "name": {
             "title": "Name",
@@ -74836,6 +76288,48 @@
           "share_slug"
         ],
         "title": "CopyBody",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__id__login__schemas__RestoreBody": {
+        "description": "POST /v1/id/login/restore and /login/restore/decline.",
+        "properties": {
+          "login_challenge": {
+            "minLength": 1,
+            "title": "Login Challenge",
+            "type": "string"
+          },
+          "ticket": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "login_challenge",
+          "ticket"
+        ],
+        "title": "RestoreBody",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__id__login__schemas__RestoreResponse": {
+        "description": "The account is scheduled for deletion on ``deletes_on``: restore or decline.",
+        "properties": {
+          "deletes_on": {
+            "format": "date",
+            "title": "Deletes On",
+            "type": "string"
+          },
+          "ticket": {
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket",
+          "deletes_on"
+        ],
+        "title": "RestoreResponse",
         "type": "object"
       },
       "app__interfaces__http__v1__id__schemas__AuditItemResponse": {
@@ -80642,6 +82136,130 @@
         "summary": "Revoke Device",
         "tags": [
           "faces"
+        ]
+      }
+    },
+    "/v1/admin/essay-keys/backup": {
+      "post": {
+        "description": "The one passphrase-sealed backup of the current generation (409 after it).",
+        "operationId": "post_backup_v1_admin_essay_keys_backup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PassphraseBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Backup file"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Backup",
+        "tags": [
+          "admin-essay-keys"
+        ]
+      }
+    },
+    "/v1/admin/essay-keys/restore": {
+      "post": {
+        "description": "Write the keys missing from Vault; an existing key is never overwritten.",
+        "operationId": "post_restore_v1_admin_essay_keys_restore_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__interfaces__http__v1__admin_users__essay_keys__schemas__RestoreBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__admin_users__essay_keys__schemas__RestoreResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Restore",
+        "tags": [
+          "admin-essay-keys"
+        ]
+      }
+    },
+    "/v1/admin/essay-keys/rotate": {
+      "post": {
+        "description": "Start the rotation in the worker; poll /status for progress.",
+        "operationId": "post_rotate_v1_admin_essay_keys_rotate_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssayKeysStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Post Rotate",
+        "tags": [
+          "admin-essay-keys"
+        ]
+      }
+    },
+    "/v1/admin/essay-keys/status": {
+      "get": {
+        "description": "Students with a key, key generation, its backup and the rotation progress.",
+        "operationId": "get_status_v1_admin_essay_keys_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssayKeysStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Status",
+        "tags": [
+          "admin-essay-keys"
         ]
       }
     },
@@ -92537,6 +94155,63 @@
         ]
       }
     },
+    "/v1/admission/essays/search": {
+      "get": {
+        "description": "Search the words inside my own essays (owner only; nothing is logged).",
+        "operationId": "admission_search_essays",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 80,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 20,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssaySearchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Essays",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/essays/short-answers/{slot_key}": {
       "get": {
         "description": "My short answer to a supplemental prompt (`slot_key` is the prompt key).",
@@ -93413,6 +95088,168 @@
           }
         },
         "summary": "Run Deep Read",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/deep-read/history": {
+      "get": {
+        "description": "My past deep reads of this essay, newest first; no model call.",
+        "operationId": "admission_essay_deep_read_history",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReadHistoryItemOut"
+                  },
+                  "title": "Response Admission Essay Deep Read History",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay has under 50 words."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The weekly limit is used up."
+          }
+        },
+        "summary": "Get Deep Read History",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/deep-read/{read_id}": {
+      "get": {
+        "description": "One past deep read of my essay.",
+        "operationId": "admission_essay_deep_read_by_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "read_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Read Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredReadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay has under 50 words."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The weekly limit is used up."
+          }
+        },
+        "summary": "Get Stored Read",
         "tags": [
           "admission"
         ]
@@ -96129,6 +97966,56 @@
         ]
       }
     },
+    "/v1/admission/matches/dismissed": {
+      "get": {
+        "description": "Universities the caller marked \"not my vibe\"; Return is the DELETE decision.",
+        "operationId": "admission_list_dismissed_matches",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Dismissed",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/matches/{university_id}/decision": {
       "delete": {
         "description": "Undo a swipe.",
@@ -97389,6 +99276,66 @@
           }
         },
         "summary": "Put My Professions",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/me/professions/custom/fill": {
+      "post": {
+        "description": "Fill the card of a typed-in profession (a model call) and keep it.\n\nIt is ready to pick through `PUT /me/professions` with the returned id.",
+        "operationId": "admission_fill_custom_profession",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomProfessionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_fit__ProfessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fill Custom Profession",
         "tags": [
           "admission"
         ]
@@ -99903,6 +101850,68 @@
         ]
       }
     },
+    "/v1/admission/settings/maps-url": {
+      "get": {
+        "description": "The map link template in force.",
+        "operationId": "admission_maps_url",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapsUrlOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Maps Url",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Replace the template (administrators).",
+        "operationId": "admission_set_maps_url",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MapsUrlIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapsUrlOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Maps Url",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/settings/school-grades": {
       "get": {
         "description": "The school grades in force (who is entitled, which grades are planned).",
@@ -100738,6 +102747,428 @@
         ]
       }
     },
+    "/v1/admission/staff/catalog/institutions/{institution_id}/description": {
+      "put": {
+        "description": "Replace the per-locale description.",
+        "operationId": "admission_card_put_description",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "institution_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Institution Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardDescriptionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardLockOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Description",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/catalog/institutions/{institution_id}/facts": {
+      "get": {
+        "description": "Facts, scholarships and description with the lock to send back.",
+        "operationId": "admission_card_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "institution_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Institution Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Facts",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Upsert and delete facts (admin, counselor).",
+        "operationId": "admission_card_put_facts",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "institution_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Institution Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardFactsPutIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardLockOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Facts",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/catalog/institutions/{institution_id}/scholarships": {
+      "get": {
+        "description": "Scholarships of the institution.",
+        "operationId": "admission_card_scholarships",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "institution_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Institution Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CardScholarshipOut"
+                  },
+                  "title": "Response Admission Card Scholarships",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Scholarships",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Add a scholarship.",
+        "operationId": "admission_card_create_scholarship",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "institution_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Institution Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardScholarshipIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardScholarshipOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Scholarship",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/catalog/institutions/{institution_id}/scholarships/{scholarship_id}": {
+      "delete": {
+        "description": "Remove a scholarship; the lock is a query parameter.",
+        "operationId": "admission_card_delete_scholarship",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "institution_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Institution Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scholarship_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scholarship Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lock_version",
+            "required": true,
+            "schema": {
+              "title": "Lock Version",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Scholarship",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Overwrite the given scholarship fields.",
+        "operationId": "admission_card_update_scholarship",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "institution_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Institution Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scholarship_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scholarship Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardScholarshipIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardScholarshipOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Scholarship",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/catalog/institutions/{institution_id}/scorecard": {
+      "post": {
+        "description": "Upsert the school's sourced facts into a US institution (curators).",
+        "operationId": "admission_staff_scorecard_attach",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "institution_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Institution Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScorecardAttachIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScorecardSchoolOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Attach Scorecard",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/staff/catalog/institutions/{institution_id}/supp-prompts/{cycle}": {
       "put": {
         "description": "Replace the prompts of one cycle (curator roles); returns every cycle.",
@@ -100949,6 +103380,51 @@
           }
         },
         "summary": "Review Catalog Proposal",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/catalog/scorecard/search": {
+      "get": {
+        "description": "Candidates by school name or numeric UNITID (curators).",
+        "operationId": "admission_staff_scorecard_search",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 1,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScorecardSearchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Scorecard",
         "tags": [
           "admission"
         ]
@@ -109588,7 +112064,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RestoreBody"
+                "$ref": "#/components/schemas/app__interfaces__http__v1__id__login__schemas__RestoreBody"
               }
             }
           },
@@ -109630,7 +112106,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RestoreBody"
+                "$ref": "#/components/schemas/app__interfaces__http__v1__id__login__schemas__RestoreBody"
               }
             }
           },

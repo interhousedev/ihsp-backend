@@ -1,5 +1,6 @@
 """Deep read of an essay and the group critique over its target universities."""
 
+from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID
 
@@ -23,9 +24,13 @@ class DeepReadIn(BaseModel):
 
 
 class GroupCritiqueIn(BaseModel):
-    """`refresh` ignores stored reviews and reviews again."""
+    """`refresh` ignores stored reviews and reviews again.
+
+    `institution_ids` limits the review to those targets (all when omitted).
+    """
 
     refresh: bool = False
+    institution_ids: list[UUID] | None = None
 
 
 class ParagraphReadOut(BaseModel):
@@ -135,9 +140,59 @@ async def group_critique(
 ) -> EssayReviewsOut:
     """Review my essay for each target university under that target's prompt."""
     r = await container.admission.essay_deep_read.group_critique(
-        ctx, essay_id, refresh=body.refresh, locale=_locale(lang)
+        ctx,
+        essay_id,
+        refresh=body.refresh,
+        locale=_locale(lang),
+        institution_ids=body.institution_ids,
     )
     return EssayReviewsOut.of(r)
+
+
+class ReadHistoryItemOut(BaseModel):
+    """One past deep read: when, how long the essay was, the gist, the unis."""
+
+    id: UUID
+    created_at: datetime
+    words: int
+    summary: str
+    universities: list[UUID]
+
+
+class StoredReadOut(BaseModel):
+    """One past deep read, read-only; `latest` when no newer read exists."""
+
+    id: UUID
+    created_at: datetime
+    latest: bool
+    read: DeepReadBodyOut
+
+
+async def get_deep_read_history(
+    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+) -> list[ReadHistoryItemOut]:
+    """My past deep reads of this essay, newest first; no model call."""
+    items = await container.admission.essay_deep_read.history(ctx, essay_id)
+    return [
+        ReadHistoryItemOut(
+            id=i.id,
+            created_at=i.created_at,
+            words=i.words,
+            summary=i.summary,
+            universities=list(i.universities),
+        )
+        for i in items
+    ]
+
+
+async def get_stored_read(
+    essay_id: UUID, read_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+) -> StoredReadOut:
+    """One past deep read of my essay."""
+    s = await container.admission.essay_deep_read.stored_read(ctx, essay_id, read_id)
+    body = DeepReadOut.of(DeepReadResult(s.read, True, False)).read
+    assert body is not None
+    return StoredReadOut(id=s.id, created_at=s.created_at, latest=s.latest, read=body)
 
 
 def _route(path: str, endpoint: Any, method: str, op: str, model: Any) -> None:
@@ -166,4 +221,18 @@ _route(
     "POST",
     "group_critique",
     EssayReviewsOut,
+)
+_route(
+    "/essays/{essay_id}/deep-read/history",
+    get_deep_read_history,
+    "GET",
+    "deep_read_history",
+    list[ReadHistoryItemOut],
+)
+_route(
+    "/essays/{essay_id}/deep-read/{read_id}",
+    get_stored_read,
+    "GET",
+    "deep_read_by_id",
+    StoredReadOut,
 )

@@ -1,4 +1,4 @@
-# Development stack: postgres, redis, S3 (RustFS), vault (dev mode), hydra, mailpit.
+# Development stack: postgres, redis, S3 (RustFS), vault (file storage), hydra, mailpit.
 # Start:  docker compose -f materials/docker-compose.dev.yaml up -d --wait
 # The app itself runs on the host (`scripts/dev.sh all`).
 name: ihsp-dev
@@ -75,31 +75,35 @@ services:
 
   vault:
     image: hashicorp/vault:1.21.4
+    command: ["server", "-config=/etc/vault-dev/vault.hcl"]
     cap_add:
       - IPC_LOCK
-    environment:
-      VAULT_DEV_ROOT_TOKEN_ID: dev-root
-      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
     ports:
       - "127.0.0.1:8200:8200"
+    volumes:
+      - vault_data:/vault/file
+      - ./vault/dev/vault.hcl:/etc/vault-dev/vault.hcl:ro
     healthcheck:
-      test: ["CMD", "vault", "status", "-address=http://127.0.0.1:8200"]
+      # Healthy even while uninitialised or sealed: vault-init does both.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8200/v1/sys/health?uninitcode=200&sealedcode=200"]
       interval: 3s
       timeout: 3s
       retries: 30
 
-  # Dev mode keeps nothing on disk: the bootstrap runs on every `up`.
+  # Persistent dev Vault: init once (keys in materials/dev-keys/vault-init.json,
+  # git-ignored), unseal on every start, then the idempotent bootstrap.
   vault-init:
     image: python:3.13.18-slim
     command:
       - sh
       - -c
-      - pip install -q --disable-pip-version-check hvac==2.4.0 && python /init/setup.py
+      - pip install -q --disable-pip-version-check hvac==2.4.0 && python /init/dev_init.py
     environment:
       VAULT_ADDR: http://vault:8200
-      VAULT_TOKEN: dev-root
+    working_dir: /init
     volumes:
       - ./vault:/init:ro
+      - ./dev-keys:/keys
     depends_on:
       vault:
         condition: service_healthy
@@ -153,3 +157,4 @@ volumes:
   pg_data:
   redis_data:
   s3_data:
+  vault_data:

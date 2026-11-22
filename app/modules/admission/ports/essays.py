@@ -11,8 +11,18 @@ from app.modules.admission.domain.essays import Essay, EssayIdea, EssayVersion
 class EssayRepository(Protocol):
     """Essays, their versions and the ideas board."""
 
-    async def list_for(self, student_id: UUID) -> list[Essay]:
-        """Return the student's essays, newest edit first."""
+    async def list_for(
+        self, student_id: UUID, *, include_unreadable: bool = False
+    ) -> list[Essay]:
+        """Return the student's essays, newest edit first.
+
+        Essays whose sealed text no longer opens are skipped, or returned as
+        text-less stubs with `unreadable` set when `include_unreadable`.
+        """
+        ...
+
+    async def owner_of(self, essay_id: UUID) -> UUID | None:
+        """Return the owner of an essay without opening its text."""
         ...
 
     async def statuses(self, student_id: UUID) -> list[str]:

@@ -26,6 +26,7 @@ from uuid import UUID
 
 from app.modules.admission.domain.errors import (
     EssayKeyUnavailableError,
+    EssayUnreadableError,
     EssayVaultUnavailableError,
 )
 from app.modules.admission.ports.essay_crypto import (
@@ -33,6 +34,7 @@ from app.modules.admission.ports.essay_crypto import (
     EssayCipher,
     EssayKey,
     EssayKeyStore,
+    RestoreOutcome,
 )
 from app.settings import EssayVaultSettings, Settings
 
@@ -67,6 +69,51 @@ def _aad(owner_id: UUID, record_id: UUID, column: str) -> bytes:
     return f"{owner_id}|{record_id}|{column}".encode()
 
 
+def seal_blob(
+    secret: bytes, owner_id: UUID, record_id: UUID, column: str, text: str
+) -> bytes:
+    """A version-1 blob of `text` under one data key."""
+    nonce = os.urandom(NONCE_BYTES)
+    sealed = AESGCM(secret).encrypt(
+        nonce, text.encode(), _aad(owner_id, record_id, column)
+    )
+    return bytes([VERSION_AES_GCM]) + nonce + sealed
+
+
+def _check_blob(blob: bytes) -> None:
+    if len(blob) < 1 + NONCE_BYTES + TAG_BYTES:
+        raise EssayUnreadableError(support_details="essay blob too short")
+    if blob[0] != VERSION_AES_GCM:
+        raise EssayUnreadableError(support_details="unknown essay blob version")
+
+
+def open_blob(
+    secret: bytes, owner_id: UUID, record_id: UUID, column: str, blob: bytes
+) -> str | None:
+    """The text of a blob under one data key; None when this key does not open it.
+
+    Raises EssayUnreadableError for a blob no key could open (short, unknown version).
+    """
+    _check_blob(blob)
+    nonce, sealed = blob[1 : 1 + NONCE_BYTES], blob[1 + NONCE_BYTES :]
+    try:
+        plain = AESGCM(secret).decrypt(nonce, sealed, _aad(owner_id, record_id, column))
+    except InvalidTag:
+        return None
+    return plain.decode()
+
+
+def _open_any(
+    key: EssayKey, owner_id: UUID, record_id: UUID, column: str, blob: bytes
+) -> str | None:
+    """The text under any secret of `key` (newest first); None when none opens it."""
+    for secret in reversed(key.secrets):
+        plain = open_blob(secret, owner_id, record_id, column, blob)
+        if plain is not None:
+            return plain
+    return None
+
+
 class AesGcmEssayCipher:
     """Implements `EssayCipher` over an `EssayKeyStore` with an LRU+TTL key cache."""
 
@@ -96,18 +143,35 @@ class AesGcmEssayCipher:
         self._cache.move_to_end(owner_id)
         return hit[0]
 
-    def _remember(self, key: EssayKey) -> None:
-        self._cache[key.owner_id] = (key, self._clock() + self._ttl)
+    def _remember(self, key: EssayKey, loaded_at: float) -> None:
+        # The TTL runs from the start of the load: a slow store read cannot stretch
+        # the life of a key past `loaded_at + ttl` (the rotation settle relies on it).
+        self._cache[key.owner_id] = (key, loaded_at + self._ttl)
         self._cache.move_to_end(key.owner_id)
         while len(self._cache) > self._size:
             self._cache.popitem(last=False)
 
     async def _load(self, owner_id: UUID, create: bool) -> EssayKey | None:
+        started = self._clock()
         key = await self._store.get(owner_id)
         if key is None and create:
             key = await self._store.create(owner_id)
         if key is not None:
-            self._remember(key)
+            self._remember(key, started)
+        return key
+
+    async def refresh(self, owner_id: UUID) -> EssayKey | None:
+        """Read the key from the store, bypassing the cache, and cache it."""
+        self._cache.pop(owner_id, None)
+        return await self._load(owner_id, create=False)
+
+    async def write_key(self, owner_id: UUID, *, fresh: bool) -> EssayKey:
+        """The key to seal with; `fresh` reads it from the store, not the cache."""
+        if not fresh:
+            return await self._required(owner_id)
+        self._cache.pop(owner_id, None)
+        key = await self._load(owner_id, create=True)
+        assert key is not None  # create always returns a key
         return key
 
     async def _key(self, owner_id: UUID, create: bool) -> EssayKey | None:
@@ -131,44 +195,42 @@ class AesGcmEssayCipher:
     async def seal(
         self, owner_id: UUID, record_id: UUID, column: str, text: str
     ) -> bytes:
-        """Encrypt `text` under the owner's key, creating the key when missing."""
+        """Encrypt `text` under the owner's active key; create the key if missing."""
         key = await self._required(owner_id)
-        nonce = os.urandom(NONCE_BYTES)
-        sealed = AESGCM(key.secret).encrypt(
-            nonce, text.encode(), _aad(owner_id, record_id, column)
-        )
-        return bytes([VERSION_AES_GCM]) + nonce + sealed
+        return seal_blob(key.active, owner_id, record_id, column, text)
 
     async def open(
         self, owner_id: UUID, record_id: UUID, column: str, blob: bytes
     ) -> str:
-        """Decrypt a blob; ValueError if tampered or foreign, 503 without a key."""
-        if len(blob) < 1 + NONCE_BYTES + TAG_BYTES:
-            raise ValueError("essay blob too short")
-        if blob[0] != VERSION_AES_GCM:
-            raise ValueError("unknown essay blob version")
+        """Decrypt a blob; EssayUnreadableError (a ValueError) if tampered or foreign.
+
+        Raises the 503 EssayKeyUnavailableError when the owner has no key at all.
+        """
+        _check_blob(blob)
         key = await self._key(owner_id, create=False)
         if key is None:
             log.error("essay_key_missing", owner_id=str(owner_id))
             raise EssayKeyUnavailableError(support_details="essay key missing")
-        nonce, sealed = blob[1 : 1 + NONCE_BYTES], blob[1 + NONCE_BYTES :]
-        try:
-            plain = AESGCM(key.secret).decrypt(
-                nonce, sealed, _aad(owner_id, record_id, column)
-            )
-        except InvalidTag as exc:
-            raise ValueError("essay blob does not open") from exc
-        return plain.decode()
+        plain = _open_any(key, owner_id, record_id, column, blob)
+        if plain is None:
+            # Another process may have sealed it with a pending key this cache does
+            # not know yet (a rotation): read the key once more before giving up.
+            fresh = await self.refresh(owner_id)
+            if fresh is not None and fresh.secrets != key.secrets:
+                plain = _open_any(fresh, owner_id, record_id, column, blob)
+        if plain is None:
+            raise EssayUnreadableError(support_details="essay blob does not open")
+        return plain
 
     async def digest(self, owner_id: UUID, purpose: str, data: str) -> str:
-        """HMAC-SHA256 of `data` under an HKDF subkey of the owner's key (hex)."""
+        """HMAC-SHA256 of `data` under an HKDF subkey of the owner's active key."""
         key = await self._required(owner_id)
         subkey = HKDF(
             algorithm=hashes.SHA256(),
             length=KEY_BYTES,
             salt=None,
             info=_DIGEST_INFO + purpose.encode(),
-        ).derive(key.secret)
+        ).derive(key.active)
         return hmac.new(subkey, data.encode(), hashlib.sha256).hexdigest()
 
     async def forget(self, owner_id: UUID) -> None:
@@ -197,21 +259,74 @@ class MemoryEssayKeyStore:
         """Delete the key."""
         self.keys.pop(owner_id, None)
 
+    async def owners(self) -> list[UUID]:
+        """Every owner with a key."""
+        return list(self.keys)
+
+    async def restore(self, key: EssayKey) -> RestoreOutcome:
+        """Add the key unless the owner has one."""
+        found = self.keys.get(key.owner_id)
+        if found is None:
+            self.keys[key.owner_id] = key
+            return "restored"
+        return "same" if key.secret in found.secrets else "conflict"
+
+    async def begin_rotation(self, owner_id: UUID) -> EssayKey | None:
+        """Add a pending key once."""
+        found = self.keys.get(owner_id)
+        if found is None or found.pending is not None:
+            return found
+        rotating = EssayKey(owner_id, found.secret, os.urandom(KEY_BYTES))
+        self.keys[owner_id] = rotating
+        return rotating
+
+    async def finish_rotation(self, owner_id: UUID, pending: bytes) -> bool:
+        """Promote the pending key when it is `pending`."""
+        found = self.keys.get(owner_id)
+        if found is None or not _same(found.pending, pending):
+            return False
+        self.keys[owner_id] = EssayKey(owner_id, pending)
+        return True
+
+
+def _same(found: bytes | None, expected: bytes) -> bool:
+    return found is not None and hmac.compare_digest(found, expected)
+
+
+def _refuse() -> EssayVaultUnavailableError:
+    return EssayVaultUnavailableError(support_details="essay vault not configured")
+
 
 class RefusingEssayKeyStore:
     """Production without Vault settings: every call fails closed (503)."""
 
     async def get(self, owner_id: UUID) -> EssayKey | None:
         """Refuse."""
-        raise EssayVaultUnavailableError(support_details="essay vault not configured")
+        raise _refuse()
 
     async def create(self, owner_id: UUID) -> EssayKey:
         """Refuse."""
-        raise EssayVaultUnavailableError(support_details="essay vault not configured")
+        raise _refuse()
 
     async def destroy(self, owner_id: UUID) -> None:
         """Refuse."""
-        raise EssayVaultUnavailableError(support_details="essay vault not configured")
+        raise _refuse()
+
+    async def owners(self) -> list[UUID]:
+        """Refuse."""
+        raise _refuse()
+
+    async def restore(self, key: EssayKey) -> RestoreOutcome:
+        """Refuse."""
+        raise _refuse()
+
+    async def begin_rotation(self, owner_id: UUID) -> EssayKey | None:
+        """Refuse."""
+        raise _refuse()
+
+    async def finish_rotation(self, owner_id: UUID, pending: bytes) -> bool:
+        """Refuse."""
+        raise _refuse()
 
 
 class VaultEssayKeyStore:
@@ -267,7 +382,7 @@ class VaultEssayKeyStore:
     def _path(self, owner_id: UUID) -> str:
         return f"{self._settings.kv_prefix}/{owner_id}"
 
-    def _read(self, owner_id: UUID) -> EssayKey | None:
+    def _read_versioned(self, owner_id: UUID) -> tuple[EssayKey, int] | None:
         try:
             response = self._client.secrets.kv.v2.read_secret_version(
                 path=self._path(owner_id),
@@ -276,7 +391,34 @@ class VaultEssayKeyStore:
             )
         except InvalidPath:
             return None
-        return EssayKey(owner_id, base64.b64decode(response["data"]["data"]["dek"]))
+        data = response["data"]["data"]
+        pending = data.get("pending_dek")
+        key = EssayKey(
+            owner_id,
+            base64.b64decode(data["dek"]),
+            None if pending is None else base64.b64decode(pending),
+        )
+        version = response["data"].get("metadata", {}).get("version", 0)
+        return key, int(version)
+
+    def _read(self, owner_id: UUID) -> EssayKey | None:
+        found = self._read_versioned(owner_id)
+        return None if found is None else found[0]
+
+    def _write(self, key: EssayKey, cas: int) -> None:
+        secret = {
+            "dek": base64.b64encode(key.secret).decode(),
+            "alg": ALG,
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+        if key.pending is not None:
+            secret["pending_dek"] = base64.b64encode(key.pending).decode()
+        self._client.secrets.kv.v2.create_or_update_secret(
+            path=self._path(key.owner_id),
+            secret=secret,
+            cas=cas,
+            mount_point=self._settings.kv_mount,
+        )
 
     async def get(self, owner_id: UUID) -> EssayKey | None:
         """The student's key, or None when it does not exist."""
@@ -285,20 +427,10 @@ class VaultEssayKeyStore:
     async def create(self, owner_id: UUID) -> EssayKey:
         """Write a new key with cas=0; after a lost race read back the winner."""
         fresh = EssayKey(owner_id, os.urandom(KEY_BYTES))
-        secret = {
-            "dek": base64.b64encode(fresh.secret).decode(),
-            "alg": ALG,
-            "created_at": datetime.now(UTC).isoformat(),
-        }
 
         def call() -> EssayKey:
             try:
-                self._client.secrets.kv.v2.create_or_update_secret(
-                    path=self._path(owner_id),
-                    secret=secret,
-                    cas=0,
-                    mount_point=self._settings.kv_mount,
-                )
+                self._write(fresh, cas=0)
             except InvalidRequest:
                 winner = self._read(owner_id)  # check-and-set lost: someone made it
                 if winner is None:
@@ -321,24 +453,100 @@ class VaultEssayKeyStore:
 
         await self._run(call)
 
+    async def owners(self) -> list[UUID]:
+        """List the key paths under the prefix (needs `list` on the metadata)."""
+
+        def call() -> list[UUID]:
+            try:
+                response = self._client.secrets.kv.v2.list_secrets(
+                    path=self._settings.kv_prefix, mount_point=self._settings.kv_mount
+                )
+            except InvalidPath:
+                return []
+            found: list[UUID] = []
+            for name in response["data"]["keys"]:
+                try:
+                    found.append(UUID(name.rstrip("/")))
+                except ValueError:
+                    continue
+            return found
+
+        return await self._run(call)
+
+    async def restore(self, key: EssayKey) -> RestoreOutcome:
+        """Write with cas=0; an existing key is compared, never replaced."""
+
+        def call() -> RestoreOutcome:
+            try:
+                self._write(key, cas=0)
+            except InvalidRequest:
+                found = self._read(key.owner_id)
+                if found is None:
+                    raise
+                return "same" if key.secret in found.secrets else "conflict"
+            return "restored"
+
+        return await self._run(call)
+
+    async def begin_rotation(self, owner_id: UUID) -> EssayKey | None:
+        """Write `{dek, pending_dek}` with check-and-set on the version read."""
+
+        def call() -> EssayKey | None:
+            for _ in range(3):
+                found = self._read_versioned(owner_id)
+                if found is None or found[0].pending is not None:
+                    return None if found is None else found[0]
+                key, version = found
+                rotating = EssayKey(owner_id, key.secret, os.urandom(KEY_BYTES))
+                try:
+                    self._write(rotating, cas=version)
+                except InvalidRequest:
+                    continue  # another writer won; read again
+                return rotating
+            raise EssayVaultUnavailableError(support_details="vault: cas contention")
+
+        return await self._run(call)
+
+    async def finish_rotation(self, owner_id: UUID, pending: bytes) -> bool:
+        """Write `{dek: pending}` with check-and-set, only if `pending` is pending."""
+
+        def call() -> bool:
+            for _ in range(3):
+                found = self._read_versioned(owner_id)
+                if found is None or not _same(found[0].pending, pending):
+                    return False
+                try:
+                    self._write(EssayKey(owner_id, pending), cas=found[1])
+                except InvalidRequest:
+                    continue
+                return True
+            raise EssayVaultUnavailableError(support_details="vault: cas contention")
+
+        return await self._run(call)
+
 
 def _vault_configured(settings: EssayVaultSettings) -> bool:
     return bool((settings.role_id and settings.secret_id) or settings.token)
 
 
-def essay_cipher(settings: Settings) -> EssayCipher:
-    """The process's essay cipher: Vault when configured, never plaintext.
+def essay_key_store(settings: Settings) -> EssayKeyStore:
+    """The process's key store: Vault when configured, never plaintext.
 
     Production without Vault settings refuses every essay operation (503);
     development without Vault keeps keys in memory, so essays die with the process.
     """
     if _vault_configured(settings.essay_vault):
-        return AesGcmEssayCipher(VaultEssayKeyStore(settings.essay_vault))
+        return VaultEssayKeyStore(settings.essay_vault)
     if settings.env == "prod":
         log.error("essay_vault_not_configured")
-        return AesGcmEssayCipher(RefusingEssayKeyStore())
+        return RefusingEssayKeyStore()
     log.warning("essay_keys_in_memory")
-    return AesGcmEssayCipher(MemoryEssayKeyStore())
+    return MemoryEssayKeyStore()
+
+
+def essay_cipher(settings: Settings) -> EssayCipher:
+    """The cipher over `essay_key_store(settings)`."""
+    return AesGcmEssayCipher(essay_key_store(settings))
 
 
 __all__ = [
@@ -347,4 +555,7 @@ __all__ = [
     "RefusingEssayKeyStore",
     "VaultEssayKeyStore",
     "essay_cipher",
+    "essay_key_store",
+    "open_blob",
+    "seal_blob",
 ]

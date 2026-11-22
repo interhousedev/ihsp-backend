@@ -7,6 +7,7 @@ from urllib.parse import urlsplit
 from uuid import UUID
 
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.application.media_mirroring import mirror_media
 from app.modules.admission.application.supp_prompts import (
     apply_proposed,
     clean_proposed,
@@ -29,6 +30,7 @@ from app.modules.admission.domain.errors import (
     InvalidProofUrlError,
     InvalidTransitionError,
 )
+from app.modules.admission.domain.focuses import check_domains
 from app.modules.admission.domain.intl_facts import (
     clean_facts,
     clean_name,
@@ -37,6 +39,7 @@ from app.modules.admission.domain.intl_facts import (
 )
 from app.modules.admission.domain.permissions import KIND_ROLE, Permission
 from app.modules.admission.domain.urls import is_https_url
+from app.modules.admission.ports.media_mirror import MediaMirror
 from app.modules.admission.ports.repositories import AuditEvent
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.actor import Role
@@ -124,16 +127,21 @@ class CatalogProposalService:
         clock: Clock,
         limiter: RateLimiter | None = None,
         per_day: int = DEFAULT_PER_DAY,
+        mirror: MediaMirror | None = None,
     ) -> None:
-        """Keep the transaction factory, the clock and the daily proposal limit."""
+        """Keep the transaction factory, clock, daily limit and image mirror."""
+        self._mirror = mirror
         self._uow = uow_factory
         self._clock = clock
         self._limiter = limiter
         self._per_day = per_day
 
     def can_review(self, ctx: AdmissionContext) -> bool:
-        """Return whether the caller is an administrator or a live catalog curator."""
-        if Role.ADMIN in ctx.actor.roles:
+        """Return whether the caller is an administrator, a counselor or a curator.
+
+        Counselors curate the catalog by role, with or without an assignment.
+        """
+        if {Role.ADMIN, Role.COUNSELOR} & ctx.actor.roles:
             return True
         now = self._clock.now()
         return any(
@@ -155,7 +163,7 @@ class CatalogProposalService:
         if not self._may_propose(ctx):
             raise AdmissionForbiddenError(params={"permission": "catalog:propose"})
 
-    async def propose(
+    async def propose(  # noqa: C901
         self,
         ctx: AdmissionContext,
         *,
@@ -214,6 +222,10 @@ class CatalogProposalService:
             repo = uow.catalog_proposals
             if target_id is not None and not await repo.target_exists(kind, target_id):
                 raise AdmissionNotFoundError()
+            if target_id is not None and "focuses" in cleaned:
+                check_domains(
+                    cleaned["focuses"].value, await repo.website_domain(target_id)
+                )
             if kind == "scholarship":
                 await self._check_scholarship_institution(repo, payload)
             if kind == "institution" and target_id is None:
@@ -336,6 +348,13 @@ class CatalogProposalService:
                 raise AdmissionNotFoundError()
             if current.status != "pending":
                 raise InvalidTransitionError(params={"status": current.status})
+            if approve:
+                current = dataclasses.replace(
+                    current,
+                    payload=await mirror_media(
+                        self._mirror, current.payload, MEDIA_FIELDS
+                    ),
+                )
             now = self._clock.now()
             applied = (
                 await uow.catalog_proposals.apply(

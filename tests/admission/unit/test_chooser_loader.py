@@ -137,3 +137,14 @@ def test_slug_defaults_from_domain_and_description_is_capped() -> None:
                 "description": {"en": "a" * 401, "ru": "a", "uz": "a"},
             }
         )
+
+
+async def test_seed_aliases_loaded_and_curator_aliases_kept() -> None:
+    assert next(i for i in load_seed() if i["slug"] == "mit")["aliases"] == ["MIT"]
+    s = _Session()
+    await load_catalog(s, NOW)  # type: ignore[arg-type]
+    mit = s.rows[(InstitutionRow, seed_id("institution", "mit"))]
+    assert "MIT" in mit.aliases
+    mit.aliases = ["Curator Alias", "mit"]
+    await load_catalog(s, NOW)  # type: ignore[arg-type]
+    assert mit.aliases == ["Curator Alias", "mit"]

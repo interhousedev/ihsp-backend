@@ -36,8 +36,8 @@ class Decisions:
         self.rows: dict[tuple[UUID, UUID], str] = {}
         self.created: set[tuple[UUID, UUID]] = set()
 
-    async def decided(self, sid: UUID) -> set[UUID]:
-        return {i for (s, i) in self.rows if s == sid}
+    async def decided(self, sid: UUID) -> dict[UUID, str]:
+        return {i: d for (s, i), d in self.rows.items() if s == sid}
 
     async def get(self, sid: UUID, iid: UUID) -> str | None:
         return self.rows.get((sid, iid))
@@ -221,3 +221,13 @@ async def test_writes_require_applicant() -> None:
         await w.svc.decide(w.ctx, w.us.id, "interested")
     with pytest.raises(AdmissionForbiddenError):
         await w.svc.undo(w.ctx, w.us.id)
+
+
+async def test_dismissed_lists_not_my_vibe_and_return_restores_deck() -> None:
+    w = World()
+    await w.svc.decide(w.ctx, w.us.id, "not_my_vibe")
+    await w.svc.decide(w.ctx, w.uk.id, "interested")
+    assert [m.institution.name for m in await w.svc.dismissed(w.ctx)] == ["Alpha"]
+    await w.svc.undo(w.ctx, w.us.id)
+    assert await w.svc.dismissed(w.ctx) == []
+    assert [m.institution.name for m in await w.svc.matches(w.ctx, 20)] == ["Alpha"]

@@ -43,6 +43,9 @@ class AdmissionSettings(BaseModel):
     enabled: bool = True
     """Serve the `/v1/admission` routes."""
 
+    media_acl: str = "public-read"
+    """S3 ACL of mirrored org logos and covers; empty sends none (bucket policy)."""
+
     eligible_grades: list[int] = Field(default_factory=lambda: [10, 11])
     """Grades whose students are entitled automatically."""
 

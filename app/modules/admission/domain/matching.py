@@ -16,7 +16,7 @@ from app.modules.admission.domain.admit_rate import (
     TARGET_RATE,
     admission_rate,
 )
-from app.modules.admission.domain.chooser import CatalogInstitution
+from app.modules.admission.domain.chooser import CatalogInstitution, budget_upper
 
 Experience = Literal["academic", "social", "adventure", "holistic"]
 Setting = Literal["rural", "suburban", "city"]
@@ -212,6 +212,21 @@ def _rate_and_aid_tags(inst: CatalogInstitution) -> list[str]:
     ):
         tags.append("aid_needed")
     return tags
+
+
+def budget_fit(
+    band: str | None, net: Decimal | None, gross: Decimal | None
+) -> Literal["fits", "above"] | None:
+    """Whether the yearly price fits the student's budget band; None if unknown.
+
+    The net price (after the average aid) is used when known, else the sticker one.
+    An open band (`over_50k`) always fits.
+    """
+    price = net if net is not None else gross
+    if not band or price is None:
+        return None
+    upper = budget_upper(band)
+    return "fits" if upper is None or price <= upper else "above"
 
 
 def university_tags(inst: CatalogInstitution) -> list[str]:

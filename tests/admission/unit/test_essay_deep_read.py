@@ -142,3 +142,50 @@ async def test_group_critique_reviews_each_target_under_its_prompt() -> None:
     assert all(u.cached for u in again.universities) and len(d.w.ai.calls) == 3
     got = await d.reviewer.get(ctx, e.id, "en")
     assert not any(u.stale for u in got.universities)
+
+
+async def test_group_critique_only_for_chosen_targets_with_ao_reaction() -> None:
+    reaction = {
+        "summary": "Warm.",
+        "likely_positive": ["service"],
+        "likely_concerns": ["thin reflection"],
+    }
+    d = Deep(_base(), _uni(ao_reaction=reaction))
+    ctx, e = await d.essay()
+    a, z = d.inst("A"), d.inst("Z")
+    await d.svc.save(
+        ctx,
+        e.id,
+        1,
+        {"targets": [PromptTarget(a, 1, "A?", 250), PromptTarget(z, 1, "Z?", 90)]},
+    )
+    r = await d.deep.group_critique(
+        ctx, e.id, refresh=False, locale="en", institution_ids=[a]
+    )
+    assert [u.institution_id for u in r.universities] == [a]
+    ao = r.universities[0].review.ao_reaction
+    assert ao is not None and ao.likely_positive == ("service",)
+    got = await d.reviewer.get(ctx, e.id, "en")
+    assert got.universities[0].review.ao_reaction == ao
+
+
+async def test_deep_read_history_lists_reads_and_denies_others() -> None:
+    d = Deep(_deep(), _deep(uniqueness_note="Second."))
+    ctx, e = await d.essay()
+    assert await d.deep.history(ctx, e.id) == []
+    await d.deep.run(ctx, e.id, refresh=False, locale="en")
+    d.clock.advance(seconds=60)
+    await d.svc.save(ctx, e.id, 1, {"body": BODY + " extra"})
+    await d.deep.run(ctx, e.id, refresh=False, locale="en")
+    items = await d.deep.history(ctx, e.id)
+    assert len(items) == 2 and items[0].words > 0
+    old = await d.deep.stored_read(ctx, e.id, items[1].id)
+    new = await d.deep.stored_read(ctx, e.id, items[0].id)
+    assert new.latest and not old.latest
+    other = await d.w.ctx(OTHER)
+    with pytest.raises(AdmissionNotFoundError):
+        await d.deep.history(other, e.id)
+    with pytest.raises(AdmissionNotFoundError):
+        await d.deep.stored_read(other, e.id, items[0].id)
+    with pytest.raises(AdmissionNotFoundError):
+        await d.deep.stored_read(ctx, e.id, e.id)

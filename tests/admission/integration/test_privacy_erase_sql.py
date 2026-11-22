@@ -33,6 +33,8 @@ NOT_STUDENT_DATA = frozenset(
         # Add a table here only after deciding that, in review.
         "admission_stats",
         "prompt_group_labels",  # labels of public prompt groups, keyed by a hash
+        "essay_key_state",  # one platform row: key generation and rotation progress
+        "essay_key_exports",  # one row per key backup; staff id only, no student
         "aid_policies",
         "campuses",
         "career_majors",

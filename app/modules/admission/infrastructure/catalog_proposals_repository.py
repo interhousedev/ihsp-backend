@@ -1,13 +1,14 @@
 """SQL repository of catalog proposals."""
 
 import datetime as dt
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import Any, Literal
 from uuid import UUID
 
 from app.modules.admission.domain.catalog_proposals import CatalogProposal
 from app.modules.admission.domain.errors import AdmissionConflictError
+from app.modules.admission.domain.focuses import check_domains
 from app.modules.admission.domain.intl_facts import CleanFact, clean_facts, to_row
 from app.modules.admission.infrastructure.catalog_loader import _AID
 from app.modules.admission.infrastructure.orm.catalog import (
@@ -131,6 +132,11 @@ class SqlCatalogProposalRepository:
         """Return whether the row to edit exists."""
         return await self._s.get(_TARGETS[kind], target_id) is not None
 
+    async def website_domain(self, institution_id: UUID) -> str | None:
+        """The institution's website domain; None when unknown or unset."""
+        row = await self._s.get(InstitutionRow, institution_id)
+        return row.website_domain if row is not None else None
+
     async def set_logo(
         self, institution_id: UUID, *, zoom: float | None, fit: str | None
     ) -> bool:
@@ -251,19 +257,24 @@ class SqlCatalogProposalRepository:
                 )
             )
         if proposal.facts:
-            await self._apply_facts(row.id, proposal, reviewer_id, now)
+            await self.apply_facts(row.id, proposal.facts, reviewer_id, now)
         return row.id  # type: ignore[no-any-return]
 
-    async def _apply_facts(
+    async def apply_facts(
         self,
         institution_id: UUID,
-        proposal: CatalogProposal,
+        facts: Mapping[str, Mapping[str, Any]],
         reviewer_id: UUID,
         now: dt.datetime,
     ) -> None:
         """Upsert each fact in place and mirror cost and aid into their tables."""
+        cleaned = clean_facts(facts)
+        if "focuses" in cleaned:
+            check_domains(
+                cleaned["focuses"].value, await self.website_domain(institution_id)
+            )
         sources: dict[str, UUID] = {}
-        for key, fact in clean_facts(proposal.facts).items():
+        for key, fact in cleaned.items():
             if fact.source_url not in sources:
                 src = SourceRow(
                     id=new_id(),

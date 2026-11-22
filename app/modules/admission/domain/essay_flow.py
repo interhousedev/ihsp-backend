@@ -10,7 +10,7 @@ with others and finally dropped into the prompt slots of each university.
 import datetime as dt
 import hashlib
 import math
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from typing import Final, Literal
 from uuid import UUID
@@ -51,6 +51,9 @@ precision 0.94 and recall 0.83 there (F1 0.88, the best of 0.22 to 0.45). The fa
 model of development compares words, not meaning; 0.55 keeps its clusters small.
 """
 DEFAULT_DELTA: Final = 0.39
+EXACT_RATIO: Final = 0.5
+"""A member is an exact match when it is within this share of the threshold of the
+group's central prompt; the rest of a group are near matches ("similar")."""
 
 PS_SLOT: Final = "ps"
 """Slot key of the personal statement; supplements are `supp:<position>`."""
@@ -142,29 +145,36 @@ def cosine_distance(a: Sequence[float], b: Sequence[float]) -> float:
 
 
 def _pair_distances(
-    vectors: Sequence[Sequence[float]], owners: Sequence[str]
+    vectors: Sequence[Sequence[float]],
+    owners: Sequence[str],
+    isolated: frozenset[int] = frozenset(),
 ) -> dict[tuple[int, int], float]:
     """Cosine distances of every pair of vectors with different owners."""
     dist: dict[tuple[int, int], float] = {}
     for i in range(len(vectors)):
+        if i in isolated:
+            continue
         for j in range(i + 1, len(vectors)):
-            if owners[i] != owners[j]:
+            if owners[i] != owners[j] and j not in isolated:
                 dist[(i, j)] = cosine_distance(vectors[i], vectors[j])
     return dist
 
 
 def cluster(
-    vectors: Sequence[Sequence[float]], owners: Sequence[str], delta: float
+    vectors: Sequence[Sequence[float]],
+    owners: Sequence[str],
+    delta: float,
+    isolated: frozenset[int] = frozenset(),
 ) -> list[list[int]]:
     """Complete-linkage clusters: every two members are at most `delta` apart.
 
     Two prompts of one owner (a university, or the Common App) never share a
     cluster: one essay cannot answer two prompts of the same application. Pairs are
     merged closest first, so the result is deterministic. Members of a cluster and
-    the clusters are in input order.
+    the clusters are in input order. Indexes in `isolated` always stand alone.
     """
     n = len(vectors)
-    dist = _pair_distances(vectors, owners)
+    dist = _pair_distances(vectors, owners, isolated)
     root = list(range(n))
     members: dict[int, list[int]] = {i: [i] for i in range(n)}
 
@@ -260,6 +270,9 @@ class PromptGroup:
     prompts: tuple[PromptRef, ...]
     spread: float
     """Largest distance inside the group; for a unique prompt, its nearest other."""
+    similar: tuple[str, ...] = ()
+    """Keys of the members that only resemble the core of the group: the others ask
+    the same question (within `EXACT_RATIO` of the threshold of the central prompt)."""
 
 
 LABEL_MAX: Final = 60
@@ -309,15 +322,23 @@ def build_map(
     vectors: Sequence[Sequence[float]] | None,
     *,
     model: str,
+    isolate: Callable[[PromptRef], bool] | None = None,
 ) -> PromptMap:
-    """Group the prompts; without vectors every prompt stands alone."""
+    """Group the prompts; without vectors every prompt stands alone.
+
+    A prompt for which `isolate` is true (a "Why us" question names its own
+    university) never joins another prompt: it stays a unique group.
+    """
     delta = delta_for(model)
     owners = [r.owner for r in refs]
     if vectors is None:
         clusters = [[i] for i in range(len(refs))]
         near = [1.0] * len(refs)
     else:
-        clusters = cluster(vectors, owners, delta)
+        alone = frozenset(
+            i for i, r in enumerate(refs) if isolate is not None and isolate(r)
+        )
+        clusters = cluster(vectors, owners, delta, alone)
         near = nearest(vectors, owners)
     groups: list[PromptGroup] = []
     for members in clusters:
@@ -335,7 +356,23 @@ def build_map(
         kind: Literal["common", "shared", "unique"] = (
             "common" if common else "shared" if len(members) > 1 else "unique"
         )
-        groups.append(PromptGroup(prompts[0].key, kind, prompts, round(spread, 4)))
+        similar: tuple[str, ...] = ()
+        if len(members) > 1 and vectors is not None:
+            centre = min(
+                members,
+                key=lambda a: sum(
+                    cosine_distance(vectors[a], vectors[b]) for b in members
+                ),
+            )
+            similar = tuple(
+                refs[m].key
+                for m in members
+                if m != centre
+                and cosine_distance(vectors[centre], vectors[m]) > delta * EXACT_RATIO
+            )
+        groups.append(
+            PromptGroup(prompts[0].key, kind, prompts, round(spread, 4), similar)
+        )
     order = {"common": 0, "shared": 1, "unique": 2}
     groups.sort(
         key=lambda g: (

@@ -9,6 +9,30 @@ def test_bugsink_off_by_default() -> None:
     assert init_observability(Settings(), "api") is False
 
 
+def test_scrub_event_drops_frame_locals_and_key_material() -> None:
+    frame = {"function": "seal", "vars": {"dek": "secret", "text": "my essay"}}
+    event: Any = {
+        "exception": {"values": [{"stacktrace": {"frames": [dict(frame)]}}]},
+        "threads": {"values": [{"stacktrace": {"frames": [dict(frame)]}}]},
+        "extra": {
+            "passphrase": "p",
+            "dek": "k",
+            "pending_dek": "k2",
+            "plaintext": "t",
+            "body": "essay",
+            "essay_body": "essay",
+            "note": "ok",
+        },
+    }
+    out: Any = scrub_event(event, {})
+    for section in ("exception", "threads"):
+        (shown,) = out[section]["values"][0]["stacktrace"]["frames"]
+        assert shown == {"function": "seal"}
+    extra = out["extra"]
+    assert extra.pop("note") == "ok"
+    assert set(extra.values()) == {SCRUBBED}
+
+
 def test_scrub_event_strips_auth_and_cookies() -> None:
     event: Any = {
         "request": {

@@ -7,24 +7,44 @@ sealed field unreadable (crypto-shredding on erasure).
 """
 
 from dataclasses import dataclass, field
-from typing import Final, Protocol
+from typing import Final, Literal, Protocol
 from uuid import UUID
 
 KEY_BYTES: Final = 32
 """Length of a data key (AES-256)."""
 
+RestoreOutcome = Literal["restored", "same", "conflict"]
+"""What `EssayKeyStore.restore` did: wrote it, found it, or found another key."""
+
 
 @dataclass(frozen=True, slots=True)
 class EssayKey:
-    """A student's data key; the secret never appears in a repr or a log."""
+    """A student's data key; the secrets never appear in a repr or a log.
+
+    During a rotation `pending` holds the next key: new text is sealed with it,
+    reads try both, and `EssayKeyStore.finish_rotation` makes it the only key.
+    """
 
     owner_id: UUID
     secret: bytes = field(repr=False)
+    pending: bytes | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         """Refuse a key of the wrong length."""
-        if len(self.secret) != KEY_BYTES:
+        if len(self.secret) != KEY_BYTES or (
+            self.pending is not None and len(self.pending) != KEY_BYTES
+        ):
             raise ValueError("an essay key is 32 bytes")
+
+    @property
+    def active(self) -> bytes:
+        """The key new text is sealed and digested with."""
+        return self.pending if self.pending is not None else self.secret
+
+    @property
+    def secrets(self) -> tuple[bytes, ...]:
+        """Every key a blob of this owner may be sealed with, newest last."""
+        return (self.secret,) if self.pending is None else (self.secret, self.pending)
 
 
 class EssayKeyStore(Protocol):
@@ -40,6 +60,26 @@ class EssayKeyStore(Protocol):
 
     async def destroy(self, owner_id: UUID) -> None:
         """Delete the key with all its versions."""
+        ...
+
+    async def owners(self) -> list[UUID]:
+        """Every student that has a key."""
+        ...
+
+    async def restore(self, key: EssayKey) -> RestoreOutcome:
+        """Write a key from a backup only where none exists; never overwrite."""
+        ...
+
+    async def begin_rotation(self, owner_id: UUID) -> EssayKey | None:
+        """Add a pending key (kept when one is there already); None without a key."""
+        ...
+
+    async def finish_rotation(self, owner_id: UUID, pending: bytes) -> bool:
+        """Make `pending` the only key, only while it is the stored pending key.
+
+        False (nothing written) when another key is pending or none is: a run
+        never promotes a pending key it did not reseal with.
+        """
         ...
 
 

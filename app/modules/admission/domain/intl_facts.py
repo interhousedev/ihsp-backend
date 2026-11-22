@@ -21,6 +21,10 @@ from app.modules.admission.domain.catalog_display import (
     TEST_POLICY,
 )
 from app.modules.admission.domain.errors import CatalogFactInvalidError
+from app.modules.admission.domain.focuses import LOCALES as FOCUS_LOCALES
+from app.modules.admission.domain.focuses import MAX_FOCUSES
+from app.modules.admission.domain.focuses import QUOTE_MAX as FOCUS_QUOTE_MAX
+from app.modules.admission.domain.focuses import TEXT_MAX as FOCUS_TEXT_MAX
 from app.modules.admission.domain.study_fields import canonical_id, labels_of
 
 MONEY_MAX: Final = 9_999_999_999.99
@@ -57,6 +61,10 @@ FactKind = Literal[
     "factors",
     "deadlines",
     "study_fields",
+    "url",
+    "rankings",
+    "experience_scores",
+    "focuses",
 ]
 
 
@@ -167,6 +175,10 @@ def _build() -> dict[str, FactSpec]:
         _enum("city_type", "overview", tuple(SETTING)),
         _enum("institution_type", "overview", tuple(INSTITUTION_TYPE)),
         FactSpec("fields", "overview", "study_fields"),
+        FactSpec("map_url", "overview", "url"),
+        FactSpec("rankings", "credentials", "rankings"),
+        FactSpec("experience_scores", "overview", "experience_scores"),
+        FactSpec("focuses", "overview", "focuses"),
         _multi(
             "application_platforms",
             "overview",
@@ -468,6 +480,120 @@ def _study_fields(key: str, v: Any) -> list[str]:
     return out
 
 
+_RANK_SYSTEMS: Final = ("qs", "the", "arwu", "usnews")
+_SUBJECT: Final = re.compile(r"[a-z][a-z_]{1,39}")
+_BAND: Final = re.compile(r"\d{1,4}(-\d{1,4}|\+)")
+MAX_RANKINGS: Final = 40
+MAX_EXPERIENCE_NOTE: Final = 160
+
+
+def _ranking_item(key: str, x: Any) -> dict[str, Any]:
+    if not isinstance(x, dict) or x.get("system") not in _RANK_SYSTEMS:
+        raise _fail(key, "value")
+    subject, rank, year = x.get("subject"), x.get("rank"), x.get("year")
+    if not isinstance(subject, str) or not _SUBJECT.fullmatch(subject):
+        raise _fail(key, "value")
+    band = isinstance(rank, str) and _BAND.fullmatch(rank) is not None
+    number = isinstance(rank, int) and not isinstance(rank, bool) and 1 <= rank <= 5000
+    if not (band or number):
+        raise _fail(key, "value")
+    if isinstance(year, bool) or not isinstance(year, int) or not 2000 <= year <= 2100:
+        raise _fail(key, "value")
+    return {
+        "system": x["system"],
+        "subject": subject,
+        "rank": rank,
+        "year": year,
+        "source_url": _clean_url(key, x.get("source_url")),
+    }
+
+
+def _rankings(key: str, v: Any) -> list[dict[str, Any]]:
+    if not isinstance(v, list) or not v or len(v) > MAX_RANKINGS:
+        raise _fail(key, "value")
+    return [_ranking_item(key, x) for x in v]
+
+
+def _focus_text(key: str, raw: Any) -> dict[str, str]:
+    if not isinstance(raw, dict) or set(raw) != set(FOCUS_LOCALES):
+        raise _fail(key, "value")
+    out: dict[str, str] = {}
+    for loc in FOCUS_LOCALES:
+        text = _clean_text(raw[loc], FOCUS_TEXT_MAX)
+        if not text or _INJECTION.search(text):
+            raise _fail(key, "value")
+        out[loc] = text
+    return out
+
+
+def _focus_time(key: str, raw: Any) -> str:
+    try:
+        stamp = dt.datetime.fromisoformat(raw) if isinstance(raw, str) else None
+    except ValueError:
+        stamp = None
+    if stamp is None or stamp.tzinfo is None:
+        raise _fail(key, "value")
+    return stamp.isoformat()
+
+
+def _focus_item(key: str, x: Any) -> dict[str, Any]:
+    if not isinstance(x, dict) or not isinstance(x.get("verified"), bool):
+        raise _fail(key, "value")
+    quote = _clean_text(x.get("quote"), FOCUS_QUOTE_MAX)
+    if not quote or _INJECTION.search(quote):
+        raise _fail(key, "value")
+    return {
+        "text": _focus_text(key, x.get("text")),
+        "quote": quote,
+        "source_url": _clean_url(key, x.get("source_url")),
+        "fetched_at": _focus_time(key, x.get("fetched_at")),
+        "verified": x["verified"],
+    }
+
+
+def _focuses(key: str, v: Any) -> list[dict[str, Any]]:
+    if not isinstance(v, list) or not v or len(v) > MAX_FOCUSES:
+        raise _fail(key, "value")
+    return [_focus_item(key, x) for x in v]
+
+
+def _experience_notes(key: str, raw: Any) -> dict[str, dict[str, str]]:
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise _fail(key, "value")
+    out: dict[str, dict[str, str]] = {}
+    for part, per in raw.items():
+        if part not in ("social", "research", "work") or not isinstance(per, dict):
+            raise _fail(key, "value")
+        texts = {}
+        for loc, text in per.items():
+            clean = _clean_text(text, MAX_EXPERIENCE_NOTE)
+            if loc not in ("en", "ru", "uz") or not clean:
+                raise _fail(key, "value")
+            texts[loc] = clean
+        out[part] = texts
+    return out
+
+
+def _experience_scores(key: str, v: Any) -> dict[str, Any]:
+    if not isinstance(v, dict):
+        raise _fail(key, "value")
+    out: dict[str, Any] = {}
+    for part in ("social", "research", "work"):
+        if part not in v:
+            continue
+        score = v[part]
+        if isinstance(score, bool) or not isinstance(score, int) or not 1 <= score <= 5:
+            raise _fail(key, "value")
+        out[part] = score
+    if not out:
+        raise _fail(key, "value")
+    if notes := _experience_notes(key, v.get("notes")):
+        out["notes"] = notes
+    return out
+
+
 def _bool_value(spec: FactSpec, v: Any) -> bool:
     if not isinstance(v, bool):
         raise _fail(spec.key, "value")
@@ -528,6 +654,10 @@ _VALUE_CLEANERS: Final[dict[str, Callable[[FactSpec, Any], Any]]] = {
     "factors": lambda spec, v: _factors(spec.key, spec, v),
     "deadlines": lambda spec, v: _deadlines(spec.key, v),
     "study_fields": lambda spec, v: _study_fields(spec.key, v),
+    "url": lambda spec, v: _clean_url(spec.key, v),
+    "rankings": lambda spec, v: _rankings(spec.key, v),
+    "experience_scores": lambda spec, v: _experience_scores(spec.key, v),
+    "focuses": lambda spec, v: _focuses(spec.key, v),
 }
 
 
