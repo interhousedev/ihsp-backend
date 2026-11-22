@@ -42,6 +42,7 @@ MATCHES_PER_PROJECT: Final = 6
 
 LIKES_MAX: Final = 1500
 EXPERIENCE_MAX: Final = 1500
+FUTURE_MAX: Final = 1500
 NETWORK_MAX: Final = 1000
 NOTE_MAX: Final = 300
 HOURS_MIN: Final = 0.25
@@ -74,6 +75,7 @@ class Brief:
     network: str
     budget_min_usd: int
     budget_max_usd: int
+    future_interest: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,6 +176,7 @@ def clean_brief(
     network: str,
     budget_min_usd: int,
     budget_max_usd: int,
+    future_interest: str = "",
 ) -> Brief:
     """Return a validated brief; a bad field raises `ValidationFailedError`."""
     if teammates not in TEAMMATES:
@@ -191,6 +194,7 @@ def clean_brief(
         network=_text(network, "network", NETWORK_MAX),
         budget_min_usd=budget_min_usd,
         budget_max_usd=budget_max_usd,
+        future_interest=_text(future_interest, "future_interest", FUTURE_MAX),
     )
 
 

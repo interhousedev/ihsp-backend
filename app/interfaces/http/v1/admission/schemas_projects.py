@@ -33,6 +33,7 @@ class BriefIn(BaseModel):
     network: str = Field(default="", max_length=1000)
     budget_min_usd: int = Field(ge=0, le=1_000_000)
     budget_max_usd: int = Field(ge=0, le=1_000_000)
+    future_interest: str = Field(default="", max_length=1500)
 
     @classmethod
     def of(cls, brief: Brief) -> "BriefIn":
@@ -46,6 +47,7 @@ class BriefIn(BaseModel):
             network=brief.network,
             budget_min_usd=brief.budget_min_usd,
             budget_max_usd=brief.budget_max_usd,
+            future_interest=brief.future_interest,
         )
 
 

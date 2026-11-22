@@ -146,10 +146,12 @@ def clean_ideas(data: Any, known: set[str]) -> tuple[ProjectIdea, ...]:
 def search_queries(brief: Brief) -> list[str]:
     """Two web queries: ideas for the interests, and the same in Uzbekistan."""
     likes = " ".join(brief.likes.split())[:120]
+    future = " ".join(brief.future_interest.split())[:120]
     experience = " ".join(brief.experience.split())[:80]
+    mix = f"{likes} {future}".strip()
     return [
-        f"{likes} {experience} student project ideas".strip(),
-        f"{likes} student project Uzbekistan",
+        f"{mix} {experience} student project ideas".strip(),
+        f"{mix} student project Uzbekistan",
     ]
 
 
@@ -158,6 +160,7 @@ def brief_lines(brief: Brief, locale: str) -> list[str]:
     return [
         f"Language: {locale}",
         f"[likes] {brief.likes}",
+        f"[future interest] {brief.future_interest}",
         f"[experience] {brief.experience}",
         f"[hours per day] {brief.hours_per_day}",
         f"[teammates] {brief.teammates} {brief.teammates_note}".strip(),
