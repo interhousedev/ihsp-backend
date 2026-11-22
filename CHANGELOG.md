@@ -4,6 +4,31 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-11-23
+
+Includes the unreleased 1.11.1 and 1.12 work. Migrations `admission_0062` to `admission_0066` run forward only.
+
+### Added
+
+- Admission: Today roadmap with XP, creative practice and new programs; "What project can I make?" with staff-curated helpers, a future-interest field and ideas that cross current and future interests.
+- Admission: voice fill endpoint `POST /v1/admission/voice-fill` turns a spoken answer into form fields.
+- Admission: QS overall rankings on match cards and institution detail; import script `scripts/admission_import_qs_rankings.py`; research script for rankings and experience scores as pending proposals.
+- Admission: country facts with a staff editor and seed; sourced university focuses from official pages.
+- Admission: counselor card editing, Scorecard attach, richer match cards, custom professions, per-university essay reads with history, dismissed list and budget fit.
+- Admission: application review per section and subsection, owner-only essay search, prompt map that keeps university-specific prompts apart.
+- Admission: essay key backup, restore and rotation with lease and fencing; unreadable essays are flagged; admin essay keys page.
+- Admission: mirror external university media into S3.
+
+### Fixed
+
+- Production compose passes the AI connector Vault settings to the services.
+- Match card cost falls back to the international cost-of-attendance fact; blank optional scholarship fields are accepted.
+
+### Known issues
+
+- Subject rankings need the research script with model credits; 114 institutions have no QS rank.
+- Country facts exist for three countries only.
+
 ### Changed
 
 - Production compose turns outbound mail on by default (api, worker) through the `IHSP_SMTP_OUT__*` relay, and passes `IHSP_ADMISSION__SCORECARD_API_KEY` (default `DEMO_KEY`).
