@@ -5,7 +5,6 @@ access check, no storage. The coach and the review service gate them.
 """
 
 import hashlib
-import re
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from typing import Any, Final
@@ -16,6 +15,7 @@ from app.modules.admission.application.words import delimit, plain
 from app.modules.admission.domain.essay_reviews import (
     ALIGNMENTS,
     MAX_LIST,
+    AoReaction,
     BaseReview,
     DimensionScore,
     EssayInput,
@@ -26,6 +26,7 @@ from app.modules.admission.domain.essay_reviews import (
     UniGoal,
     UniReview,
 )
+from app.modules.admission.domain.essay_text import paragraphs as essay_paragraphs
 from app.modules.admission.domain.essays import Essay, word_count
 from app.modules.admission.domain.exemplars import ExemplarMatch
 from app.modules.admission.infrastructure.ai.prompts import essay_review as review
@@ -52,7 +53,6 @@ _REVIEW_TOKENS: Final = 3000
 _FLAGGED_MAX: Final = 1200
 _BODY_TO_MODEL: Final = 12000
 _EXEMPLAR_TO_MODEL: Final = 4000
-_PARAGRAPHS: Final = re.compile(r"\n\s*\n")
 
 
 @dataclass(frozen=True, slots=True)
@@ -146,7 +146,7 @@ def _verbatim(value: Any, haystack: str) -> str | None:
 
 
 def _paragraphs(body: str) -> list[str]:
-    return [p.strip() for p in _PARAGRAPHS.split(body) if p.strip()]
+    return essay_paragraphs(body)
 
 
 def band_of(score: int) -> str:
@@ -471,7 +471,19 @@ def _uni_review(data: dict[str, Any], essay: EssayInput, uni: UniContext) -> Uni
         supplement_tips=tuple(_lines(data.get("supplement_tips"), MAX_LIST)),
         risks=tuple(_lines(data.get("risks"), MAX_LIST)),
         sourced=True,
+        ao_reaction=_ao_reaction(data.get("ao_reaction")),
     )
+
+
+def _ao_reaction(raw: Any) -> AoReaction | None:
+    if not isinstance(raw, dict):
+        return None
+    out = AoReaction(
+        _summary(raw.get("summary")),
+        tuple(_lines(raw.get("likely_positive"), MAX_LIST)),
+        tuple(_lines(raw.get("likely_concerns"), MAX_LIST)),
+    )
+    return out if out.summary or out.likely_positive or out.likely_concerns else None
 
 
 def unsourced_review(uni: UniContext) -> UniReview:
@@ -504,6 +516,7 @@ async def run_uni_review(
     uni: UniContext,
     base: BaseReview | None,
     locale: str,
+    exemplars: Sequence[ExemplarMatch] = (),
 ) -> tuple[UniReview, str]:
     """Judge the fit with one university; no call when nothing is sourced."""
     if not uni.sourced:
@@ -513,6 +526,13 @@ async def run_uni_review(
         f"Essay: {essay.body[:_BODY_TO_MODEL]}",
         *uni_lines(uni),
     ]
+    for m in exemplars:
+        ex = m.exemplar
+        same = ex.institution_id == uni.institution_id
+        lines.append(
+            f"[exemplar {'this-university' if same else 'similar-tier'}] "
+            f"{ex.school_name} {ex.kind}: {ex.body[:_EXEMPLAR_TO_MODEL]}"
+        )
     if base is not None:
         lines.append(f"Base review: {base.score}/100 ({base.band}). {base.summary}")
     data, model = await _ask(
@@ -621,6 +641,15 @@ def uni_from(payload: Mapping[str, Any]) -> UniReview:
             "goals": tuple(GoalAlignment(**g) for g in payload["goals"]),
             "supplement_tips": tuple(payload["supplement_tips"]),
             "risks": tuple(payload["risks"]),
+            "ao_reaction": (
+                None
+                if not payload.get("ao_reaction")
+                else AoReaction(
+                    payload["ao_reaction"]["summary"],
+                    tuple(payload["ao_reaction"]["likely_positive"]),
+                    tuple(payload["ao_reaction"]["likely_concerns"]),
+                )
+            ),
         }
     )
 
