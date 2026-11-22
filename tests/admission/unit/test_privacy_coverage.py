@@ -34,6 +34,7 @@ _ALLOWED = {
     ("catalog_proposals", "reviewed_by"),
     ("entitlements", "granted_by"),
     ("runtime_settings", "updated_by"),
+    ("project_helpers", "created_by"),
     ("staff_roles", "created_by"),
     ("opportunity_submissions", "reviewed_by"),
     ("eligibility_rules", "reviewer_id"),
