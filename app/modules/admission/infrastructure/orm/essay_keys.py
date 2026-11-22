@@ -53,7 +53,7 @@ class EssayKeyStateRow(CreatedMixin, UpdatedMixin, Base):
     """Renewed with every step; a run is stale only when this is old."""
 
 
-class EssayKeyExportRow(Base):
+class EssayKeyExportRow(CreatedMixin, UpdatedMixin, Base):
     """The one allowed backup download of a key generation."""
 
     __tablename__ = "essay_key_exports"

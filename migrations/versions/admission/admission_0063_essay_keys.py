@@ -58,6 +58,12 @@ def upgrade() -> None:
         sa.Column("generation", sa.Integer(), nullable=False),
         sa.Column("exported_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("exported_by", sa.Uuid(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), **NN
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), **NN
+        ),
         sa.PrimaryKeyConstraint("generation", name=op.f("pk_essay_key_exports")),
         schema=S,
     )
