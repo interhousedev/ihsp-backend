@@ -30,3 +30,5 @@ fc99d59b353d89c35f6416ff5981bb34ec313dc1:app/modules/lms/domain/authoring/errors
 02d87dd808f205e8b06537070100c759292a1f80:tests/ai/unit/test_connectors.py:generic-api-key:51
 02d87dd808f205e8b06537070100c759292a1f80:tests/admin/http/test_admin_ai_connectors_http.py:generic-api-key:33
 02d87dd808f205e8b06537070100c759292a1f80:tests/admin/http/test_admin_ai_connectors_http.py:generic-api-key:219
+9288a5c5e2745873c9285feff6b24f60835a78d3:tests/admin/http/test_admin_ai_connectors_http.py:generic-api-key:390
+9288a5c5e2745873c9285feff6b24f60835a78d3:tests/admin/http/test_admin_ai_connectors_http.py:generic-api-key:404
