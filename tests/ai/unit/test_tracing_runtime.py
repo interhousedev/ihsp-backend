@@ -42,9 +42,7 @@ class _Maker:
         backend = _Backend()
         self.backends.append(backend)
         self.calls.append(kwargs)
-        return LangfuseTracer(
-            backend, salt="s", capture_content=kwargs["capture_content"]
-        )
+        return LangfuseTracer(backend, capture_content=kwargs["capture_content"])
 
 
 async def _secrets() -> FakeSecrets:

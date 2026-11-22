@@ -87,7 +87,11 @@ from app.shared.clock import local_today
 from app.shared.contracts.web_search import WebResult, WebSearchDisabledError
 from app.shared.ids import new_id
 from app.shared.openui.prompt import openui_prompt
-from app.shared.usage_context import bind_ai_session
+from app.shared.usage_context import (
+    SURFACE_LMS,
+    SURFACE_NOTEBOOKS,
+    bind_ai_session,
+)
 from app.shared.web_citations import (
     WebMarkers,
     cited_in,
@@ -361,13 +365,11 @@ class AnswerPipeline:
 
     async def answer(self, request: AnswerRequest) -> TurnView:
         """Answer in one piece: both messages are stored in one transaction."""
-        bind_ai_session(request.notebook_id)
         with recording(StepRecorder()):  # AI-STEPS: stored with the answer
             return await self._answer(request)
 
     async def stream(self, request: AnswerRequest) -> AsyncGenerator[StreamEvent, None]:
         """Answer as events; the steps of the answer stream as ``step`` events."""
-        bind_ai_session(request.notebook_id)
         with recording(StepRecorder()):
             async with aclosing(self._stream(request)) as events:
                 async for event in events:
@@ -516,6 +518,11 @@ class AnswerPipeline:
         async with self.core.uow_factory() as uow:
             notebook = await load_notebook(
                 uow, user_id, notebook_id, write=False, shared=True
+            )
+            # the trace session of every model call of the answer
+            bind_ai_session(
+                SURFACE_LMS if notebook.is_course_workspace else SURFACE_NOTEBOOKS,
+                notebook_id,
             )
             # Refused before the source embeddings and retrieval below run.
             await self.core.budget.pool(notebook.is_course_workspace).require_access(

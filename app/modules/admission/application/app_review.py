@@ -42,7 +42,12 @@ from app.shared.ids import new_id
 from app.shared.limits import LimitsProvider
 from app.shared.rate_limit import RateLimiter
 from app.shared.tasks import TaskKicker
-from app.shared.usage_context import bind_usage_user, reset_usage_actor
+from app.shared.usage_context import (
+    SURFACE_ADMISSION,
+    bind_ai_session,
+    bind_usage_user,
+    reset_usage_actor,
+)
 
 log = logging.getLogger(__name__)
 
@@ -284,6 +289,7 @@ class AppReviewService:
         if review is None or review.status != "queued":
             return
         token = bind_usage_user(review.student_id, unlimited=False)
+        bind_ai_session(SURFACE_ADMISSION, f"app_review:{review_id}")
         try:
             await self._run(review)
         except Exception:

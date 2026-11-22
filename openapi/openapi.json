@@ -46603,6 +46603,17 @@
             ],
             "title": "Lessons Prompt Enabled"
           },
+          "limit_ai_tracing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Ai Tracing"
+          },
           "locale": {
             "anyOf": [
               {
@@ -71030,6 +71041,11 @@
           "lessons_prompt_enabled": {
             "default": true,
             "title": "Lessons Prompt Enabled",
+            "type": "boolean"
+          },
+          "limit_ai_tracing": {
+            "default": false,
+            "title": "Limit Ai Tracing",
             "type": "boolean"
           },
           "locale": {

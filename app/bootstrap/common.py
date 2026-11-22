@@ -117,6 +117,7 @@ from app.modules.ai.infrastructure.recording_gateways import (
     RecordingWebSearch,
     UsageRecorder,
 )
+from app.modules.ai.infrastructure.tracing_opt_out import CachedTracingOptOut
 from app.modules.ai.infrastructure.tracing_runtime import TracingRuntime
 from app.modules.ai.infrastructure.usage_store import SqlUsageStore
 from app.modules.ai.wiring import build as build_ai
@@ -364,6 +365,12 @@ class _Assembler:
             default_bot_token=make_default_bot_token(c.settings, c.sessionmaker).get,
         )
         c.identity = identity
+        directory = identity.directory
+
+        async def limits_tracing(user_id: UUID) -> bool:
+            return (await directory.get_preferences(user_id)).limit_ai_tracing
+
+        self.recorder.use_opt_out(CachedTracingOptOut(limits_tracing))
         schedule = build_schedule(
             self.deps,
             identity=identity.directory,

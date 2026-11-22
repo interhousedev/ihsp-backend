@@ -76,6 +76,7 @@ class PreferencesPatchBody(BaseModel):
     mail_forward_to_telegram: bool | None = None
     hide_photo_from_classmates: bool | None = None
     notify_push: bool | None = None
+    limit_ai_tracing: bool | None = None
     today_cards: list[str] | None = None
     onboarding_dismissed: list[str] | None = None
     bottom_nav: list[str] | None = None

@@ -15,7 +15,14 @@ from app.modules.ai.infrastructure.recording_gateways import (
     UsageRecorder,
 )
 from app.shared.contracts.ai import LlmGateway, LlmTuning
-from app.shared.usage_context import UsageActor, _current, bind_ai_session
+from app.shared.usage_context import (
+    SURFACE_ADMISSION,
+    SURFACE_LMS,
+    SURFACE_WEB,
+    UsageActor,
+    _current,
+    bind_ai_session,
+)
 from tests.fakes.clock import FixedClock
 
 import pytest
@@ -58,9 +65,20 @@ class _Backend:
             raise RuntimeError("langfuse down")
 
 
-def _gateway(backend: _Backend, *, capture: bool) -> RecordingLlmGateway:
-    tracer = LangfuseTracer(backend, salt="s", capture_content=capture)
-    recorder = UsageRecorder(_Sink(), FixedClock(), tracer)
+class _OptOut:
+    def __init__(self, value: bool) -> None:
+        self.value = value
+
+    async def limits_tracing(self, user_id: Any) -> bool:
+        return self.value
+
+
+def _gateway(
+    backend: _Backend, *, capture: bool, limit_tracing: bool | None = None
+) -> RecordingLlmGateway:
+    tracer = LangfuseTracer(backend, capture_content=capture)
+    opt_out = None if limit_tracing is None else _OptOut(limit_tracing)
+    recorder = UsageRecorder(_Sink(), FixedClock(), tracer, opt_out)
     inner: LlmGateway = FakeLlmGateway()
     return RecordingLlmGateway(inner, recorder)
 
@@ -117,20 +135,69 @@ async def test_span_has_no_content_when_capture_off() -> None:
     backend = _Backend()
     user = uuid4()
     token = _current.set(UsageActor(user, "student"))
-    bind_ai_session("chat-1")
+    bind_ai_session(SURFACE_WEB, "chat-1")
     try:
         await _call(_gateway(backend, capture=False))
     finally:
         _current.reset(token)
     (span,) = backend.spans
     assert span.started["name"] == "student_chat"
-    assert span.started["session_id"] == "chat-1"
+    assert span.started["session_id"] == "web:chat-1"
     assert span.started["input"] is None
-    assert span.started["user_id"] not in (None, str(user))
-    assert str(user) not in repr(span.started)
     assert span.ended is not None and span.ended["output"] is None
     assert "SECRET" not in repr(span.started) + repr(span.ended)
     assert set(span.ended["usage"]) >= {"input", "output"}
+
+
+async def test_span_carries_user_session_and_surface() -> None:
+    """The internal user id, the `<surface>:<id>` session and the surface tag."""
+    backend = _Backend()
+    user = uuid4()
+    token = _current.set(UsageActor(user, "student"))
+    bind_ai_session(SURFACE_LMS, "nb-7")
+    try:
+        await _call(_gateway(backend, capture=True))
+    finally:
+        _current.reset(token)
+    (span,) = backend.spans
+    assert span.started["user_id"] == str(user)
+    assert span.started["session_id"] == "lms:nb-7"
+    assert span.started["tags"] == ["lms"]
+    assert span.started["metadata"]["surface"] == "lms"
+    assert span.started["metadata"]["masked"] is False
+
+
+@pytest.mark.parametrize(
+    ("surface", "limit", "masked"),
+    [
+        (SURFACE_WEB, True, False),  # general chat keeps its text
+        (SURFACE_LMS, True, True),  # anything else is masked for the user
+        (SURFACE_LMS, False, False),
+        (SURFACE_ADMISSION, False, True),  # admission is always masked
+    ],
+)
+async def test_masked_span_sends_marker_and_keeps_usage(
+    surface: str, limit: bool, masked: bool
+) -> None:
+    backend = _Backend()
+    user = uuid4()
+    token = _current.set(UsageActor(user, "student"))
+    bind_ai_session(surface, "c")
+    try:
+        await _call(_gateway(backend, capture=True, limit_tracing=limit))
+    finally:
+        _current.reset(token)
+    (span,) = backend.spans
+    assert span.ended is not None
+    assert span.started["user_id"] == str(user)
+    assert span.started["metadata"]["masked"] is masked
+    assert set(span.ended["usage"]) >= {"input", "output"}
+    if masked:
+        assert span.started["input"] == "[redacted]"
+        assert span.ended["output"] == "[redacted]"
+        assert "SECRET" not in repr(span.started) + repr(span.ended)
+    else:
+        assert "SECRET-TEXT" in repr(span.started["input"])
 
 
 async def test_span_has_content_when_capture_on() -> None:
@@ -144,7 +211,7 @@ async def test_span_has_content_when_capture_on() -> None:
 async def test_backend_errors_are_swallowed() -> None:
     backend = _Backend(fail=True)
     await _call(_gateway(backend, capture=True))  # no exception
-    tracer = LangfuseTracer(backend, salt="s", capture_content=False)
+    tracer = LangfuseTracer(backend, capture_content=False)
     tracer.flush()
     tracer.close()
     assert backend.shut

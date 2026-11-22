@@ -11,7 +11,12 @@ from contextlib import asynccontextmanager
 from uuid import UUID
 
 from app.shared.limits import LimitsProvider
-from app.shared.usage_context import bind_usage_user, reset_usage_actor
+from app.shared.usage_context import (
+    SURFACE_NOTEBOOKS,
+    bind_ai_surface,
+    bind_usage_user,
+    reset_usage_actor,
+)
 
 
 @asynccontextmanager
@@ -27,6 +32,7 @@ async def owner_usage(
     if limits is not None:
         unlimited = (await limits.for_user(user_id)).unlimited
     token = bind_usage_user(user_id, unlimited=unlimited)
+    bind_ai_surface(SURFACE_NOTEBOOKS)
     try:
         yield
     finally:

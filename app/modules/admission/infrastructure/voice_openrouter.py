@@ -34,7 +34,7 @@ class _Pending(Protocol):
 class Ledger(Protocol):
     """The usage recorder (`UsageRecorder.begin`)."""
 
-    def begin(self, *, model: str, task: str | None) -> _Pending:
+    async def begin(self, *, model: str, task: str | None) -> _Pending:
         """Start one usage record."""
         ...
 
@@ -76,7 +76,9 @@ class OpenRouterVoice:
         if (await self._limits.ai_access(user_id)).blocks(scope_of(task)):
             raise AiAccessRevokedError(params={"scope": scope_of(task)})
         model = self._models[task]
-        pending = self._ledger.begin(model=model, task=task) if self._ledger else None
+        pending = (
+            await self._ledger.begin(model=model, task=task) if self._ledger else None
+        )
         try:
             reply = await self._client.post(
                 f"{self._base}{path}",

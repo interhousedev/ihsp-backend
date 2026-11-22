@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Changed
 
 - Production compose turns outbound mail on by default (api, worker) through the `IHSP_SMTP_OUT__*` relay, and passes `IHSP_ADMISSION__SCORECARD_API_KEY` (default `DEMO_KEY`).
+- Langfuse traces carry the internal user id, a `<surface>:<id>` session (web, telegram, lms, admission, lib, notebooks, mcp) and a surface tag. Admission and essay calls are always sent as `[redacted]`; the new preference `limit_ai_tracing` (iht.id security page, off by default) keeps text only for the general chat on web and Telegram.
 
 ### Removed
 

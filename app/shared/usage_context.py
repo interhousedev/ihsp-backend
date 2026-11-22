@@ -83,13 +83,77 @@ def current_ai_scope() -> str | None:
 
 
 _session: ContextVar[str | None] = ContextVar("ai_session", default=None)
+_surface: ContextVar[str | None] = ContextVar("ai_surface", default=None)
+
+# Where a model call comes from; tags the Langfuse trace and prefixes its session.
+SURFACE_WEB = "web"  # the sp app and the other web apps without their own surface
+SURFACE_TELEGRAM = "telegram"
+SURFACE_LMS = "lms"
+SURFACE_ADMISSION = "admission"
+SURFACE_LIBRARY = "lib"
+SURFACE_NOTEBOOKS = "notebooks"  # notebooks and Studio
+SURFACE_MCP = "mcp"
+
+_PATH_SURFACES = (
+    ("/v1/admission", SURFACE_ADMISSION),
+    ("/v1/lms", SURFACE_LMS),
+    ("/v1/library", SURFACE_LIBRARY),
+    ("/v1/me/library", SURFACE_LIBRARY),
+    ("/v1/notebooks", SURFACE_NOTEBOOKS),
+)
+_APP_SURFACES = {
+    "admission": SURFACE_ADMISSION,
+    "lms": SURFACE_LMS,
+    "library": SURFACE_LIBRARY,
+}
 
 
-def bind_ai_session(session_id: object) -> None:
-    """Group the calls of this context under one chat or notebook (a trace session)."""
-    _session.set(str(session_id))
+def surface_of_app(app: str | None) -> str:
+    """The surface of a web app name (the `X-IHSP-App` header); web by default."""
+    return _APP_SURFACES.get((app or "").strip().lower(), SURFACE_WEB)
+
+
+def bind_http_surface(path: str, app: str | None) -> None:
+    """Tag the calls of an HTTP request by its route, else by its app.
+
+    The session is `<surface>:<feature>` (the first path segment after the
+    surface's prefix); a chat or a notebook replaces it with its own id.
+    """
+    match = next(
+        (
+            (prefix, surface)
+            for prefix, surface in _PATH_SURFACES
+            if path == prefix or path.startswith(prefix + "/")
+        ),
+        None,
+    )
+    if match is not None:
+        surface = match[1]
+        rest = path[len(match[0]) :].strip("/")
+    else:
+        surface = surface_of_app(app)
+        rest = path.removeprefix("/v1/").strip("/")
+    feature = rest.split("/", 1)[0] or surface
+    _surface.set(surface)
+    _session.set(f"{surface}:{feature}")
+
+
+def bind_ai_surface(surface: str) -> None:
+    """Tag the calls of this context with a surface (session left as it is)."""
+    _surface.set(surface)
+
+
+def bind_ai_session(surface: str, session_id: object) -> None:
+    """Group the calls of this context under one conversation: `<surface>:<id>`."""
+    _surface.set(surface)
+    _session.set(f"{surface}:{session_id}")
 
 
 def current_ai_session() -> str | None:
-    """The chat or notebook the calls made now belong to, if any."""
+    """The conversation the calls made now belong to, if any."""
     return _session.get()
+
+
+def current_ai_surface() -> str | None:
+    """The surface the calls made now come from, if any."""
+    return _surface.get()

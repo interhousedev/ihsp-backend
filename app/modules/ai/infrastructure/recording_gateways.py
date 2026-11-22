@@ -17,6 +17,7 @@ from app.modules.ai.application.request_context import current_request
 from app.modules.ai.application.routing import current_route
 from app.modules.ai.domain.prompt_registry import PromptRef, note_prompt
 from app.modules.ai.domain.structured_check import schema_violation
+from app.modules.ai.domain.trace_privacy import masks_content
 from app.modules.ai.domain.usage import UNKNOWN_TASK, UsageEvent, counts_of, feature_of
 from app.modules.ai.infrastructure.langfuse_tracer import (
     PRIVATE_ERROR_CODE,
@@ -24,6 +25,7 @@ from app.modules.ai.infrastructure.langfuse_tracer import (
     TracingSource,
 )
 from app.modules.ai.ports.prompts import PromptRewriter
+from app.modules.ai.ports.trace_privacy import TracingOptOut
 from app.modules.ai.ports.usage import UsageSink
 from app.shared.ai_tasks import TASK_SPECS, AiTask
 from app.shared.clock import Clock
@@ -33,6 +35,7 @@ from app.shared.contracts.web_search import SearchCall, SearchReply, WebSearchGa
 from app.shared.usage_context import (
     UsageActor,
     current_ai_session,
+    current_ai_surface,
     current_usage_actor,
 )
 
@@ -54,14 +57,28 @@ class UsageRecorder:
     """Turns the end of a call into a ledger event (the actor is read at the start)."""
 
     def __init__(
-        self, sink: UsageSink, clock: Clock, tracing: TracingSource | None = None
+        self,
+        sink: UsageSink,
+        clock: Clock,
+        tracing: TracingSource | None = None,
+        opt_out: TracingOptOut | None = None,
     ) -> None:
-        """Keep the sink, the clock and the optional Langfuse tracing source."""
+        """Keep the sink, the clock, the Langfuse source and the users' choice."""
         self._sink = sink
         self._clock = clock
         self._tracing = tracing
+        self._opt_out = opt_out
 
-    def begin(
+    def use_opt_out(self, opt_out: TracingOptOut) -> None:
+        """Read the users' `limit_ai_tracing` from here (wired after identity)."""
+        self._opt_out = opt_out
+
+    async def _limits_tracing(self, actor: UsageActor) -> bool:
+        if actor.user_id is None or self._opt_out is None:
+            return False
+        return await self._opt_out.limits_tracing(actor.user_id)
+
+    async def begin(
         self,
         *,
         model: str,
@@ -78,14 +95,19 @@ class UsageRecorder:
         tracing = self._tracing
         tracer = tracing.tracer_for(task) if tracing is not None else None
         if tracer is not None and tracing is not None:
+            surface = current_ai_surface()
+            masked = masks_content(
+                task, surface, limit_tracing=await self._limits_tracing(actor)
+            )
             span = tracer.begin(
                 task=name,
                 model=model,
                 user_id=actor.user_id,
                 role=actor.role,
                 session_id=current_ai_session(),
-                content=None if private else content,
-                private=private,
+                surface=surface,
+                content=None if masked else content,
+                masked=masked,
                 prompt_version=prompt.version if prompt else None,
                 prompt_hash=prompt.hash if prompt else None,
                 capture=tracing.capture_for(task),
@@ -109,7 +131,7 @@ class UsageRecorder:
 
     async def note_free(self, *, task: str, model: str) -> None:
         """Record a request that was answered without a paid call (cost 0)."""
-        await self.begin(model=model, task=task).finish({"cost_micro": 0})
+        await (await self.begin(model=model, task=task)).finish({"cost_micro": 0})
 
     async def _write(
         self,
@@ -276,7 +298,7 @@ class RecordingLlmGateway:
     ) -> dict[str, Any]:
         """Run `complete` and record it."""
         system, ref = await self._prompt(tuning, system)
-        pending = self._recorder.begin(
+        pending = await self._recorder.begin(
             model=model,
             task=_task_of(tuning),
             content={"system": system, "messages": messages},
@@ -313,7 +335,7 @@ class RecordingLlmGateway:
     ) -> dict[str, Any]:
         """Run `complete_json` and record it."""
         system, ref = await self._prompt(tuning, system)
-        pending = self._recorder.begin(
+        pending = await self._recorder.begin(
             model=model,
             task=_task_of(tuning),
             content={"system": system, "messages": messages},
@@ -379,7 +401,7 @@ class RecordingLlmGateway:
         tools: list[dict[str, Any]] | None,
     ) -> AsyncIterator[dict[str, Any]]:
         system, ref = await self._prompt(tuning, system)
-        pending = self._recorder.begin(
+        pending = await self._recorder.begin(
             model=model,
             task=_task_of(tuning),
             content={"system": system, "messages": messages},
@@ -431,7 +453,7 @@ class RecordingWebSearch:
         The search engine (Exa) is the cost here, not the task's language model, so
         the event names the engine; its charge comes in `reply.cost_micro`.
         """
-        pending = self._recorder.begin(
+        pending = await self._recorder.begin(
             model=SEARCH_ENGINE, task=call.profile.task.value
         )
         try:
@@ -475,7 +497,9 @@ class RecordingEmbeddings:
 
     async def embed(self, texts: Sequence[str], *, kind: EmbedKind) -> EmbeddingBatch:
         """Embed the texts and record the tokens and cost of the batch."""
-        pending = self._recorder.begin(model=self.model, task=AiTask.EMBEDDING.value)
+        pending = await self._recorder.begin(
+            model=self.model, task=AiTask.EMBEDDING.value
+        )
         try:
             batch = await self._inner.embed(texts, kind=kind)
         except BaseException as exc:
