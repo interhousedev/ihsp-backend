@@ -6,7 +6,7 @@ from typing import Any, Final
 from uuid import UUID
 
 from app.modules.admission.infrastructure.essay_crypto import open_blob, seal_blob
-from app.modules.admission.infrastructure.orm._common import S
+from app.modules.admission.infrastructure.orm._common import SCHEMA
 from app.modules.admission.infrastructure.orm.essay_keys import (
     EssayKeyExportRow,
     EssayKeyStateRow,
@@ -146,7 +146,7 @@ class SqlEssayKeyLedger:
 
 
 def _table(name: str) -> Table:
-    return Base.metadata.tables[f"{S}.{name}"]
+    return Base.metadata.tables[f"{SCHEMA}.{name}"]
 
 
 class Unreadable:
