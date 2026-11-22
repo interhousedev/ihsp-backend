@@ -29,7 +29,7 @@ from app.modules.admission.domain.essays import (
     EssayVersion,
 )
 
-from fastapi import APIRouter, Header, Response, status
+from fastapi import APIRouter, Header, Query, Response, status
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
@@ -482,6 +482,48 @@ async def list_essays(
     return EssayListOut(items=[EssaySummaryOut.of(e, states.get(e.id)) for e in rows])
 
 
+class EssaySearchHitOut(BaseModel):
+    """One of my essays that contains the query, with a highlighted snippet."""
+
+    essay_id: UUID
+    title: str
+    field: Literal["title", "prompt", "body", "notes"]
+    snippet: str
+    match_start: int = Field(description="Start of the match inside `snippet`.")
+    match_end: int = Field(description="End (exclusive) of the match inside `snippet`.")
+
+
+class EssaySearchOut(BaseModel):
+    """Matches in the caller's own essays."""
+
+    items: list[EssaySearchHitOut]
+
+
+async def search_essays(
+    container: ContainerDep,
+    ctx: StudentCtx,
+    response: Response,
+    q: Annotated[str, Query(min_length=2, max_length=80)],
+    limit: Annotated[int, Query(ge=1, le=20)] = 10,
+) -> EssaySearchOut:
+    """Search the words inside my own essays (owner only; nothing is logged)."""
+    response.headers["Cache-Control"] = "private, no-store"
+    hits = await container.admission.essays.search(ctx, q, limit)
+    return EssaySearchOut(
+        items=[
+            EssaySearchHitOut(
+                essay_id=h.essay_id,
+                title=h.title,
+                field=h.field,
+                snippet=h.snippet,
+                match_start=h.match_start,
+                match_end=h.match_end,
+            )
+            for h in hits
+        ]
+    )
+
+
 async def create_essay(
     body: EssayIn, container: ContainerDep, ctx: StudentCtx
 ) -> EssayOut:
@@ -770,6 +812,13 @@ _CREATED = {"status_code": status.HTTP_201_CREATED}
 _GONE = {"status_code": status.HTTP_204_NO_CONTENT}
 
 _route("/essays", list_essays, "GET", "list_essays", response_model=EssayListOut)
+_route(
+    "/essays/search",
+    search_essays,
+    "GET",
+    "search_essays",
+    response_model=EssaySearchOut,
+)
 _route(
     "/essays", create_essay, "POST", "create_essay", response_model=EssayOut, **_CREATED
 )

@@ -20233,6 +20233,71 @@
         "title": "EssayReviewsOut",
         "type": "object"
       },
+      "EssaySearchHitOut": {
+        "description": "One of my essays that contains the query, with a highlighted snippet.",
+        "properties": {
+          "essay_id": {
+            "format": "uuid",
+            "title": "Essay Id",
+            "type": "string"
+          },
+          "field": {
+            "enum": [
+              "title",
+              "prompt",
+              "body",
+              "notes"
+            ],
+            "title": "Field",
+            "type": "string"
+          },
+          "match_end": {
+            "description": "End (exclusive) of the match inside `snippet`.",
+            "title": "Match End",
+            "type": "integer"
+          },
+          "match_start": {
+            "description": "Start of the match inside `snippet`.",
+            "title": "Match Start",
+            "type": "integer"
+          },
+          "snippet": {
+            "title": "Snippet",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "essay_id",
+          "title",
+          "field",
+          "snippet",
+          "match_start",
+          "match_end"
+        ],
+        "title": "EssaySearchHitOut",
+        "type": "object"
+      },
+      "EssaySearchOut": {
+        "description": "Matches in the caller's own essays.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EssaySearchHitOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "EssaySearchOut",
+        "type": "object"
+      },
       "EssaySummaryOut": {
         "description": "A row of the essays list.",
         "properties": {
@@ -93930,6 +93995,63 @@
           }
         },
         "summary": "Get Prompt Map",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/search": {
+      "get": {
+        "description": "Search the words inside my own essays (owner only; nothing is logged).",
+        "operationId": "admission_search_essays",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 80,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 20,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssaySearchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Essays",
         "tags": [
           "admission"
         ]

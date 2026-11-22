@@ -1263,6 +1263,291 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "sat act ielts toefl duolingo ap ib a-level cambridge olympiad score "
         "тест сертификат балл экзамен олимпиада test sertifikat natija imtihon",
     ),
+    _d(
+        "admission-essay-practice",
+        "admission",
+        "/essays/practice/",
+        _ST,
+        (
+            "Insho mashqi",
+            "Практика эссе",
+            "Essay practice",
+        ),
+        "mashq kundalik yozish практика эссе ежедневное письмо practice daily "
+        "writing streak warm-up",
+    ),
+    _d(
+        "admission-essays-by-university",
+        "admission",
+        "/essays/?lens=uni",
+        _ST,
+        (
+            "Universitet boʼyicha insholar",
+            "Эссе по университетам",
+            "Essays by university",
+        ),
+        "universitet insho guruh эссе университет группа промпт essays by "
+        "university supplemental prompts common app",
+    ),
+    _d(
+        "admission-essay-ideas",
+        "admission",
+        "/essays/?tab=ideas",
+        _ST,
+        (
+            "Insho gʼoyalari",
+            "Идеи для эссе",
+            "Essay ideas",
+        ),
+        "gʼoya mavzu brainstorm идеи темы мозговой штурм essay ideas topics brainstorm",
+    ),
+    _d(
+        "admission-essay-story",
+        "admission",
+        "/essays/?tab=story",
+        _ST,
+        (
+            "Hayot hikoyam va 3 soʼz",
+            "Моя история и три слова",
+            "My story and three words",
+        ),
+        "hikoya uch soʼz hayot история три слова моя story three words life "
+        "story voice",
+    ),
+    _d(
+        "admission-essay-alignment",
+        "admission",
+        "/essays/?tab=alignment",
+        _ST,
+        (
+            "Insholar va universitetlar mosligi",
+            "Соответствие эссе университетам",
+            "Essay alignment",
+        ),
+        "moslik insho universitet соответствие эссе вуз alignment essay "
+        "coverage prompts",
+    ),
+    _d(
+        "admission-professions",
+        "admission",
+        "/profile/professions/",
+        _ST,
+        (
+            "Kasblar",
+            "Профессии",
+            "Professions",
+        ),
+        "kasb mutaxassislik профессии специальности professions careers majors",
+    ),
+    _d(
+        "admission-weights",
+        "admission",
+        "/profile/",
+        _ST,
+        (
+            "Men uchun muhim narsalar (radar)",
+            "Что для меня важно (радар)",
+            "What matters to me (radar)",
+        ),
+        "muhim radar ustuvorlik вес важно приоритеты радар weights priorities "
+        "radar what matters",
+    ),
+    _d(
+        "admission-profile-background",
+        "admission",
+        "/settings/?tab=profile&section=background",
+        _ST,
+        (
+            "Profil: fon va qiziqishlar",
+            "Профиль: фон и интересы",
+            "Profile: background and interests",
+        ),
+        "fon qiziqish xizmat фон интересы услуги background interests services family",
+    ),
+    _d(
+        "admission-profile-details",
+        "admission",
+        "/settings/?tab=profile&section=details",
+        _ST,
+        (
+            "Profil: tafsilotlar",
+            "Профиль: подробности",
+            "Profile: details",
+        ),
+        "tafsilot uch soʼz подробности три слова details three words",
+    ),
+    _d(
+        "admission-catalog",
+        "admission",
+        "/chooser/?step=match&view=list",
+        _ST,
+        (
+            "Universitetlar katalogi",
+            "Каталог университетов",
+            "University catalog",
+        ),
+        "katalog universitetlar qidirish каталог университеты поиск catalog "
+        "universities browse search",
+    ),
+    _d(
+        "admission-list-graph",
+        "admission",
+        "/chooser/?step=list&view=graph",
+        _ST,
+        (
+            "Roʼyxat grafigi",
+            "График списка",
+            "List graph",
+        ),
+        "grafik roʼyxat universitet график список вузы graph list chart reach "
+        "target safety",
+    ),
+    _d(
+        "admission-quiz",
+        "admission",
+        "/chooser/?step=quiz",
+        _ST,
+        (
+            "Universitet tanlash testi",
+            "Тест по подбору вузов",
+            "University quiz",
+        ),
+        "test anketa savollar тест анкета вопросы quiz questionnaire preferences",
+    ),
+    _d(
+        "admission-tasks-gantt",
+        "admission",
+        "/tasks/?view=gantt",
+        _ST,
+        (
+            "Muddatlar va vazifalar (Gantt)",
+            "Сроки и задачи (диаграмма)",
+            "Deadlines and tasks (Gantt)",
+        ),
+        "gantt vazifa muddat диаграмма ганта задачи сроки gantt timeline "
+        "deadlines tasks",
+    ),
+    _d(
+        "admission-tasks-board",
+        "admission",
+        "/tasks/?view=board",
+        _ST,
+        (
+            "Vazifalar taxtasi",
+            "Доска задач",
+            "Task board",
+        ),
+        "taxta vazifa kanban доска задачи канбан board kanban tasks",
+    ),
+    _d(
+        "admission-plan-saved",
+        "admission",
+        "/plan/?view=saved",
+        _ST,
+        (
+            "Saqlangan imkoniyatlar",
+            "Сохранённые возможности",
+            "Saved opportunities",
+        ),
+        "saqlangan imkoniyat сохранённые возможности избранное saved "
+        "opportunities bookmarks favorites",
+    ),
+    _d(
+        "admission-career-field",
+        "admission",
+        "/career/?tab=field",
+        _ST,
+        (
+            "Yoʼnalishni tanlash",
+            "Выбор направления",
+            "Choose a field",
+        ),
+        "yoʼnalish soha направление область field major choose",
+    ),
+    _d(
+        "admission-career-explore",
+        "admission",
+        "/career/?tab=explore",
+        _ST,
+        (
+            "Kasblarni oʼrganish",
+            "Изучение профессий",
+            "Explore careers",
+        ),
+        "kasb oʼrganish профессии изучить explore careers professions",
+    ),
+    _d(
+        "admission-honors",
+        "admission",
+        "/activities/?kind=honor",
+        _ST,
+        (
+            "Mukofotlar va yutuqlar",
+            "Награды и достижения",
+            "Honors and awards",
+        ),
+        "mukofot yutuq награды достижения honors awards prizes olympiad",
+    ),
+    _d(
+        "admission-opportunity-events",
+        "admission",
+        "/opportunities/?kind=event",
+        _ST,
+        (
+            "Tadbirlar",
+            "Мероприятия",
+            "Events",
+        ),
+        "tadbir tanlov мероприятия события events competitions",
+    ),
+    _d(
+        "admission-opportunity-programs",
+        "admission",
+        "/opportunities/?kind=program",
+        _ST,
+        (
+            "Dasturlar",
+            "Программы",
+            "Programs",
+        ),
+        "dastur yozgi программы летние programs summer pre-college",
+    ),
+    _d(
+        "admission-opportunity-certifications",
+        "admission",
+        "/opportunities/?kind=certification",
+        _ST,
+        (
+            "Sertifikatlar",
+            "Сертификаты",
+            "Certifications",
+        ),
+        "sertifikat сертификаты certifications certificates exams",
+    ),
+    _d(
+        "admission-notifications",
+        "admission",
+        "/notifications/",
+        _ST,
+        (
+            "Bildirishnomalar",
+            "Уведомления",
+            "Notifications",
+        ),
+        "bildirishnoma xabar уведомления сообщения notifications alerts inbox",
+    ),
+    _d(
+        "admission-assistant",
+        "admission",
+        "/assistant/",
+        _ST,
+        (
+            "Qabul yordamchisi",
+            "Помощник по поступлению",
+            "Admission assistant",
+        ),
+        "yordamchi AI suhbat помощник ИИ чат assistant ai chat help",
+    ),
 )
 
 _WORD = re.compile(r"[\w'ʼ-]+", re.UNICODE)

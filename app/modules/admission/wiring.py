@@ -540,7 +540,7 @@ def build(
             texts,
             student_search,
         ),
-        essays=EssayService(uow_factory, access, deps.clock),
+        essays=EssayService(uow_factory, access, deps.clock, deps.rate_limiter),
         essay_coach=EssayCoach(
             uow_factory,
             access,

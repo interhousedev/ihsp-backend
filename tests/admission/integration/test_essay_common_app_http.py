@@ -124,3 +124,35 @@ async def test_common_app_slot_categories_and_sealed_short_answer(
             {"s": student.user_id, "k": key},
         )
     assert isinstance(raw, bytes) and SECRET.encode() not in raw
+
+
+async def test_essay_search_is_owner_only_and_folds_text(
+    make_container: ContainerFactory,
+    overrides_cleaned: list[FastAPI],  # noqa: F811
+) -> None:
+    container, client, switch, _ = await _http(
+        make_container, overrides_cleaned, Role.ADMIN, "srch.admin"
+    )
+    async with client:
+        owner, essay_id = await _essay_student(
+            container, client, switch, "srch.owner", "Мой ДЕД жил в Ташкенте, o‘g‘il."
+        )
+        found = await client.get(f"{ESSAYS_SEARCH}?q=дед")
+        assert found.status_code == 200, found.text
+        assert found.headers["cache-control"] == "private, no-store"
+        (hit,) = found.json()["items"]
+        assert hit["essay_id"] == essay_id and hit["field"] == "body"
+        snippet = hit["snippet"]
+        assert snippet[hit["match_start"] : hit["match_end"]].lower() == "дед"
+        assert (await client.get(f"{ESSAYS_SEARCH}?q=OGʼIL")).json()["items"] != []
+        assert (await client.get(f"{ESSAYS_SEARCH}?q=d")).status_code == 422
+        _, _ = await _essay_student(container, client, switch, "srch.other", "x")
+        other = await client.get(f"{ESSAYS_SEARCH}?q=дед")
+        assert other.status_code == 200 and other.json()["items"] == []
+        switch.set(owner)
+        assert (
+            len((await client.get(f"{ESSAYS_SEARCH}?q=ташкент")).json()["items"]) == 1
+        )
+
+
+ESSAYS_SEARCH = f"{BASE}/essays/search"
