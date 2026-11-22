@@ -103,6 +103,17 @@ def open_blob(
     return plain.decode()
 
 
+def _open_any(
+    key: EssayKey, owner_id: UUID, record_id: UUID, column: str, blob: bytes
+) -> str | None:
+    """The text under any secret of `key` (newest first); None when none opens it."""
+    for secret in reversed(key.secrets):
+        plain = open_blob(secret, owner_id, record_id, column, blob)
+        if plain is not None:
+            return plain
+    return None
+
+
 class AesGcmEssayCipher:
     """Implements `EssayCipher` over an `EssayKeyStore` with an LRU+TTL key cache."""
 
@@ -132,18 +143,35 @@ class AesGcmEssayCipher:
         self._cache.move_to_end(owner_id)
         return hit[0]
 
-    def _remember(self, key: EssayKey) -> None:
-        self._cache[key.owner_id] = (key, self._clock() + self._ttl)
+    def _remember(self, key: EssayKey, loaded_at: float) -> None:
+        # The TTL runs from the start of the load: a slow store read cannot stretch
+        # the life of a key past `loaded_at + ttl` (the rotation settle relies on it).
+        self._cache[key.owner_id] = (key, loaded_at + self._ttl)
         self._cache.move_to_end(key.owner_id)
         while len(self._cache) > self._size:
             self._cache.popitem(last=False)
 
     async def _load(self, owner_id: UUID, create: bool) -> EssayKey | None:
+        started = self._clock()
         key = await self._store.get(owner_id)
         if key is None and create:
             key = await self._store.create(owner_id)
         if key is not None:
-            self._remember(key)
+            self._remember(key, started)
+        return key
+
+    async def refresh(self, owner_id: UUID) -> EssayKey | None:
+        """Read the key from the store, bypassing the cache, and cache it."""
+        self._cache.pop(owner_id, None)
+        return await self._load(owner_id, create=False)
+
+    async def write_key(self, owner_id: UUID, *, fresh: bool) -> EssayKey:
+        """The key to seal with; `fresh` reads it from the store, not the cache."""
+        if not fresh:
+            return await self._required(owner_id)
+        self._cache.pop(owner_id, None)
+        key = await self._load(owner_id, create=True)
+        assert key is not None  # create always returns a key
         return key
 
     async def _key(self, owner_id: UUID, create: bool) -> EssayKey | None:
@@ -183,11 +211,16 @@ class AesGcmEssayCipher:
         if key is None:
             log.error("essay_key_missing", owner_id=str(owner_id))
             raise EssayKeyUnavailableError(support_details="essay key missing")
-        for secret in reversed(key.secrets):
-            plain = open_blob(secret, owner_id, record_id, column, blob)
-            if plain is not None:
-                return plain
-        raise EssayUnreadableError(support_details="essay blob does not open")
+        plain = _open_any(key, owner_id, record_id, column, blob)
+        if plain is None:
+            # Another process may have sealed it with a pending key this cache does
+            # not know yet (a rotation): read the key once more before giving up.
+            fresh = await self.refresh(owner_id)
+            if fresh is not None and fresh.secrets != key.secrets:
+                plain = _open_any(fresh, owner_id, record_id, column, blob)
+        if plain is None:
+            raise EssayUnreadableError(support_details="essay blob does not open")
+        return plain
 
     async def digest(self, owner_id: UUID, purpose: str, data: str) -> str:
         """HMAC-SHA256 of `data` under an HKDF subkey of the owner's active key."""
@@ -247,11 +280,17 @@ class MemoryEssayKeyStore:
         self.keys[owner_id] = rotating
         return rotating
 
-    async def finish_rotation(self, owner_id: UUID) -> None:
-        """Promote the pending key."""
+    async def finish_rotation(self, owner_id: UUID, pending: bytes) -> bool:
+        """Promote the pending key when it is `pending`."""
         found = self.keys.get(owner_id)
-        if found is not None and found.pending is not None:
-            self.keys[owner_id] = EssayKey(owner_id, found.pending)
+        if found is None or not _same(found.pending, pending):
+            return False
+        self.keys[owner_id] = EssayKey(owner_id, pending)
+        return True
+
+
+def _same(found: bytes | None, expected: bytes) -> bool:
+    return found is not None and hmac.compare_digest(found, expected)
 
 
 def _refuse() -> EssayVaultUnavailableError:
@@ -285,7 +324,7 @@ class RefusingEssayKeyStore:
         """Refuse."""
         raise _refuse()
 
-    async def finish_rotation(self, owner_id: UUID) -> None:
+    async def finish_rotation(self, owner_id: UUID, pending: bytes) -> bool:
         """Refuse."""
         raise _refuse()
 
@@ -468,24 +507,22 @@ class VaultEssayKeyStore:
 
         return await self._run(call)
 
-    async def finish_rotation(self, owner_id: UUID) -> None:
-        """Write `{dek: pending_dek}` with check-and-set on the version read."""
+    async def finish_rotation(self, owner_id: UUID, pending: bytes) -> bool:
+        """Write `{dek: pending}` with check-and-set, only if `pending` is pending."""
 
-        def call() -> None:
+        def call() -> bool:
             for _ in range(3):
                 found = self._read_versioned(owner_id)
-                if found is None or found[0].pending is None:
-                    return
-                key, version = found
-                assert key.pending is not None
+                if found is None or not _same(found[0].pending, pending):
+                    return False
                 try:
-                    self._write(EssayKey(owner_id, key.pending), cas=version)
+                    self._write(EssayKey(owner_id, pending), cas=found[1])
                 except InvalidRequest:
                     continue
-                return
+                return True
             raise EssayVaultUnavailableError(support_details="vault: cas contention")
 
-        await self._run(call)
+        return await self._run(call)
 
 
 def _vault_configured(settings: EssayVaultSettings) -> bool:

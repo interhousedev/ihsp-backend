@@ -1,6 +1,5 @@
 """Backup, restore and rotation of the essay data keys (/v1/admin/essay-keys)."""
 
-import json
 from typing import Annotated
 
 from app.bootstrap.container import Container
@@ -19,12 +18,15 @@ router = APIRouter(prefix="/v1/admin/essay-keys", tags=["admin-essay-keys"])
 
 ContainerDep = Annotated[Container, Depends(get_container)]
 
+NO_STORE = "private, no-store"
+
 
 @router.get("/status", response_model=EssayKeysStatusResponse)
 async def get_status(
-    admin: AdminDep, container: ContainerDep
+    admin: AdminDep, container: ContainerDep, response: Response
 ) -> EssayKeysStatusResponse:
     """Students with a key, key generation, its backup and the rotation progress."""
+    response.headers["Cache-Control"] = NO_STORE
     result = await container.admission.essay_keys.status(admin)
     return EssayKeysStatusResponse.from_status(result)
 
@@ -46,17 +48,18 @@ async def post_backup(
         media_type="application/json",
         headers={
             "Content-Disposition": f'attachment; filename="{file.filename}"',
-            "Cache-Control": "no-store",
+            "Cache-Control": NO_STORE,
         },
     )
 
 
 @router.post("/restore", response_model=RestoreResponse)
 async def post_restore(
-    body: RestoreBody, admin: AdminDep, container: ContainerDep
+    body: RestoreBody, admin: AdminDep, container: ContainerDep, response: Response
 ) -> RestoreResponse:
     """Write the keys missing from Vault; an existing key is never overwritten."""
-    data = json.dumps(body.backup).encode()
+    response.headers["Cache-Control"] = NO_STORE
+    data = body.backup.model_dump_json().encode()
     report = await container.admission.essay_keys.restore(admin, data, body.passphrase)
     return RestoreResponse.from_report(report)
 
@@ -67,8 +70,9 @@ async def post_restore(
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def post_rotate(
-    admin: AdminDep, container: ContainerDep
+    admin: AdminDep, container: ContainerDep, response: Response
 ) -> EssayKeysStatusResponse:
     """Start the rotation in the worker; poll /status for progress."""
+    response.headers["Cache-Control"] = NO_STORE
     ledger = await container.admission.essay_keys.rotate(admin)
     return EssayKeysStatusResponse.build(ledger, None)

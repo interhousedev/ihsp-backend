@@ -74,8 +74,12 @@ class EssayKeyStore(Protocol):
         """Add a pending key (kept when one is there already); None without a key."""
         ...
 
-    async def finish_rotation(self, owner_id: UUID) -> None:
-        """Replace the key with its pending key; nothing when none is pending."""
+    async def finish_rotation(self, owner_id: UUID, pending: bytes) -> bool:
+        """Make `pending` the only key, only while it is the stored pending key.
+
+        False (nothing written) when another key is pending or none is: a run
+        never promotes a pending key it did not reseal with.
+        """
         ...
 
 

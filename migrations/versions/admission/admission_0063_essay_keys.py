@@ -36,6 +36,8 @@ def upgrade() -> None:
         sa.Column("rotation_by", sa.Uuid(), nullable=True),
         sa.Column("rotation_started_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("rotation_finished_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("rotation_run_id", sa.Uuid(), nullable=True),
+        sa.Column("rotation_heartbeat_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
             "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), **NN
         ),

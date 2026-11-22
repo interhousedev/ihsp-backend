@@ -189,6 +189,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     ) -> None:
         """Keep the essay cipher, the clock and the outbox that can cancel."""
         super().__init__(*args, **kwargs)
+        self._raw_cipher = cipher
         self._cipher = cipher
         self._clock = clock
         self._notification_outbox = notification_outbox
@@ -218,7 +219,10 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         await super().commit()
 
     def _init_repos(self) -> None:
-        """Create the repositories on the open session."""
+        """Create the repositories on the open session (seals take the key fence)."""
+        from app.modules.admission.infrastructure.essay_keys_sql import fenced_cipher
+
+        self._cipher = fenced_cipher(self.session, self._raw_cipher)
         self.access = SqlAccessRepository(self.session)
         self.catalog = SqlCatalogRepository(self.session)
         self.catalog_proposals = SqlCatalogProposalRepository(self.session)

@@ -1,10 +1,15 @@
 """Essay key administration: backup once, restore never overwrites, rotation."""
 
+import dataclasses
 import datetime as dt
 import json
 from uuid import UUID
 
-from app.modules.admission.application.essay_keys import ROTATE_TASK, EssayKeyAdmin
+from app.modules.admission.application.essay_keys import (
+    ROTATE_TASK,
+    STALE_AFTER,
+    EssayKeyAdmin,
+)
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     EssayKeysBackupInvalidError,
@@ -23,8 +28,10 @@ from app.modules.admission.infrastructure.essay_key_backup import (
 from app.modules.admission.infrastructure.essay_keys_sql import Unreadable, move_blob
 from app.modules.admission.ports.essay_crypto import EssayKey
 from app.modules.admission.ports.essay_keys import (
+    BackupBuilder,
     EssayKeyLedgerState,
     ResealResult,
+    RotationFencedError,
     RotationProgress,
 )
 from app.modules.admission.ports.repositories import AuditEvent
@@ -40,7 +47,7 @@ ADMIN = Actor(user_id=new_id(), roles=frozenset({Role.ADMIN}))
 
 
 class MemoryLedger:
-    """In-memory `EssayKeyLedger`."""
+    """In-memory `EssayKeyLedger` with the same lease and fencing rules."""
 
     def __init__(self) -> None:
         self.generation = 1
@@ -57,48 +64,58 @@ class MemoryLedger:
             self.rotation,
         )
 
-    async def claim_export(
-        self, generation: int, actor_id: UUID, at: dt.datetime, event: AuditEvent
-    ) -> bool:
-        if generation in self.exports:
-            return False
-        self.exports[generation] = (at, actor_id)
+    async def export(
+        self, actor_id: UUID, at: dt.datetime, build: BackupBuilder
+    ) -> bytes:
+        if self.rotation.state not in ("idle", "done"):
+            raise EssayKeysRotationRunningError()
+        if self.generation in self.exports:
+            raise EssayKeysBackupTakenError()
+        content, event = await build(self.generation)
+        self.exports[self.generation] = (at, actor_id)
         self.events.append(event)
-        return True
+        return content
 
-    async def start_rotation(self, actor_id: UUID, at: dt.datetime) -> bool:
-        if self.rotation.state == "running":
+    async def start_rotation(
+        self, run_id: UUID, actor_id: UUID, at: dt.datetime, stale_before: dt.datetime
+    ) -> bool:
+        r = self.rotation
+        beat = r.heartbeat_at
+        if r.state == "running" and beat is not None and beat >= stale_before:
             return False
-        self.rotation = RotationProgress("running", 0, 0, 0, at, None, actor_id)
+        self.rotation = RotationProgress(
+            "running", 0, 0, 0, at, None, actor_id, run_id=run_id, heartbeat_at=at
+        )
         return True
 
-    def _with(self, **kw: object) -> None:
+    def _fenced(self, run_id: UUID, at: dt.datetime, **kw: object) -> bool:
         r = self.rotation
-        values = {
-            "state": r.state,
-            "total": r.total,
-            "done": r.done,
-            "unreadable": r.unreadable,
-            "started_at": r.started_at,
-            "finished_at": r.finished_at,
-            "requested_by": r.requested_by,
-        }
-        values.update(kw)
-        self.rotation = RotationProgress(**values)  # type: ignore[arg-type]
+        if r.state != "running" or r.run_id != run_id:
+            return False
+        replaced = dataclasses.replace(r, heartbeat_at=at)
+        self.rotation = dataclasses.replace(replaced, **kw)  # type: ignore[arg-type]
+        return True
 
-    async def set_total(self, total: int) -> None:
-        self._with(total=total, done=0, unreadable=0)
+    async def heartbeat(self, run_id: UUID, at: dt.datetime) -> bool:
+        return self._fenced(run_id, at)
 
-    async def advance(self, unreadable: int) -> None:
+    async def set_total(self, run_id: UUID, total: int, at: dt.datetime) -> bool:
+        return self._fenced(run_id, at, total=total, done=0, unreadable=0)
+
+    async def advance(self, run_id: UUID, unreadable: int, at: dt.datetime) -> bool:
         r = self.rotation
-        self._with(done=r.done + 1, unreadable=r.unreadable + unreadable)
+        return self._fenced(
+            run_id, at, done=r.done + 1, unreadable=r.unreadable + unreadable
+        )
 
-    async def finish_rotation(self, at: dt.datetime) -> None:
-        self._with(state="done", finished_at=at)
+    async def finish_rotation(self, run_id: UUID, at: dt.datetime) -> bool:
+        if not self._fenced(run_id, at, state="done", finished_at=at):
+            return False
         self.generation += 1
+        return True
 
-    async def fail_rotation(self, at: dt.datetime) -> None:
-        self._with(state="failed", finished_at=at)
+    async def fail_rotation(self, run_id: UUID, at: dt.datetime) -> bool:
+        return self._fenced(run_id, at, state="failed", finished_at=at)
 
     async def audit(self, event: AuditEvent) -> None:
         self.events.append(event)
@@ -107,10 +124,14 @@ class MemoryLedger:
 class MemoryResealer:
     """Blobs per (owner, record, column), moved with the production `move_blob`."""
 
-    def __init__(self) -> None:
+    def __init__(self, ledger: MemoryLedger) -> None:
+        self.ledger = ledger
         self.blobs: dict[tuple[UUID, UUID, str], bytes] = {}
 
-    async def reseal(self, key: EssayKey) -> ResealResult:
+    async def reseal(self, key: EssayKey, run_id: UUID) -> ResealResult:
+        r = self.ledger.rotation
+        if r.state != "running" or r.run_id != run_id:
+            raise RotationFencedError()
         resealed = unreadable = 0
         for (owner, record, column), blob in list(self.blobs.items()):
             if owner != key.owner_id:
@@ -132,7 +153,8 @@ def _admin(
     store: MemoryEssayKeyStore | None = None,
 ) -> tuple[EssayKeyAdmin, MemoryEssayKeyStore, MemoryLedger, MemoryResealer]:
     store = store or MemoryEssayKeyStore()
-    ledger, resealer = MemoryLedger(), MemoryResealer()
+    ledger = MemoryLedger()
+    resealer = MemoryResealer(ledger)
     admin = EssayKeyAdmin(
         store,
         ledger,
@@ -228,24 +250,117 @@ async def test_rotation_reseals_everything_and_counts_unreadable() -> None:
     )
     state = await admin.rotate(ADMIN)
     assert state.rotation.state == "running"
-    assert admin._kicker.calls == [(ROTATE_TASK, {})]  # type: ignore[attr-defined]
+    run_id = state.rotation.run_id
+    assert run_id is not None
+    kicks = admin._kicker.calls  # type: ignore[attr-defined]
+    assert kicks == [(ROTATE_TASK, {"run_id": str(run_id)})]
     with pytest.raises(EssayKeysRotationRunningError):
         await admin.rotate(ADMIN)
 
-    await admin.run_rotation()
+    await admin.run_rotation(run_id)
     new = store.keys[owner]
     assert new.pending is None and new.secret != old.secret
     blob = resealer.blobs[(owner, good, "body")]
     assert open_blob(new.secret, owner, good, "body", blob) == "my essay"
     assert open_blob(old.secret, owner, good, "body", blob) is None
-    assert (
-        await cipher.open(owner, good, "body", blob)  # type: ignore[call-arg]
-        == "my essay"
-    )
+    assert await cipher.open(owner, good, "body", blob) == "my essay"
     assert ledger.rotation.state == "done"
     assert (ledger.rotation.total, ledger.rotation.done) == (1, 1)
     assert ledger.rotation.unreadable == 1
     assert ledger.generation == 2
 
-    await admin.run_rotation()  # not running any more: a no-op
+    await admin.run_rotation(run_id)  # not running any more: a no-op
     assert store.keys[owner] == new
+
+
+async def test_fresh_run_blocks_a_second_start_stale_run_is_taken_over() -> None:
+    admin, store, ledger, _ = _admin()
+    await store.create(new_id())
+    first = (await admin.rotate(ADMIN)).rotation.run_id
+    clock: FixedClock = admin._clock  # type: ignore[assignment]
+    clock.advance(minutes=9)
+    with pytest.raises(EssayKeysRotationRunningError):
+        await admin.rotate(ADMIN)
+    clock.advance(seconds=STALE_AFTER.total_seconds())
+    second = (await admin.rotate(ADMIN)).rotation.run_id
+    assert second is not None and second != first
+    assert first is not None
+    await admin.run_rotation(first)  # fenced: the old run does nothing
+    assert ledger.rotation.run_id == second and ledger.generation == 1
+    await admin.run_rotation(second)
+    assert ledger.rotation.state == "done" and ledger.generation == 2
+
+
+async def test_wrong_run_id_is_fenced_and_never_promotes() -> None:
+    admin, store, ledger, resealer = _admin()
+    owner = new_id()
+    old = await store.create(owner)
+    run_id = (await admin.rotate(ADMIN)).rotation.run_id
+    assert run_id is not None
+    await store.begin_rotation(owner)
+    with pytest.raises(RotationFencedError):
+        await resealer.reseal(store.keys[owner], new_id())
+    await admin.run_rotation(new_id())
+    assert store.keys[owner].secret == old.secret
+    assert ledger.rotation.state == "running" and ledger.generation == 1
+
+
+async def test_promote_only_the_exact_pending_key() -> None:
+    store = MemoryEssayKeyStore()
+    owner = new_id()
+    old = await store.create(owner)
+    pending = await store.begin_rotation(owner)
+    assert pending is not None and pending.pending is not None
+    assert not await store.finish_rotation(owner, b"\x07" * 32)
+    assert store.keys[owner].secret == old.secret
+    assert await store.finish_rotation(owner, pending.pending)
+    assert store.keys[owner].secret == pending.pending
+
+
+@pytest.mark.parametrize(
+    ("path", "value"),
+    [
+        (("kdf", "n"), 2**20),
+        (("kdf", "r"), 16),
+        (("kdf", "p"), 2),
+        (("kdf", "length"), 64),
+        (("kdf", "salt"), "AAAA"),
+        (("cipher", "nonce"), "AAAA"),
+        (("count",), 20_001),
+    ],
+)
+async def test_restore_rejects_other_kdf_params_and_sizes(
+    path: tuple[str, ...], value: object
+) -> None:
+    admin, store, _, _ = _admin()
+    await store.create(new_id())
+    doc = json.loads((await admin.backup(ADMIN, PASS)).content)
+    target = doc
+    for part in path[:-1]:
+        target = target[part]
+    target[path[-1]] = value
+    with pytest.raises(EssayKeysBackupInvalidError):
+        await admin.restore(ADMIN, json.dumps(doc).encode(), PASS)
+
+
+@pytest.mark.parametrize("state", ["running", "failed"])
+async def test_backup_refused_during_a_running_or_failed_rotation(state: str) -> None:
+    admin, store, ledger, _ = _admin()
+    await store.create(new_id())
+    ledger.rotation = dataclasses.replace(
+        ledger.rotation, state=state  # type: ignore[arg-type]
+    )
+    with pytest.raises(EssayKeysRotationRunningError):
+        await admin.backup(ADMIN, PASS)
+    assert ledger.exports == {}
+
+
+async def test_open_refreshes_a_stale_cached_key_once() -> None:
+    store = MemoryEssayKeyStore()
+    cipher = AesGcmEssayCipher(store)
+    owner, record = new_id(), new_id()
+    await cipher.seal(owner, record, "body", "warm the cache")
+    rotated = await store.begin_rotation(owner)
+    assert rotated is not None and rotated.pending is not None
+    blob = seal_blob(rotated.pending, owner, record, "body", "new text")
+    assert await cipher.open(owner, record, "body", blob) == "new text"

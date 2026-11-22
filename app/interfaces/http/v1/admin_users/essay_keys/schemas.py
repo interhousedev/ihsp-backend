@@ -1,11 +1,15 @@
 """Request and response models of /v1/admin/essay-keys."""
 
 from datetime import datetime
-from typing import Any, Literal
+from typing import Literal
 from uuid import UUID
 
 from app.modules.admission.application.essay_keys import EssayKeysStatus, RestoreReport
-from app.modules.admission.ports.essay_keys import EssayKeyLedgerState
+from app.modules.admission.ports.essay_keys import (
+    MAX_BACKUP_CIPHERTEXT,
+    MAX_BACKUP_KEYS,
+    EssayKeyLedgerState,
+)
 
 from pydantic import BaseModel, Field
 
@@ -18,10 +22,41 @@ class PassphraseBody(BaseModel):
     passphrase: str = Field(min_length=MIN_PASSPHRASE, max_length=1024)
 
 
+class BackupKdf(BaseModel):
+    """Key derivation of a backup file (only the parameters the server writes)."""
+
+    name: str = Field(max_length=16)
+    n: int = Field(ge=2, le=2**20)
+    r: int = Field(ge=1, le=32)
+    p: int = Field(ge=1, le=4)
+    length: int = Field(ge=16, le=64)
+    salt: str = Field(max_length=64)
+
+
+class BackupCipher(BaseModel):
+    """Cipher of a backup file."""
+
+    name: str = Field(max_length=32)
+    nonce: str = Field(max_length=32)
+
+
+class BackupDocument(BaseModel):
+    """The JSON object of a backup file, with every size bounded."""
+
+    format: str = Field(max_length=64)
+    version: int
+    generation: int = Field(ge=1)
+    created_at: str = Field(max_length=64)
+    count: int = Field(ge=0, le=MAX_BACKUP_KEYS)
+    kdf: BackupKdf
+    cipher: BackupCipher
+    ciphertext: str = Field(max_length=MAX_BACKUP_CIPHERTEXT)
+
+
 class RestoreBody(BaseModel):
     """The backup file (its JSON object) and its passphrase."""
 
-    backup: dict[str, Any]
+    backup: BackupDocument
     passphrase: str = Field(min_length=1, max_length=1024)
 
 

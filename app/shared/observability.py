@@ -16,7 +16,9 @@ if TYPE_CHECKING:
 
 SCRUBBED = "[Filtered]"
 _SECRET_KEY = re.compile(
-    r"(authorization|cookie|token|secret|password|api[_-]?key|session|csrf)", re.I
+    r"(authorization|cookie|token|secret|password|passphrase|api[_-]?key|session"
+    r"|csrf|(^|_)dek$|plain(text)?|^body$|_body$|ciphertext)",
+    re.I,
 )
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 _SECRET_TEXT = re.compile(
@@ -54,8 +56,20 @@ def _scrub_breadcrumbs(event: "Event") -> None:
         event["breadcrumbs"] = [_scrub_mapping(crumb) for crumb in crumbs]
 
 
+def _drop_frame_vars(block: object) -> None:
+    values = block.get("values") if isinstance(block, dict) else None
+    for value in values if isinstance(values, list) else ():
+        trace = value.get("stacktrace") if isinstance(value, dict) else None
+        frames = trace.get("frames") if isinstance(trace, dict) else None
+        for frame in frames if isinstance(frames, list) else ():
+            if isinstance(frame, dict):
+                frame.pop("vars", None)
+
+
 def scrub_event(event: "Event", _hint: dict[str, Any]) -> "Event":
-    """Strip auth, cookies, bodies and secrets/e-mails from an outgoing event."""
+    """Strip auth, cookies, bodies, frame locals and secrets from an outgoing event."""
+    _drop_frame_vars(event.get("exception"))
+    _drop_frame_vars(event.get("threads"))
     request = event.get("request")
     if isinstance(request, dict):
         headers = request.get("headers")
@@ -143,6 +157,7 @@ def init_observability(settings: Settings, process: str) -> bool:
         release=release,
         environment=settings.env,
         send_default_pii=False,
+        include_local_variables=False,  # frame locals can hold keys and essays
         max_request_body_size="never",  # request bodies can hold passwords
         traces_sample_rate=settings.bugsink.traces_sample_rate,
         before_send=before_send,

@@ -45,6 +45,12 @@ class EssayKeyStateRow(CreatedMixin, UpdatedMixin, Base):
     rotation_finished_at: Mapped[dt.datetime | None] = mapped_column(
         DateTime(timezone=True)
     )
+    rotation_run_id: Mapped[UUID | None] = mapped_column(Uuid)
+    """The run that holds the rotation lease; every run step is fenced on it."""
+    rotation_heartbeat_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
+    """Renewed with every step; a run is stale only when this is old."""
 
 
 class EssayKeyExportRow(Base):
