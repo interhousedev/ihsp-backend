@@ -129,6 +129,7 @@ class AiTask(StrEnum):
     ADMIT_OPPORTUNITY_INTAKE = "admit_opportunity_intake"
     ADMIT_OPPORTUNITY_PLAN = "admit_opportunity_plan"
     ADMIT_PROJECT_IDEAS = "admit_project_ideas"
+    ADMIT_VOICE_FILL = "admit_voice_fill"
     ADMIT_APP_REVIEW_PROFILE = "admit_app_review_profile"
     ADMIT_APP_REVIEW_ACTIVITIES = "admit_app_review_activities"
     ADMIT_APP_REVIEW_ALIGNMENT = "admit_app_review_alignment"
@@ -659,6 +660,12 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     ),
     AiTask.ADMIT_PROJECT_IDEAS: _admission(
         "Admission: project ideas a student can build, with analogs and first steps.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_VOICE_FILL: _admission(
+        "Admission: turns a spoken answer into the values of a form's fields.",
         model=NOTEBOOK_MODEL,
         budget_weight=1,
         reasoning_effort=_NO_REASONING,

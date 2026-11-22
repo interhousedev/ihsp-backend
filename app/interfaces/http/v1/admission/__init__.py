@@ -52,6 +52,7 @@ from app.interfaces.http.v1.admission import (
     routes_test_scores,
     routes_today,
     routes_uni_chat,
+    routes_voice_fill,
 )
 from app.interfaces.http.v1.admission.router import router
 
@@ -111,4 +112,5 @@ ROUTERS: list[APIRouter] = [
     routes_country_facts.router,
     routes_projects.router,
     routes_project_helpers_staff.router,
+    routes_voice_fill.router,
 ]

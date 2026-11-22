@@ -22,6 +22,7 @@ from app.modules.admission.infrastructure.ai.prompts import (
     research,
     tasks_suggest,
     uni_advice,
+    voice_fill,
 )
 from app.shared.ai_tasks import AiTask
 
@@ -38,6 +39,7 @@ BUILTIN_PROMPTS: dict[tuple[str, str], str] = {
     (AiTask.ADMIT_OPPORTUNITY_INTAKE.value, "system"): opportunity_intake.SYSTEM,
     (AiTask.ADMIT_OPPORTUNITY_PLAN.value, "system"): opportunity_plan.SYSTEM,
     (AiTask.ADMIT_PROJECT_IDEAS.value, "system"): project_ideas.SYSTEM,
+    (AiTask.ADMIT_VOICE_FILL.value, "system"): voice_fill.SYSTEM,
     **{
         (AiTask.ADMIT_ESSAY_COACH.value, name): text
         for name, text in essays.PROMPTS.items()

@@ -31,6 +31,7 @@ from app.modules.ai.infrastructure.fake_tasks import (
 )
 from app.modules.ai.infrastructure.fake_teacher import build_teacher_document
 from app.modules.ai.infrastructure.fake_uni_advice import build_uni_advice_document
+from app.modules.ai.infrastructure.fake_voice_fill import build_voice_fill_document
 from app.shared.contracts.ai import LlmTuning
 from app.shared.ids import new_id
 
@@ -128,6 +129,7 @@ class FakeLlmGateway:
             built = built or build_tasks_document(schema_name)
             built = built or build_item_grade_document(schema_name)
             built = built or build_project_ideas_document(schema_name)
+            built = built or build_voice_fill_document(schema_name, messages)
             if built is None and schema_name not in BUILDERS:
                 # Schemas of other modules (admission): a valid document by shape.
                 built = document_for(schema)

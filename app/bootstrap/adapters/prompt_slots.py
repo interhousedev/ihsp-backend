@@ -47,6 +47,9 @@ from app.modules.admission.infrastructure.ai.prompts import tasks_suggest as adm
 from app.modules.admission.infrastructure.ai.prompts import (
     uni_advice as admit_uni_advice,
 )
+from app.modules.admission.infrastructure.ai.prompts import (
+    voice_fill as admit_voice_fill,
+)
 from app.modules.ai.application import transcribe_audio
 from app.modules.ai.domain import prompts, prompts_author, web_prompts
 from app.modules.ai.domain.prompt_registry import PromptSlot
@@ -273,6 +276,13 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         "system",
         "Admission: project ideas for a student, with analogs and first steps",
         admit_project_ideas.SYSTEM,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_VOICE_FILL,),
+        "system",
+        "Admission: spoken answer into the fields of a form",
+        admit_voice_fill.SYSTEM,
         False,
     ),
     (

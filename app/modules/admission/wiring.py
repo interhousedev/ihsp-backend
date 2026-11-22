@@ -113,6 +113,7 @@ from app.modules.admission.application.transcripts import TranscriptService
 from app.modules.admission.application.uni_advice import UniAdviceService
 from app.modules.admission.application.uni_chat import UniChatService
 from app.modules.admission.application.voice import VoiceService
+from app.modules.admission.application.voice_fill import VoiceFillService
 from app.modules.admission.application.words import WordsService
 from app.modules.admission.infrastructure.ai.prompt_source import BuiltinPrompts
 from app.modules.admission.infrastructure.app_review_repository import (
@@ -278,6 +279,7 @@ class AdmissionServices:
     country_facts: CountryFactsService
     project_ideas: ProjectIdeaService
     project_helpers: ProjectHelperService
+    voice_fill: VoiceFillService
     cipher: EssayCipher
     essay_reviews: EssayReviewService
     essay_invites: EssayInviteService
@@ -715,6 +717,7 @@ def build(
             curators.can_review,
             deps.clock,
         ),
+        voice_fill=VoiceFillService(model, consents, texts, deps.rate_limiter),
         memory_notes=MemoryNoteService(uow_factory, access, deps.clock),
         application_data=UowAssistantData(uow_factory),
         calendar=calendar,
