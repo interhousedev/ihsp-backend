@@ -132,6 +132,35 @@ async def test_invalid_fact_and_scholarship_are_rejected() -> None:
     assert card.scholarships[0]["name"] == "A"
 
 
+async def test_blank_optional_scholarship_fields_are_accepted() -> None:
+    w = World()
+    svc, _, card, _, _ = _svc(w)
+    ctx = await w.ctx(STAFF, Role.ADMIN)
+    await svc.create_scholarship(
+        ctx,
+        IID,
+        {
+            "name": "A",
+            "provider": "institution",
+            "basis": "merit",
+            "country": None,
+            "url": None,
+            "cycle": None,
+            "coverage_pct_max": 50,
+            "covers": [],
+        },
+        lock_version=3,
+    )
+    assert card.scholarships[0]["name"] == "A"
+    with pytest.raises(ValidationFailedError):
+        await svc.create_scholarship(
+            ctx,
+            IID,
+            {"name": "A", "provider": "institution", "basis": "merit", "country": "X"},
+            lock_version=3,
+        )
+
+
 async def test_description_is_cleaned_per_locale() -> None:
     w = World()
     svc, _, card, _, _ = _svc(w)

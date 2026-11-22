@@ -41,7 +41,11 @@ def _scholarship_values(raw: Mapping[str, Any], *, create: bool) -> dict[str, An
     values = {k: v for k, v in raw.items() if k in SCHOLARSHIP_WRITE}
     if create and not all(values.get(k) for k in ("name", "provider", "basis")):
         raise ValidationFailedError(params={"field": "name"})
-    bad = invalid_field("scholarship", values)
+    required = ("name", "provider", "basis")
+    bad = invalid_field(
+        "scholarship",
+        {k: v for k, v in values.items() if v is not None or k in required},
+    )
     if bad is not None:
         raise ValidationFailedError(params={"field": bad})
     lo, hi = values.get("coverage_pct_min"), values.get("coverage_pct_max")
