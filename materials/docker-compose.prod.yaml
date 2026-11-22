@@ -202,6 +202,13 @@ x-essay-vault-env: &essay-vault-env
   IHSP_ESSAY_VAULT__ROLE_ID: ${IHSP_ESSAY_VAULT__ROLE_ID:-} # written to .env.prod by scripts/prod_init.sh vault
   IHSP_ESSAY_VAULT__SECRET_ID: ${IHSP_ESSAY_VAULT__SECRET_ID:-}
 
+# AI connector keys (Langfuse and other admin-saved secrets); off until ENABLED=true.
+x-ai-connector-vault-env: &ai-connector-vault-env
+  IHSP_AI_CONNECTOR_VAULT__URL: http://vault:8200
+  IHSP_AI_CONNECTOR_VAULT__ENABLED: ${IHSP_AI_CONNECTOR_VAULT__ENABLED:-false}
+  IHSP_AI_CONNECTOR_VAULT__ROLE_ID: ${IHSP_AI_CONNECTOR_VAULT__ROLE_ID:-} # written to .env.prod by scripts/prod_init.sh vault
+  IHSP_AI_CONNECTOR_VAULT__SECRET_ID: ${IHSP_AI_CONNECTOR_VAULT__SECRET_ID:-}
+
 # Outbound mail relay (identity sends login codes, the worker sends student mail).
 x-smtp-out-env: &smtp-out-env
   IHSP_SMTP_OUT__HOST: ${IHSP_SMTP_OUT__HOST:?}
@@ -406,7 +413,7 @@ services:
     command: ["python", "-m", "app", "identity"]
     mem_limit: 1g
     environment:
-      <<: [*backend-env, *smtp-out-env, *vault-env, *bot-vault-env, *essay-vault-env]
+      <<: [*backend-env, *smtp-out-env, *vault-env, *bot-vault-env, *essay-vault-env, *ai-connector-vault-env]
       IHSP_HYDRA__MINIAPP_CLIENT_SECRET: ${IHSP_HYDRA__MINIAPP_CLIENT_SECRET:?}
     secrets:
       - source: jwt_bearer
@@ -430,7 +437,7 @@ services:
     command: ["python", "-m", "app", "api"]
     mem_limit: 2g
     environment:
-      <<: [*backend-env, *openrouter-env, *exa-env, *bot-vault-env, *essay-vault-env]
+      <<: [*backend-env, *openrouter-env, *exa-env, *bot-vault-env, *essay-vault-env, *ai-connector-vault-env]
       # Server migration: the api only drops a 0600 request file here; the root host
       # runner (scripts/migrate_runner.sh, systemd path unit) does the copying.
       IHSP_MIGRATION__DIR: /migration
@@ -457,7 +464,7 @@ services:
       # Same AI keys as api. The bot builds the AI module at start; without a key its
       # gateways fail only when called (ProcessPlan.ai_keys), so the process never stops.
       # SMTP out: Telegram linking sends notice emails (else localhost:1025).
-      <<: [*backend-env, *smtp-out-env, *openrouter-env, *exa-env, *bot-vault-env, *essay-vault-env]
+      <<: [*backend-env, *smtp-out-env, *openrouter-env, *exa-env, *bot-vault-env, *essay-vault-env, *ai-connector-vault-env]
       IHSP_TELEGRAM__WEBHOOK_SECRET: ${IHSP_TELEGRAM__WEBHOOK_SECRET:?}
       IHSP_TELEGRAM__WEBHOOK_URL: https://api.${DOMAIN} # base URL; the bot registers /telegram/<secret>
     healthcheck:
@@ -504,7 +511,7 @@ services:
     mem_limit: 3g
     stop_grace_period: 60s
     environment:
-      <<: [*backend-env, *smtp-out-env, *openrouter-env, *exa-env, *vault-env, *bot-vault-env, *essay-vault-env]
+      <<: [*backend-env, *smtp-out-env, *openrouter-env, *exa-env, *vault-env, *bot-vault-env, *essay-vault-env, *ai-connector-vault-env]
     secrets: # identity.destroy_emis_secret deletes the Vault secret of a closed account
       - source: jwt_bearer
         target: jwt_bearer
