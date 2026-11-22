@@ -44,7 +44,12 @@ from app.shared.contracts.files import FilePurpose, FileRef, FilesApi, FileScope
 from app.shared.ids import new_id
 from app.shared.limits import ActorLimits, LimitsProvider
 from app.shared.tasks import TaskKicker
-from app.shared.usage_context import bind_usage_user, reset_usage_actor
+from app.shared.usage_context import (
+    SURFACE_NOTEBOOKS,
+    bind_ai_session,
+    bind_usage_user,
+    reset_usage_actor,
+)
 
 import structlog
 
@@ -229,6 +234,7 @@ class GatherWebMaterials:
             return report
         view = await self.limits.for_user(notebook.owner_id)
         token = bind_usage_user(notebook.owner_id, unlimited=view.unlimited)
+        bind_ai_session(SURFACE_NOTEBOOKS, notebook.id)
         try:
             await self._gather(self.fetcher, source, notebook, view, report)
         finally:

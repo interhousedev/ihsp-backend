@@ -55,7 +55,12 @@ from app.shared.i18n.core import I18nCore
 from app.shared.ids import new_id
 from app.shared.limits import LimitsProvider, StaticLimits
 from app.shared.openui.finalize import OpenUiFinalizer, UsageCounter
-from app.shared.usage_context import bind_ai_session
+from app.shared.usage_context import (
+    SURFACE_ADMISSION,
+    SURFACE_LMS,
+    bind_ai_session,
+    surface_of_app,
+)
 from app.shared.web_citations import rewrite_markers
 
 MAX_OUTPUT_TOKENS = 4096
@@ -158,10 +163,11 @@ class ContinueTurn:
         texts of the tool rounds become its `progress` notes and the last text is
         the answer. A turn continued after an approval adds to the waiting message.
         """
-        bind_ai_session(chat_id)  # the trace session of every model call of the turn
         limits = await self.limits.current()
         history = limits.ai_chat_history_limit
         chat, tail = await self._load(chat_id)
+        # the trace session of every model call of the turn
+        bind_ai_session(_trace_surface(chat.assistant, surface, app), chat_id)
         summary, after = await self.summarizer.context(
             chat, tail[-1].seq if tail else 0, window=history
         )
@@ -541,3 +547,16 @@ def _final_status(calls: list[ToolCall]) -> TurnStatus | None:
     if not calls:
         return TurnStatus.DONE
     return None
+
+
+_ASSISTANT_SURFACES = {
+    Assistant.LMS_AUTHOR: SURFACE_LMS,
+    Assistant.ADMISSION: SURFACE_ADMISSION,
+}
+
+
+def _trace_surface(assistant: Assistant, surface: str, app: str | None) -> str:
+    """Telegram, else the assistant's own surface, else the web app's."""
+    if surface == SURFACE_TELEGRAM:
+        return SURFACE_TELEGRAM
+    return _ASSISTANT_SURFACES.get(assistant) or surface_of_app(app)

@@ -11,7 +11,7 @@ from app.modules.ai.domain.errors import ChatNotFoundError, WrongAssistantError
 from app.modules.ai.domain.prompts import SURFACE_TELEGRAM
 from app.shared.actor import Actor
 from app.shared.contracts.files import FilesApi
-from app.shared.usage_context import bind_usage_actor
+from app.shared.usage_context import bind_ai_surface, bind_usage_actor
 
 Events = AsyncIterator[TurnEvent]
 
@@ -74,6 +74,7 @@ class BotAssistant:
         """Start the turn; a deleted chat or a changed role starts a new chat."""
         # The model calls of this update are counted and access-checked for the user.
         bind_usage_actor(actor)
+        bind_ai_surface(SURFACE_TELEGRAM)
 
         def start(chat_id: UUID) -> Events:
             return self.ai.send_message.stream(  # type: ignore[no-any-return]
@@ -104,6 +105,7 @@ class BotAssistant:
     ) -> str:
         """Speech to text for one recording; the use case keeps no copy of it."""
         bind_usage_actor(actor)
+        bind_ai_surface(SURFACE_TELEGRAM)
         return await self.ai.transcribe_audio.execute(  # type: ignore[no-any-return]
             actor, data=data, duration_ms=duration_ms
         )
@@ -113,6 +115,7 @@ class BotAssistant:
     ) -> Events:
         """Approve (the tool runs) or reject a proposed write; the turn goes on."""
         bind_usage_actor(actor)
+        bind_ai_surface(SURFACE_TELEGRAM)
         if approve:
             events = self.ai.approve_tool_call.stream(
                 actor=actor, chat_id=chat_id, call_id=call_id, surface=SURFACE_TELEGRAM

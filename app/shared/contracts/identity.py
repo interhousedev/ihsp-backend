@@ -126,6 +126,8 @@ class UserPreferences(BaseModel):
     mail_forward_to_telegram: bool = True
     hide_photo_from_classmates: bool = False  # my-group hides the photo from peers
     notify_push: bool = True  # Web Push is a second channel next to Telegram
+    # Langfuse keeps the text of the general chat only (web and Telegram)
+    limit_ai_tracing: bool = False
     today_cards: list[str] = [
         "now",
         "timeline",

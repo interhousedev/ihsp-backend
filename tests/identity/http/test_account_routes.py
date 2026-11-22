@@ -131,6 +131,31 @@ async def test_push_notifications_are_on_by_default_and_can_be_switched_off(
     assert invalid.status_code == 422
 
 
+async def test_limit_ai_tracing_is_off_by_default_and_only_for_the_owner(
+    api: Api,
+) -> None:
+    """The Langfuse opt-out is the owner's preference; others keep the default."""
+    owner = await api.world.add_user()
+    other = await api.world.add_user()
+    api.login_as(owner)
+
+    fresh = await api.client.get(ME)
+    on = await api.client.patch(f"{ME}/preferences", json={"limit_ai_tracing": True})
+    after = await api.client.get(ME)
+    invalid = await api.client.patch(
+        f"{ME}/preferences", json={"limit_ai_tracing": None}
+    )
+    api.login_as(other)
+    others = await api.client.get(ME)
+
+    assert fresh.json()["preferences"]["limit_ai_tracing"] is False
+    assert on.status_code == 200 and on.json()["limit_ai_tracing"] is True
+    assert after.json()["preferences"]["limit_ai_tracing"] is True
+    assert invalid.status_code == 422
+    assert others.json()["id"] == str(other.id)
+    assert others.json()["preferences"]["limit_ai_tracing"] is False
+
+
 async def test_patch_preferences_rejects_unknown_and_invalid_values(api: Api) -> None:
     """Validation errors are 422."""
     user = await api.world.add_user()

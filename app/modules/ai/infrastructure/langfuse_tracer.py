@@ -4,13 +4,14 @@ The usage recorder opens a span when a call starts and ends it when the call end
 Tracing is best effort: no method raises, and the SDK exports in a background thread,
 so a Langfuse outage never delays or fails a request. Without keys no client exists.
 The project comes only from Administration ("Pipelines" -> "Langfuse tracing").
-Prompts and answers are sent only when the pipeline's content switch is on; the user
-is an opaque salted hash, never an id, email or name. A task with `private_content`
-never sends input, output or error text, whatever the switch says: its error becomes
-a fixed code and the metadata is the task and the role only.
+Prompts and answers are sent only when the pipeline's content switch is on. The user
+is the internal user id (never an email, a name or a phone), the session is
+`<surface>:<conversation>` and the surface is a tag. A masked call (the policy in
+`domain/trace_privacy.py`: essays and private tasks always, everything but the
+general chat for a user who limits tracing) sends `[redacted]` as input and output
+and a fixed error code; its model, usage, status, user and session stay.
 """
 
-import hashlib
 from collections.abc import Mapping
 from typing import Any, Protocol
 from uuid import UUID
@@ -47,6 +48,7 @@ class TraceBackend(Protocol):
         model: str,
         user_id: str | None,
         session_id: str | None,
+        tags: list[str],
         input: Any | None,
         metadata: dict[str, Any],
     ) -> TraceSpan:
@@ -75,12 +77,9 @@ class LangfuseTracer:
     It is also a `TracingSource` that traces every task (the environment only).
     """
 
-    def __init__(
-        self, backend: TraceBackend, *, salt: str, capture_content: bool
-    ) -> None:
-        """Keep the backend, the salt of the user hash and the content switch."""
+    def __init__(self, backend: TraceBackend, *, capture_content: bool) -> None:
+        """Keep the backend and the content switch."""
         self._backend = backend
-        self._salt = salt
         self._capture = capture_content
 
     def tracer_for(self, task: str | None) -> "LangfuseTracer | None":
@@ -91,13 +90,6 @@ class LangfuseTracer:
         """The tracer's own content switch."""
         return self._capture
 
-    def opaque_user(self, user_id: UUID | None) -> str | None:
-        """A salted hash of the user id: stable per user, not reversible."""
-        if user_id is None:
-            return None
-        digest = hashlib.sha256(f"{self._salt}:{user_id}".encode()).hexdigest()
-        return digest[:32]
-
     def begin(
         self,
         *,
@@ -106,8 +98,9 @@ class LangfuseTracer:
         user_id: UUID | None,
         role: str,
         session_id: str | None,
+        surface: str | None = None,
         content: Any | None = None,
-        private: bool = False,
+        masked: bool = False,
         prompt_version: int | None = None,
         prompt_hash: str | None = None,
         capture: bool | None = None,
@@ -116,22 +109,27 @@ class LangfuseTracer:
 
         `capture` overrides the tracer's content switch for this call.
         """
-        send = (self._capture if capture is None else capture) and not private
+        from app.modules.ai.domain.trace_privacy import REDACTED
+
+        send = (self._capture if capture is None else capture) and not masked
         try:
             span = self._backend.start(
                 name=task,
                 model=model,
-                user_id=self.opaque_user(user_id),
+                user_id=None if user_id is None else str(user_id),
                 session_id=session_id,
-                input=content if send else None,
+                tags=[surface] if surface else [],
+                input=REDACTED if masked else (content if send else None),
                 metadata={
                     "task": task,
                     "role": role,
+                    "surface": surface,
+                    "masked": masked,
                     "prompt_version": prompt_version,
                     "prompt_hash": prompt_hash,
                 },
             )
-            return OpenSpan(span, send, private=private)
+            return OpenSpan(span, send, masked=masked)
         except Exception:
             log.warning("langfuse_start_failed", task=task, exc_info=True)
             return None
@@ -155,12 +153,12 @@ class OpenSpan:
     """A span in progress."""
 
     def __init__(
-        self, span: TraceSpan, capture_content: bool, *, private: bool = False
+        self, span: TraceSpan, capture_content: bool, *, masked: bool = False
     ) -> None:
-        """Keep the span, the content switch and whether the task is private."""
+        """Keep the span, the content switch and whether the call is masked."""
         self._span = span
         self._capture = capture_content
-        self._private = private
+        self._masked = masked
 
     def end(
         self,
@@ -171,12 +169,18 @@ class OpenSpan:
         output: Any | None = None,
     ) -> None:
         """Close the span; never raises."""
+        from app.modules.ai.domain.trace_privacy import REDACTED
+
+        if self._masked:
+            output = REDACTED
+        elif not self._capture:
+            output = None
         try:
             self._span.end(
                 model=model,
                 usage=_usage_details(usage),
-                error=PRIVATE_ERROR_CODE if self._private and error else error,
-                output=output if self._capture and not self._private else None,
+                error=PRIVATE_ERROR_CODE if self._masked and error else error,
+                output=output,
             )
         except Exception:
             log.warning("langfuse_end_failed", exc_info=True)
@@ -211,14 +215,15 @@ class SdkBackend:
         model: str,
         user_id: str | None,
         session_id: str | None,
+        tags: list[str],
         input: Any | None,
         metadata: dict[str, Any],
     ) -> TraceSpan:
-        """Open a generation span carrying the user and the session."""
+        """Open a generation span carrying the user, the session and the surface."""
         from langfuse import propagate_attributes
 
         with propagate_attributes(
-            user_id=user_id, session_id=session_id, trace_name=name
+            user_id=user_id, session_id=session_id, tags=tags or None, trace_name=name
         ):
             observation = self._client.start_observation(
                 name=name,
@@ -273,6 +278,4 @@ def make_langfuse_tracer(
     except Exception:
         log.warning("langfuse_init_failed", exc_info=True)
         return None
-    return LangfuseTracer(
-        SdkBackend(client), salt=secret_key, capture_content=capture_content
-    )
+    return LangfuseTracer(SdkBackend(client), capture_content=capture_content)

@@ -46,7 +46,12 @@ from app.shared.ids import new_id
 from app.shared.lms_scopes import effective_scopes
 from app.shared.maintenance import MaintenanceError
 from app.shared.notifications import AuditDraft
-from app.shared.usage_context import bind_usage_actor, reset_usage_actor
+from app.shared.usage_context import (
+    SURFACE_MCP,
+    bind_ai_session,
+    bind_usage_actor,
+    reset_usage_actor,
+)
 
 import structlog
 from mcp.server.auth.middleware.auth_context import get_access_token
@@ -240,6 +245,7 @@ class ToolGuard:
     ) -> dict[str, Any]:
         reset = _ACTOR.set(actor)
         usage = bind_usage_actor(actor)  # AI calls of the tool are for this actor
+        bind_ai_session(SURFACE_MCP, tool)
         try:
             result = await fn(*args, **kwargs)
         except ForbiddenError as error:

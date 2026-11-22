@@ -68,7 +68,7 @@ class Ledger:
     def __init__(self) -> None:
         self.log: list[Any] = []
 
-    def begin(self, *, model: str, task: str | None) -> Pending:
+    async def begin(self, *, model: str, task: str | None) -> Pending:
         self.log.append(("begin", model, task))
         return Pending(self.log)
 
