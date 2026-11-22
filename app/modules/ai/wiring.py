@@ -303,16 +303,12 @@ def build_connectors(
             runtime,
             routing,
             deps.clock,
-            capture_default=tracing.capture_default,
         ),
         tracing=TracingAdmin(
             make_uow,
             secrets,
             routing,
             deps.clock,
-            env_host=settings.langfuse.host,
-            env_configured=tracing.env_configured,
-            capture_default=tracing.capture_default,
             allow_plain_local_urls=settings.env != "prod",
         ),
     )

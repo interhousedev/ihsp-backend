@@ -202,13 +202,11 @@ class PipelinesResponse(BaseModel):
 class TracingOut(BaseModel):
     """GET/PUT/DELETE /tracing: the Langfuse project, never its secret key."""
 
-    source: Literal["runtime", "env", "none"]
+    source: Literal["runtime", "none"]
     host: str
     public_key: str | None
     has_secret: bool
     secret_last4: str | None
-    env_configured: bool
-    env_host: str
     capture_default: bool
     updated_at: datetime | None
 
@@ -221,8 +219,6 @@ class TracingOut(BaseModel):
             public_key=view.public_key,
             has_secret=view.has_secret,
             secret_last4=view.secret_last4,
-            env_configured=view.env_configured,
-            env_host=view.env_host,
             capture_default=view.capture_default,
             updated_at=view.updated_at,
         )

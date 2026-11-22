@@ -290,9 +290,9 @@ class _Assembler:
         self.embedding_index: EmbeddingIndex | None = None
         self.knowledge_lookup: KnowledgeLookupAdapter | None = None
         self.knowledge_gaps: KnowledgeGapAdapter | None = None
-        # Langfuse: the environment's project until Administration sets one; the
-        # route service feeds it the per-pipeline switches. Flushed on shutdown.
-        self.tracing = TracingRuntime(container.settings.langfuse)
+        # Langfuse: the project Administration sets; the route service feeds it the
+        # project and the per-pipeline switches. Flushed on shutdown.
+        self.tracing = TracingRuntime()
         container.closers.append(self.tracing.close)
         self.recorder = UsageRecorder(
             SqlUsageStore(container.sessionmaker), container.clock, self.tracing

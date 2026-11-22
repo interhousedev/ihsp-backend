@@ -171,6 +171,6 @@ async def set_tracing(
 
 @router.delete("/tracing", response_model=TracingOut)
 async def remove_tracing(container: ContainerDep, actor: AdminActor) -> TracingOut:
-    """Remove the stored project and its key; the environment's applies again."""
+    """Remove the stored project and its key; tracing stops."""
     view = await _services(container).tracing.delete(actor)
     return TracingOut.of(view)

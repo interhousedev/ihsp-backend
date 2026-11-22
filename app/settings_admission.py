@@ -50,7 +50,7 @@ class AdmissionSettings(BaseModel):
     """Show admission chance estimates to students (admins may change it at runtime)."""
 
     scorecard_api_key: SecretStr = SecretStr("")
-    """Optional College Scorecard key of the catalog importer; empty skips it."""
+    """Optional College Scorecard key of the catalog importer; empty uses `DEMO_KEY`."""
 
     runtime_cache_seconds: float = 30.0
     """How long a process caches the admin-edited runtime settings."""

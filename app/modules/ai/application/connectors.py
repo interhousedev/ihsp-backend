@@ -15,6 +15,7 @@ from app.modules.ai.domain.connectors import (
     BUILTIN_IDS,
     EFFORTS,
     PIPELINE_OF,
+    TRACING_CAPTURE_DEFAULT,
     Connector,
     ConnectorKind,
     EffectiveRoute,
@@ -266,18 +267,12 @@ class PipelineAdmin:
         runtime: ConnectorRuntime,
         routing: RouteService,
         clock: Clock,
-        *,
-        capture_default: bool = False,
     ) -> None:
-        """Keep the transaction factory, the environment connectors and the router.
-
-        `capture_default` is the environment's `LANGFUSE__CAPTURE_CONTENT`.
-        """
+        """Keep the transaction factory, the environment connectors and the router."""
         self.uow_factory = uow_factory
         self.runtime = runtime
         self.routing = routing
         self.clock = clock
-        self.capture_default = capture_default
 
     async def list(self, actor: Actor) -> list[PipelineView]:
         """Every pipeline with its tasks and routes."""
@@ -357,7 +352,7 @@ class PipelineAdmin:
             effective=await self.routing.route_of(pipeline),
             env_default=self.routing.env_route(pipeline),
             tracing_enabled=default_tracing(pipeline) if traced is None else traced,
-            capture_content=self.capture_default if capture is None else capture,
+            capture_content=TRACING_CAPTURE_DEFAULT if capture is None else capture,
             tracing_default=default_tracing(pipeline),
         )
 
