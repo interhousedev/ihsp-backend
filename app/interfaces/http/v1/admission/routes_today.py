@@ -7,7 +7,7 @@ from uuid import UUID
 from app.interfaces.http.v1.admission.deps import ContainerDep, StudentCtx
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.application.today import TodayView
-from app.modules.admission.domain.today import MAX_DEADLINES, MAX_NEXT
+from app.modules.admission.domain.today import MAX_DEADLINES, MAX_NEXT, NodeState
 
 from fastapi import APIRouter, Header, Response
 from pydantic import BaseModel, Field
@@ -74,6 +74,32 @@ class TodayDeadlineOut(BaseModel):
     href: str
 
 
+class RoadmapNodeOut(BaseModel):
+    """A stop of the roadmap; the web names `key` in the student's language."""
+
+    key: str
+    state: NodeState
+    href: str
+    progress: str | None = None
+
+
+class ProgramOut(BaseModel):
+    """A newly published program matching the student's fields."""
+
+    id: UUID
+    title: str
+    kind: str
+    provider: str | None
+    href: str
+
+
+class NewProgramsOut(BaseModel):
+    """Programs published since the student last opened the block."""
+
+    unseen: int = Field(ge=0)
+    items: list[ProgramOut]
+
+
 class TodayOut(BaseModel):
     """What the Today screen shows."""
 
@@ -82,6 +108,10 @@ class TodayOut(BaseModel):
     streak: StreakOut
     readiness: TodayReadinessOut
     deadlines: list[TodayDeadlineOut] = Field(max_length=MAX_DEADLINES)
+    roadmap: list[RoadmapNodeOut] = Field(default_factory=list)
+    programs: NewProgramsOut = Field(
+        default_factory=lambda: NewProgramsOut(unseen=0, items=[])
+    )
 
     @classmethod
     def of(cls, v: TodayView) -> "TodayOut":
@@ -118,6 +148,25 @@ class TodayOut(BaseModel):
                 days=v.streak_days, today_done=v.today_done, last7=list(v.last7)
             ),
             readiness=TodayReadinessOut(percent=v.readiness_percent),
+            roadmap=[
+                RoadmapNodeOut(
+                    key=n.key, state=n.state, href=n.href, progress=n.progress
+                )
+                for n in v.roadmap
+            ],
+            programs=NewProgramsOut(
+                unseen=v.programs.unseen,
+                items=[
+                    ProgramOut(
+                        id=p.id,
+                        title=p.title,
+                        kind=p.kind,
+                        provider=p.provider,
+                        href=p.href,
+                    )
+                    for p in v.programs.items
+                ],
+            ),
             deadlines=[
                 TodayDeadlineOut(
                     date=d.date,
@@ -196,4 +245,20 @@ router.add_api_route(
     status_code=204,
     response_class=Response,
     operation_id="admission_snooze_today",
+)
+
+
+async def post_programs_seen(container: ContainerDep, ctx: StudentCtx) -> Response:
+    """Mark the new programs as seen; the unseen count restarts from zero."""
+    await container.admission.today.mark_programs_seen(ctx)
+    return Response(status_code=204)
+
+
+router.add_api_route(
+    "/today/programs/seen",
+    post_programs_seen,
+    methods=["POST"],
+    status_code=204,
+    response_class=Response,
+    operation_id="admission_programs_seen",
 )

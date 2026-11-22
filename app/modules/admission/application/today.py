@@ -12,11 +12,15 @@ from uuid import UUID
 
 from app.modules.admission.application.actor import AdmissionContext
 from app.modules.admission.application.calendar import CalendarService, Translate
+from app.modules.admission.application.opportunities import relevance_rank
 from app.modules.admission.application.readiness import (
     COUNTRIES_QUESTION,
     ReadinessService,
 )
-from app.modules.admission.application.study_focus import load_study_focus
+from app.modules.admission.application.study_focus import (
+    StudyFocus,
+    load_study_focus,
+)
 from app.modules.admission.domain.calendar import TASHKENT, CalendarEntry
 from app.modules.admission.domain.tasks import Task
 from app.modules.admission.domain.today import (
@@ -25,10 +29,12 @@ from app.modules.admission.domain.today import (
     MAX_NEXT,
     Candidate,
     Line,
+    RoadmapNode,
     SeasonKey,
     Snapshot,
     auto_season,
     rank,
+    roadmap,
     season_lines,
     streak,
     urgent,
@@ -51,6 +57,8 @@ _SOURCE_MINUTES: Final = {
     "test_score": 15,
 }
 _TASK_MINUTES: Final = 30
+PROGRAMS_SHOWN: Final = 5
+PROGRAMS_FIRST_LOOK_DAYS: Final = 30
 SNOOZE_DAYS: Final = 3
 MAX_DATED_SNOOZES: Final = 2
 _DATED_PREFIXES: Final = ("deadline:", "task:")
@@ -89,6 +97,25 @@ class DeadlineView:
 
 
 @dataclass(frozen=True, slots=True)
+class ProgramView:
+    """A newly published program that fits the student's fields."""
+
+    id: UUID
+    title: str
+    kind: str
+    provider: str | None
+    href: str
+
+
+@dataclass(frozen=True, slots=True)
+class NewPrograms:
+    """Programs published since the student last looked, and how many there are."""
+
+    unseen: int
+    items: tuple[ProgramView, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class TodayView:
     """What the Today screen shows."""
 
@@ -99,6 +126,8 @@ class TodayView:
     last7: tuple[bool, ...]
     readiness_percent: int
     deadlines: tuple[DeadlineView, ...]
+    roadmap: tuple[RoadmapNode, ...] = ()
+    programs: NewPrograms = NewPrograms(0, ())
 
 
 @dataclass(frozen=True, slots=True)
@@ -364,6 +393,41 @@ class TodayService:
             await uow.today.save_snooze(ctx.user_id, key, count + 1, until)
             await uow.commit()
 
+    async def _programs(self, student: UUID, focus: StudyFocus) -> NewPrograms:
+        """Published since the last look (30 days on the first), matching the fields."""
+        now = self._clock.now()
+        async with self._uow() as uow:
+            seen = await uow.today.programs_seen_at(student)
+            rows = await uow.opportunities.list_published()
+        since = seen or now - dt.timedelta(days=PROGRAMS_FIRST_LOOK_DAYS)
+        fields = focus.field_ids
+        fresh = [
+            (relevance_rank(o.draft, fields) if fields else 0, o)
+            for o in rows
+            if not o.archived and o.created_at > since
+        ]
+        fresh = [(rank_, o) for rank_, o in fresh if rank_ < 2]
+        fresh.sort(key=lambda pair: (pair[0], -pair[1].created_at.timestamp()))
+        return NewPrograms(
+            unseen=len(fresh),
+            items=tuple(
+                ProgramView(
+                    o.id,
+                    o.draft.title,
+                    o.draft.kind,
+                    o.draft.provider,
+                    f"/opportunities/view/?id={o.id}",
+                )
+                for _, o in fresh[:PROGRAMS_SHOWN]
+            ),
+        )
+
+    async def mark_programs_seen(self, ctx: AdmissionContext) -> None:
+        """The student opened the block: everything published so far counts as seen."""
+        async with self._uow() as uow:
+            await uow.today.mark_programs_seen(ctx.user_id, self._clock.now())
+            await uow.commit()
+
     async def _snoozed(self, student: UUID, today: dt.date) -> set[str]:
         async with self._uow() as uow:
             found = await uow.today.snoozes(student)
@@ -424,6 +488,8 @@ class TodayService:
             today_done=today_done,
             last7=tuple(last7),
             readiness_percent=readiness.percent,
+            roadmap=tuple(roadmap(snap)),
+            programs=await self._programs(ctx.user_id, d.focus),
             deadlines=tuple(
                 DeadlineView(
                     e.day,

@@ -286,3 +286,70 @@ def streak(days: Iterable[dt.date], today: dt.date) -> tuple[int, bool, list[boo
 def urgent(days_left: int) -> bool:
     """Whether a deadline is close enough to outrank the season gaps."""
     return days_left <= URGENT_DAYS
+
+
+NodeState = Literal["done", "current", "locked"]
+
+
+@dataclass(frozen=True, slots=True)
+class RoadmapNode:
+    """One stop of the path: a stable key (the web names it), its state and page."""
+
+    key: str
+    state: NodeState
+    href: str
+    progress: str | None = None
+
+
+def _steps(snap: Snapshot) -> list[tuple[str, bool, str, str | None]]:
+    """The path of the student's grade as (key, done, href, progress)."""
+    final = snap.supp_total > 0 and snap.supp_final >= snap.supp_total
+    docs = snap.docs_applicable > 0 and snap.docs_done >= snap.docs_applicable
+    by_key = {
+        "countries": (snap.countries_answered, "/setup/", None),
+        "major": (snap.major_chosen, "/setup/", None),
+        "activities": (
+            snap.activities_ready >= snap.activities_target,
+            "/activities/",
+            f"{snap.activities_ready}/{snap.activities_target}",
+        ),
+        "tests": (
+            snap.tests_received >= snap.tests_target,
+            "/tests/",
+            f"{snap.tests_received}/{snap.tests_target}",
+        ),
+        "list": (
+            snap.list_size >= snap.list_target,
+            "/chooser/",
+            f"{snap.list_size}/{snap.list_target}",
+        ),
+        "statement": (snap.statement_final, "/essays/", None),
+        "supplements": (final, "/essays/", f"{snap.supp_final}/{snap.supp_total}"),
+        "documents": (
+            docs,
+            "/documents/",
+            f"{snap.docs_done}/{snap.docs_applicable}",
+        ),
+        "apply": (snap.submitted + snap.decided > 0, "/chooser/list/", None),
+        "results": (snap.decided > 0, "/chooser/list/", None),
+    }
+    early = ("countries", "major", "activities", "tests", "list")
+    later = ("statement", "supplements", "documents", "apply", "results")
+    if snap.grade != "grade_10":
+        early = ("countries", "major", "list", "tests", "activities")
+    return [(k, *by_key[k]) for k in (*early, *later)]
+
+
+def roadmap(snap: Snapshot) -> list[RoadmapNode]:
+    """The path: done nodes behind, the first open one current, the rest locked."""
+    nodes: list[RoadmapNode] = []
+    current_taken = False
+    for key, done, href, progress in _steps(snap):
+        if done:
+            state: NodeState = "done"
+        elif not current_taken:
+            state, current_taken = "current", True
+        else:
+            state = "locked"
+        nodes.append(RoadmapNode(key, state, href, progress))
+    return nodes

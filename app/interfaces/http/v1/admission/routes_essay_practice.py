@@ -62,6 +62,11 @@ class PracticeBodyIn(BaseModel):
     """The text of today's entry."""
 
     body: str = Field(max_length=PRACTICE_MAX)
+    theme: str | None = Field(
+        default=None,
+        max_length=40,
+        description="A creative theme key; used only when today has no entry yet.",
+    )
 
 
 class PracticeListOut(BaseModel):
@@ -106,16 +111,20 @@ def _today(t: PracticeToday) -> PracticeTodayOut:
     )
 
 
-async def practice_today(container: ContainerDep, ctx: StudentCtx) -> PracticeTodayOut:
-    """Today's theme and my entry for it, if I started one."""
-    return _today(await container.admission.essay_practice.today(ctx))
+async def practice_today(
+    container: ContainerDep, ctx: StudentCtx, theme: str | None = None
+) -> PracticeTodayOut:
+    """Today's theme (or the creative one asked for) and my entry, if I started one."""
+    return _today(await container.admission.essay_practice.today(ctx, theme))
 
 
 async def practice_save(
     body: PracticeBodyIn, container: ContainerDep, ctx: StudentCtx
 ) -> PracticeTodayOut:
     """Write today's entry (sealed at rest); a changed text drops its evaluation."""
-    return _today(await container.admission.essay_practice.save(ctx, body.body))
+    return _today(
+        await container.admission.essay_practice.save(ctx, body.body, body.theme)
+    )
 
 
 async def practice_evaluate(
