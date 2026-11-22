@@ -124,3 +124,22 @@ def test_ipeds_parse() -> None:
     assert d["city_type"] == "rural"
     assert d["test_policy"]["value"] == "optional"
     assert d["source_url"] == "https://www.sample.edu"
+
+
+def test_seed_focuses_are_verified_on_domain_and_loadable() -> None:
+    from app.modules.admission.domain.focuses import on_domain
+    from app.modules.admission.domain.intl_facts import clean_facts
+
+    found = 0
+    for i in load_seed():
+        f = i.get("focuses")
+        if not f:
+            continue
+        found += 1
+        clean_facts(
+            {"focuses": {**f, "source_url": f["value"][0]["source_url"], "year": 2026}}
+        )
+        assert all(
+            on_domain(x["source_url"], i.get("website_domain")) for x in f["value"]
+        )
+    assert found >= 2

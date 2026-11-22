@@ -29,6 +29,10 @@ class CatalogProposalRepository(Protocol):
         """Return whether the institution or scholarship to edit exists."""
         ...
 
+    async def website_domain(self, institution_id: UUID) -> str | None:
+        """The website domain of an institution; None when unknown or unset."""
+        ...
+
     async def set_logo(
         self, institution_id: UUID, *, zoom: float | None, fit: str | None
     ) -> bool:

@@ -370,6 +370,9 @@ _SHAPES: Final[dict[str, str]] = {
     "rankings": '[{"system": qs|the|arwu|usnews, "subject": slug such as '
     'computer_science, "rank": whole number or band "201-250", "year": '
     '2000-2100, "source_url": https URL}], at most 40',
+    "focuses": '[{"text": {"en"|"ru"|"uz": paraphrase <= 200}, "quote": exact '
+    'English sentence from the page <= 300, "source_url": https URL on the '
+    'university\'s own site, "fetched_at": ISO time, "verified": bool}], at most 12',
     "experience_scores": '{"social"?: 1-5, "research"?: 1-5, "work"?: 1-5, '
     '"notes"?: {part: {"en"|"ru"|"uz": text <= 160}}}, at least one score',
 }
@@ -406,6 +409,19 @@ def _example(spec: FactSpec) -> Any:
             }
         ],
         "experience_scores": {"social": 4, "research": 5, "work": 3},
+        "focuses": [
+            {
+                "text": {
+                    "en": "Community and leadership",
+                    "ru": "Вклад в сообщество и лидерство",
+                    "uz": "Jamoaga hissa va yetakchilik",
+                },
+                "quote": "We look for leadership and community involvement.",
+                "source_url": "https://www.example.edu/admissions",
+                "fetched_at": "2026-01-15T00:00:00+00:00",
+                "verified": False,
+            }
+        ],
     }
     return examples[spec.kind]
 

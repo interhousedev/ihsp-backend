@@ -46,6 +46,7 @@ class FakeStore:
         self.proposals: dict[UUID, CatalogProposal] = {}
         self.applied: list[CatalogProposal] = []
         self.known_targets: set[UUID] = set()
+        self.website_domains: dict[UUID, str] = {}
         self.institution_names: dict[str, UUID] = {}
         """Casefolded name, alias or domain of a known institution -> its id."""
         self.logos: dict[UUID, tuple[float | None, str | None]] = {}
@@ -466,6 +467,9 @@ class _CatalogProposals:
 
     async def target_exists(self, kind: str, target_id: UUID) -> bool:
         return target_id in self.s.known_targets
+
+    async def website_domain(self, institution_id: UUID) -> str | None:
+        return self.s.website_domains.get(institution_id)
 
     async def set_logo(
         self, institution_id: UUID, *, zoom: float | None, fit: str | None

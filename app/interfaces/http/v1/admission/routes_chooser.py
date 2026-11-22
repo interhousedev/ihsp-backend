@@ -8,6 +8,7 @@ from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, StudentCtx
 from app.interfaces.http.v1.admission.routes_items import _locale
+from app.interfaces.http.v1.admission.schemas_focuses import FocusOut, focuses_out
 from app.modules.admission.application.chooser import ListItem
 from app.modules.admission.application.estimates import EstimateView
 from app.modules.admission.domain.budget import cost_after_aid
@@ -59,6 +60,9 @@ class SourceOut(BaseModel):
     key: str
     url: str | None
     year: int | None
+
+
+_PRIVATE_FACTS = ("deadlines", "focuses")
 
 
 class HighlightOut(BaseModel):
@@ -191,6 +195,10 @@ class InstitutionOut(BaseModel):
         default=None,
         description="Short description in the request locale (en fallback).",
     )
+    focuses: list[FocusOut] = Field(
+        default=[],
+        description="What the university says it looks for; verified items only.",
+    )
     fit_total: int | None = Field(
         default=None,
         ge=0,
@@ -232,12 +240,12 @@ class InstitutionOut(BaseModel):
             facts={
                 k: FactOut(value=f.value, verified=f.verified)
                 for k, f in i.facts.items()
-                if k != "deadlines"
+                if k not in _PRIVATE_FACTS
             },
             sources=[
                 SourceOut(key=k, url=f.source_url, year=f.year)
                 for k, f in i.facts.items()
-                if k != "deadlines" and (f.source_url or f.year)
+                if k not in _PRIVATE_FACTS and (f.source_url or f.year)
             ],
             highlights=[HighlightOut(**h) for h in highlights(i, locale)],
             deadlines=dated_deadlines(deadlines.value if deadlines else None, locale),
@@ -263,6 +271,7 @@ class InstitutionOut(BaseModel):
                 if detail and i.aid_profile is not None
                 else None
             ),
+            focuses=focuses_out(i, locale),
             details=(
                 [DetailGroupOut(**g) for g in detail_groups(i, locale)]
                 if detail

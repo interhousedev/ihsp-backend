@@ -213,6 +213,7 @@ class _Loader:
             )
         await put("intl_acceptance_rate", d.get("intl_acceptance_rate"), unit="percent")
         await put("test_policy", d.get("test_policy"))
+        await put("focuses", d.get("focuses"))
         for key in ("intl_tuition_usd", "intl_coa_usd"):
             f = d.get(key)
             await put(key, f, (f or {}).get("currency", "USD"))

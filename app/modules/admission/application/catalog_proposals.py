@@ -30,6 +30,7 @@ from app.modules.admission.domain.errors import (
     InvalidProofUrlError,
     InvalidTransitionError,
 )
+from app.modules.admission.domain.focuses import check_domains
 from app.modules.admission.domain.intl_facts import (
     clean_facts,
     clean_name,
@@ -162,7 +163,7 @@ class CatalogProposalService:
         if not self._may_propose(ctx):
             raise AdmissionForbiddenError(params={"permission": "catalog:propose"})
 
-    async def propose(
+    async def propose(  # noqa: C901
         self,
         ctx: AdmissionContext,
         *,
@@ -221,6 +222,10 @@ class CatalogProposalService:
             repo = uow.catalog_proposals
             if target_id is not None and not await repo.target_exists(kind, target_id):
                 raise AdmissionNotFoundError()
+            if target_id is not None and "focuses" in cleaned:
+                check_domains(
+                    cleaned["focuses"].value, await repo.website_domain(target_id)
+                )
             if kind == "scholarship":
                 await self._check_scholarship_institution(repo, payload)
             if kind == "institution" and target_id is None:

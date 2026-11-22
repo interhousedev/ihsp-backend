@@ -111,6 +111,7 @@ class AiTask(StrEnum):
     ADMIT_PROOF_EXTRACT = "admit_proof_extract"
     ADMIT_UNIVERSITY_RESEARCH = "admit_university_research"
     ADMIT_CATALOG_RESEARCH = "admit_catalog_research"
+    ADMIT_FOCUSES_RESEARCH = "admit_focuses_research"
     ADMIT_GOAL_PLAN = "admit_goal_plan"
     ADMIT_CAREER_PROFESSIONS = "admit_career_professions"
     ADMIT_PROFESSION_FILL = "admit_profession_fill"
@@ -620,6 +621,13 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     AiTask.ADMIT_CATALOG_RESEARCH: _admission(
         "Admission: subject rankings and experience ratings of a university, "
         "from web pages.",
+        model=SMART_MODEL,
+        budget_weight=SMART_BUDGET_WEIGHT,
+        reasoning_effort=SMART_REASONING,
+    ),
+    AiTask.ADMIT_FOCUSES_RESEARCH: _admission(
+        "Admission: what a university says it looks for, quoted from its own "
+        "site pages.",
         model=SMART_MODEL,
         budget_weight=SMART_BUDGET_WEIGHT,
         reasoning_effort=SMART_REASONING,

@@ -5580,6 +5580,129 @@
         "title": "AxisWeightsOut",
         "type": "object"
       },
+      "BackupCipher": {
+        "description": "Cipher of a backup file.",
+        "properties": {
+          "name": {
+            "maxLength": 32,
+            "title": "Name",
+            "type": "string"
+          },
+          "nonce": {
+            "maxLength": 32,
+            "title": "Nonce",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "nonce"
+        ],
+        "title": "BackupCipher",
+        "type": "object"
+      },
+      "BackupDocument": {
+        "description": "The JSON object of a backup file, with every size bounded.",
+        "properties": {
+          "cipher": {
+            "$ref": "#/components/schemas/BackupCipher"
+          },
+          "ciphertext": {
+            "maxLength": 8388608,
+            "title": "Ciphertext",
+            "type": "string"
+          },
+          "count": {
+            "maximum": 20000.0,
+            "minimum": 0.0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "created_at": {
+            "maxLength": 64,
+            "title": "Created At",
+            "type": "string"
+          },
+          "format": {
+            "maxLength": 64,
+            "title": "Format",
+            "type": "string"
+          },
+          "generation": {
+            "minimum": 1.0,
+            "title": "Generation",
+            "type": "integer"
+          },
+          "kdf": {
+            "$ref": "#/components/schemas/BackupKdf"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "format",
+          "version",
+          "generation",
+          "created_at",
+          "count",
+          "kdf",
+          "cipher",
+          "ciphertext"
+        ],
+        "title": "BackupDocument",
+        "type": "object"
+      },
+      "BackupKdf": {
+        "description": "Key derivation of a backup file (only the parameters the server writes).",
+        "properties": {
+          "length": {
+            "maximum": 64.0,
+            "minimum": 16.0,
+            "title": "Length",
+            "type": "integer"
+          },
+          "n": {
+            "maximum": 1048576.0,
+            "minimum": 2.0,
+            "title": "N",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 16,
+            "title": "Name",
+            "type": "string"
+          },
+          "p": {
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "P",
+            "type": "integer"
+          },
+          "r": {
+            "maximum": 32.0,
+            "minimum": 1.0,
+            "title": "R",
+            "type": "integer"
+          },
+          "salt": {
+            "maxLength": 64,
+            "title": "Salt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "n",
+          "r",
+          "p",
+          "length",
+          "salt"
+        ],
+        "title": "BackupKdf",
+        "type": "object"
+      },
       "BalanceOut": {
         "description": "Counts per label and a verdict code the web translates.",
         "properties": {
@@ -24386,6 +24509,33 @@
         "title": "FlashcardsOptions",
         "type": "object"
       },
+      "FocusOut": {
+        "description": "One verified focus: a paraphrase, the university's own sentence and its page.",
+        "properties": {
+          "quote": {
+            "description": "The exact English sentence on the page.",
+            "title": "Quote",
+            "type": "string"
+          },
+          "source_url": {
+            "description": "The page, on the university's own site.",
+            "title": "Source Url",
+            "type": "string"
+          },
+          "text": {
+            "description": "Short paraphrase in the request language.",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "quote",
+          "source_url"
+        ],
+        "title": "FocusOut",
+        "type": "object"
+      },
       "ForkIn": {
         "description": "The prompt of the group the new essay takes (`null` owner: Common App).",
         "properties": {
@@ -27469,6 +27619,15 @@
             ],
             "description": "Fit for the caller (as /list/fit); null when not computable.",
             "title": "Fit Total"
+          },
+          "focuses": {
+            "default": [],
+            "description": "What the university says it looks for; verified items only.",
+            "items": {
+              "$ref": "#/components/schemas/FocusOut"
+            },
+            "title": "Focuses",
+            "type": "array"
           },
           "highlights": {
             "items": {
@@ -36754,6 +36913,15 @@
               }
             ],
             "title": "Fit Total"
+          },
+          "focuses": {
+            "default": [],
+            "description": "What the university says it looks for; verified items only.",
+            "items": {
+              "$ref": "#/components/schemas/FocusOut"
+            },
+            "title": "Focuses",
+            "type": "array"
           },
           "institution_type": {
             "anyOf": [
@@ -72919,9 +73087,7 @@
         "description": "The backup file (its JSON object) and its passphrase.",
         "properties": {
           "backup": {
-            "additionalProperties": true,
-            "title": "Backup",
-            "type": "object"
+            "$ref": "#/components/schemas/BackupDocument"
           },
           "passphrase": {
             "maxLength": 1024,

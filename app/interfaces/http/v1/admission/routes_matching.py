@@ -8,6 +8,7 @@ from uuid import UUID
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
 from app.interfaces.http.v1.admission.routes_chooser import _description
 from app.interfaces.http.v1.admission.routes_items import _locale
+from app.interfaces.http.v1.admission.schemas_focuses import FocusOut, focuses_out
 from app.modules.admission.application.matching import (
     DEFAULT_LIMIT,
     MAX_LIMIT,
@@ -170,6 +171,10 @@ class MatchOut(BaseModel):
         "null when the budget or the price is unknown.",
     )
     experience: list[ExperienceOut] = []
+    focuses: list[FocusOut] = Field(
+        default=[],
+        description="What the university says it looks for; verified items only.",
+    )
     map_url: str
 
     @classmethod
@@ -258,6 +263,7 @@ class MatchOut(BaseModel):
                 gross - aid_usd if gross is not None and aid_usd is not None else None,
                 gross,
             ),
+            focuses=focuses_out(i, locale),
             experience=[
                 ExperienceOut(**x)
                 for x in experience_meters(exp.value if exp else None, locale)

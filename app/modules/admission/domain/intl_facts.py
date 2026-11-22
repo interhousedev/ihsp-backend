@@ -21,6 +21,10 @@ from app.modules.admission.domain.catalog_display import (
     TEST_POLICY,
 )
 from app.modules.admission.domain.errors import CatalogFactInvalidError
+from app.modules.admission.domain.focuses import LOCALES as FOCUS_LOCALES
+from app.modules.admission.domain.focuses import MAX_FOCUSES
+from app.modules.admission.domain.focuses import QUOTE_MAX as FOCUS_QUOTE_MAX
+from app.modules.admission.domain.focuses import TEXT_MAX as FOCUS_TEXT_MAX
 from app.modules.admission.domain.study_fields import canonical_id, labels_of
 
 MONEY_MAX: Final = 9_999_999_999.99
@@ -60,6 +64,7 @@ FactKind = Literal[
     "url",
     "rankings",
     "experience_scores",
+    "focuses",
 ]
 
 
@@ -173,6 +178,7 @@ def _build() -> dict[str, FactSpec]:
         FactSpec("map_url", "overview", "url"),
         FactSpec("rankings", "credentials", "rankings"),
         FactSpec("experience_scores", "overview", "experience_scores"),
+        FactSpec("focuses", "overview", "focuses"),
         _multi(
             "application_platforms",
             "overview",
@@ -508,6 +514,49 @@ def _rankings(key: str, v: Any) -> list[dict[str, Any]]:
     return [_ranking_item(key, x) for x in v]
 
 
+def _focus_text(key: str, raw: Any) -> dict[str, str]:
+    if not isinstance(raw, dict) or set(raw) != set(FOCUS_LOCALES):
+        raise _fail(key, "value")
+    out: dict[str, str] = {}
+    for loc in FOCUS_LOCALES:
+        text = _clean_text(raw[loc], FOCUS_TEXT_MAX)
+        if not text or _INJECTION.search(text):
+            raise _fail(key, "value")
+        out[loc] = text
+    return out
+
+
+def _focus_time(key: str, raw: Any) -> str:
+    try:
+        stamp = dt.datetime.fromisoformat(raw) if isinstance(raw, str) else None
+    except ValueError:
+        stamp = None
+    if stamp is None or stamp.tzinfo is None:
+        raise _fail(key, "value")
+    return stamp.isoformat()
+
+
+def _focus_item(key: str, x: Any) -> dict[str, Any]:
+    if not isinstance(x, dict) or not isinstance(x.get("verified"), bool):
+        raise _fail(key, "value")
+    quote = _clean_text(x.get("quote"), FOCUS_QUOTE_MAX)
+    if not quote or _INJECTION.search(quote):
+        raise _fail(key, "value")
+    return {
+        "text": _focus_text(key, x.get("text")),
+        "quote": quote,
+        "source_url": _clean_url(key, x.get("source_url")),
+        "fetched_at": _focus_time(key, x.get("fetched_at")),
+        "verified": x["verified"],
+    }
+
+
+def _focuses(key: str, v: Any) -> list[dict[str, Any]]:
+    if not isinstance(v, list) or not v or len(v) > MAX_FOCUSES:
+        raise _fail(key, "value")
+    return [_focus_item(key, x) for x in v]
+
+
 def _experience_notes(key: str, raw: Any) -> dict[str, dict[str, str]]:
     if raw is None:
         return {}
@@ -608,6 +657,7 @@ _VALUE_CLEANERS: Final[dict[str, Callable[[FactSpec, Any], Any]]] = {
     "url": lambda spec, v: _clean_url(spec.key, v),
     "rankings": lambda spec, v: _rankings(spec.key, v),
     "experience_scores": lambda spec, v: _experience_scores(spec.key, v),
+    "focuses": lambda spec, v: _focuses(spec.key, v),
 }
 
 

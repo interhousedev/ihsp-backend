@@ -11,6 +11,7 @@ from uuid import UUID
 
 from app.modules.admission.application.items import items_summary
 from app.modules.admission.application.words import answer_texts
+from app.modules.admission.domain.focuses import served_focuses
 from app.modules.admission.ports.app_review import ReviewInputs
 from app.modules.admission.ports.essays import EssayReader
 from app.modules.admission.ports.unit_of_work import UowFactory
@@ -48,6 +49,10 @@ class UowReviewInputs:
             )
             documents = await uow.documents.for_students([student_id])
             checklist = await uow.checklist.for_student(student_id)
+            institutions = {
+                e.institution_id: await uow.catalog.institution(e.institution_id)
+                for e in entries
+            }
         answers = [
             (f"answer:{qid}", f"{qid}: {text[:_TEXT_MAX]}")
             for qid, text in answer_texts(profile.answers if profile else {}).items()
@@ -87,6 +92,15 @@ class UowReviewInputs:
             )
             for e in entries
         ]
+        for iid, inst in institutions.items():
+            if inst is None or (fact := inst.fact("focuses")) is None:
+                continue
+            for n, item in enumerate(
+                served_focuses(fact.value, inst.website_domain), 1
+            ):
+                uni_lines.append(
+                    (f"focus:{iid}:{n}", f"{inst.name} says: {item['quote']}")
+                )
         ready = [
             (
                 f"document:{d.id}",

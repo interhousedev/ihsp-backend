@@ -29,6 +29,7 @@ from app.modules.admission.domain.essay_reviews import (
 from app.modules.admission.domain.essay_text import paragraphs as essay_paragraphs
 from app.modules.admission.domain.essays import Essay, word_count
 from app.modules.admission.domain.exemplars import ExemplarMatch
+from app.modules.admission.domain.focuses import served_focuses
 from app.modules.admission.infrastructure.ai.prompts import essay_review as review
 from app.modules.admission.infrastructure.ai.prompts import essays as prompt
 from app.modules.admission.ports.ai import PromptSource, StructuredAi
@@ -573,6 +574,11 @@ async def load_uni_context(
         for i, text in enumerate(texts):
             goal_key = key if len(texts) == 1 else f"{key}_{i + 1}"
             goals.append(UniGoal(goal_key, text, fact.source_url))
+    fact = inst.fact("focuses")
+    for n, item in enumerate(
+        served_focuses(fact.value if fact else None, inst.website_domain), 1
+    ):
+        goals.append(UniGoal(f"focus_{n}", _line(item["quote"]), item["source_url"]))
     cycles = await uow.supp_prompts.by_cycle(institution_id)
     latest = cycles[max(cycles)] if cycles else []
     supplements = tuple(

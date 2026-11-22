@@ -8,6 +8,7 @@ from uuid import UUID
 
 from app.modules.admission.domain.catalog_proposals import CatalogProposal
 from app.modules.admission.domain.errors import AdmissionConflictError
+from app.modules.admission.domain.focuses import check_domains
 from app.modules.admission.domain.intl_facts import CleanFact, clean_facts, to_row
 from app.modules.admission.infrastructure.catalog_loader import _AID
 from app.modules.admission.infrastructure.orm.catalog import (
@@ -130,6 +131,11 @@ class SqlCatalogProposalRepository:
     async def target_exists(self, kind: str, target_id: UUID) -> bool:
         """Return whether the row to edit exists."""
         return await self._s.get(_TARGETS[kind], target_id) is not None
+
+    async def website_domain(self, institution_id: UUID) -> str | None:
+        """The institution's website domain; None when unknown or unset."""
+        row = await self._s.get(InstitutionRow, institution_id)
+        return row.website_domain if row is not None else None
 
     async def set_logo(
         self, institution_id: UUID, *, zoom: float | None, fit: str | None
@@ -262,8 +268,13 @@ class SqlCatalogProposalRepository:
         now: dt.datetime,
     ) -> None:
         """Upsert each fact in place and mirror cost and aid into their tables."""
+        cleaned = clean_facts(facts)
+        if "focuses" in cleaned:
+            check_domains(
+                cleaned["focuses"].value, await self.website_domain(institution_id)
+            )
         sources: dict[str, UUID] = {}
-        for key, fact in clean_facts(facts).items():
+        for key, fact in cleaned.items():
             if fact.source_url not in sources:
                 src = SourceRow(
                     id=new_id(),
