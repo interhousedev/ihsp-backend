@@ -178,13 +178,13 @@ class GetConfig:
             rs.get(ESTIMATES_STUDENT_VISIBLE, self._settings.estimates_student_visible)
         )
 
-    async def _countries(self) -> tuple[str, ...]:
-        """Every catalog country first (sorted), then the rest of the static list."""
+    async def _countries(self) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        """All countries (catalog ones first) and the codes with a university."""
         if self._uow is None:
-            return COUNTRIES
+            return COUNTRIES, ()
         async with self._uow() as uow:
             found = await uow.catalog.countries()
-        return merge_countries(found)
+        return merge_countries(found), tuple(sorted({c.upper() for c in found}))
 
     async def execute(self) -> AdmissionConfig:
         """Return the config; the wellbeing section is hidden unless enabled."""
@@ -195,12 +195,14 @@ class GetConfig:
             for x in q.QUESTIONS
             if x.enabled and (wellbeing or x.section != "wellbeing")
         )
+        countries, available = await self._countries()
         return AdmissionConfig(
             question_set=q.QUESTION_SET_VERSION,
             questions=questions,
             options={
                 **OPTION_LISTS,
-                "countries": await self._countries(),
+                "countries": countries,
+                "countries_available": available,
                 "fields": self._study_fields(),
                 "activity_categories": ACTIVITY_CATEGORIES,
                 "recognition_levels": RECOGNITION_LEVELS,

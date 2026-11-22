@@ -62,6 +62,7 @@ class FakeStore:
         self.list_entries: dict[UUID, ListEntry] = {}
         self.checks: dict[UUID, AffordabilityCheck] = {}
         self.budget_bands: dict[UUID, str] = {}
+        self.decisions: dict[tuple[UUID, UUID], str] = {}
         self.profiles: dict[UUID, AdmissionProfile] = {}
         self.words: dict[UUID, WordsState] = {}
         self.words_history: list[WordsState] = []
@@ -267,6 +268,14 @@ class _Catalog:
             and basis in (None, x.basis)
             and (coverage_min is None or (x.coverage_max or 0) >= coverage_min)
         ]
+
+
+class _Decisions:
+    def __init__(self, s: FakeStore) -> None:
+        self.s = s
+
+    async def delete(self, student_id: UUID, institution_id: UUID) -> None:
+        self.s.decisions.pop((student_id, institution_id), None)
 
 
 class _Shortlist:
@@ -587,6 +596,7 @@ class FakeUow:
         self.catalog = _Catalog(s)
         self.catalog_proposals = _CatalogProposals(s)
         self.shortlist = _Shortlist(s)
+        self.decisions: Any = _Decisions(s)
         self.profiles = _Profiles(s)
         self.reviews = _Reviews(s)
         self.staff = _Staff(s)

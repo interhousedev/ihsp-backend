@@ -17,3 +17,24 @@ async def test_repository_query_returns_distinct_upper_codes() -> None:
     w = World()
     async with FakeUow(w.store) as uow:
         assert await uow.catalog.countries() == []
+
+
+async def test_config_marks_countries_with_universities() -> None:
+    from app.modules.admission.application.config import GetConfig
+    from app.modules.admission.domain.chooser import CatalogInstitution
+    from app.shared.ids import new_id
+
+    w = World()
+    inst = CatalogInstitution(
+        id=new_id(), slug=None, name="U", country="gb", city=None, status="published"
+    )
+    w.store.institutions = {inst.id: inst}
+    cfg = GetConfig(
+        None,  # type: ignore[arg-type]
+        None,  # type: ignore[arg-type]
+        None,  # type: ignore[arg-type]
+        uow_factory=lambda: FakeUow(w.store),  # type: ignore[arg-type]
+    )
+    countries, available = await cfg._countries()
+    assert available == ("GB",)
+    assert countries[0] == "GB" and set(countries) == set(COUNTRIES) | {"GB"}

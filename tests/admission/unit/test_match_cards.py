@@ -170,3 +170,15 @@ def test_match_out_cost_from_intl_coa_fact_when_mirror_empty() -> None:
         36000,
         12000,
     )
+
+
+def test_budget_fit_marks_net_price_against_band() -> None:
+    from decimal import Decimal as D
+
+    from app.modules.admission.domain.matching import budget_fit
+
+    assert budget_fit("5k_15k", D(12000), D(50000)) == "fits"
+    assert budget_fit("5k_15k", None, D(50000)) == "above"
+    assert budget_fit("over_50k", D(90000), None) == "fits"
+    assert budget_fit(None, D(1), D(1)) is None
+    assert budget_fit("5k_15k", None, None) is None

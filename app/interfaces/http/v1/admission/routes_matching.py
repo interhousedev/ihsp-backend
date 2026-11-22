@@ -21,6 +21,7 @@ from app.modules.admission.domain.fit import FitResult
 from app.modules.admission.domain.matching import (
     MAJOR_MAX,
     REGION_MAX,
+    budget_fit,
 )
 from app.modules.admission.domain.matching import cost_usd as sticker_usd
 from app.modules.admission.domain.rankings import (
@@ -163,6 +164,11 @@ class MatchOut(BaseModel):
         default=None, description="Sticker price minus the average aid, an estimate."
     )
     aid_estimate_usd: float | None = None
+    budget_fit: Literal["fits", "above"] | None = Field(
+        default=None,
+        description="Net (else sticker) price against the student's budget; "
+        "null when the budget or the price is unknown.",
+    )
     experience: list[ExperienceOut] = []
     map_url: str
 
@@ -176,6 +182,7 @@ class MatchOut(BaseModel):
         locale: str = "en",
         subjects: tuple[str, ...] = (),
         maps_template: str | None = None,
+        budget_band: str | None = None,
     ) -> "MatchOut":
         """Map the application result."""
         i = m.institution
@@ -246,6 +253,11 @@ class MatchOut(BaseModel):
                 else None
             ),
             aid_estimate_usd=float(aid_usd) if aid_usd is not None else None,
+            budget_fit=budget_fit(
+                budget_band,
+                gross - aid_usd if gross is not None and aid_usd is not None else None,
+                gross,
+            ),
             experience=[
                 ExperienceOut(**x)
                 for x in experience_meters(exp.value if exp else None, locale)
@@ -298,6 +310,26 @@ async def list_matches(
 ) -> MatchListOut:
     """Universities not yet decided on, ranked by the caller's preferences."""
     rows = await container.admission.matching.matches(ctx, limit)
+    return await _list_out(container, ctx, rows, accept_language)
+
+
+async def list_dismissed(
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    accept_language: Annotated[str | None, Header(alias="Accept-Language")] = None,
+) -> MatchListOut:
+    """Universities the caller marked "not my vibe"; Return is the DELETE decision."""
+    rows = await container.admission.matching.dismissed(ctx)
+    out = await _list_out(container, ctx, rows, accept_language)
+    return out.model_copy(update={"undecided_only": False})
+
+
+async def _list_out(
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    rows: list[MatchItem],
+    accept_language: str | None,
+) -> MatchListOut:
     fits = await container.admission.fit.fits_for(
         ctx,
         [m.institution for m in rows],
@@ -308,6 +340,7 @@ async def list_matches(
     locale = _locale(accept_language)
     subjects = await container.admission.fit.ranking_subjects(ctx)
     template = await container.admission.maps_settings.get()
+    band = await container.admission.fit.budget_band(ctx)
     return MatchListOut(
         items=[
             MatchOut.of(
@@ -317,6 +350,7 @@ async def list_matches(
                 locale=locale,
                 subjects=subjects,
                 maps_template=template,
+                budget_band=band,
             )
             for m in rows
         ]
@@ -359,6 +393,13 @@ router.add_api_route(
     methods=["GET"],
     response_model=MatchListOut,
     operation_id="admission_list_matches",
+)
+router.add_api_route(
+    "/matches/dismissed",
+    list_dismissed,
+    methods=["GET"],
+    response_model=MatchListOut,
+    operation_id="admission_list_dismissed_matches",
 )
 router.add_api_route(
     "/matches/{university_id}/decision",

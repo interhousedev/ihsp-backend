@@ -136,13 +136,30 @@ class MatchService:
         for inst in insts:
             if inst.id in decided or inst.id in listed:
                 continue
-            pct, overlap = match(wanted, university_tags(inst))
-            rate = admission_rate(inst)
-            items.append(
-                MatchItem(inst, pct, overlap, rate, cost_usd(inst), status_of(rate))
-            )
+            items.append(self._item(inst, wanted))
         items.sort(key=lambda m: (-m.match_pct, m.institution.name.casefold()))
         return items[:limit]
+
+    async def dismissed(self, ctx: AdmissionContext) -> list[MatchItem]:
+        """Universities marked "not my vibe", best match first."""
+        async with self._uow() as uow:
+            row = await uow.preferences.get(ctx.user_id)
+            decided = await uow.decisions.decided(ctx.user_id)
+            insts = await uow.catalog.institutions()
+        wanted = preference_tags(row[0]) if row else []
+        items = [
+            self._item(inst, wanted)
+            for inst in insts
+            if decided.get(inst.id) == "not_my_vibe"
+        ]
+        items.sort(key=lambda m: (-m.match_pct, m.institution.name.casefold()))
+        return items
+
+    @staticmethod
+    def _item(inst: CatalogInstitution, wanted: list[str]) -> MatchItem:
+        pct, overlap = match(wanted, university_tags(inst))
+        rate = admission_rate(inst)
+        return MatchItem(inst, pct, overlap, rate, cost_usd(inst), status_of(rate))
 
     async def decide(
         self, ctx: AdmissionContext, institution_id: UUID, decision: str

@@ -19760,6 +19760,62 @@
         "title": "EssayIn",
         "type": "object"
       },
+      "EssayKeysStatusResponse": {
+        "description": "Keys, generation, backup and rotation.",
+        "properties": {
+          "exported_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exported At"
+          },
+          "exported_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exported By"
+          },
+          "generation": {
+            "title": "Generation",
+            "type": "integer"
+          },
+          "rotation": {
+            "$ref": "#/components/schemas/RotationResponse"
+          },
+          "students_with_keys": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Students With Keys"
+          }
+        },
+        "required": [
+          "students_with_keys",
+          "generation",
+          "exported_at",
+          "exported_by",
+          "rotation"
+        ],
+        "title": "EssayKeysStatusResponse",
+        "type": "object"
+      },
       "EssayLinkIO": {
         "description": "A link to an item id or a profile question id.",
         "properties": {
@@ -20261,6 +20317,12 @@
             ],
             "description": "The one score shown everywhere: deep-read uniqueness 0-100.",
             "title": "Uniqueness"
+          },
+          "unreadable": {
+            "default": false,
+            "description": "The sealed text is lost (key gone or changed): no text, only deletion is possible.",
+            "title": "Unreadable",
+            "type": "boolean"
           },
           "updated_at": {
             "anyOf": [
@@ -35533,7 +35595,7 @@
           "restore": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/RestoreResponse"
+                "$ref": "#/components/schemas/app__interfaces__http__v1__id__login__schemas__RestoreResponse"
               },
               {
                 "type": "null"
@@ -36521,6 +36583,22 @@
             ],
             "description": "Average aid for international students, USD.",
             "title": "Avg Aid Intl"
+          },
+          "budget_fit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fits",
+                  "above"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Net (else sticker) price against the student's budget; null when the budget or the price is unknown.",
+            "title": "Budget Fit"
           },
           "city": {
             "anyOf": [
@@ -43792,6 +43870,22 @@
           "last_used_at"
         ],
         "title": "PasskeyResponse",
+        "type": "object"
+      },
+      "PassphraseBody": {
+        "description": "The passphrase that seals the backup (kept by the admin, never stored).",
+        "properties": {
+          "passphrase": {
+            "maxLength": 1024,
+            "minLength": 12,
+            "title": "Passphrase",
+            "type": "string"
+          }
+        },
+        "required": [
+          "passphrase"
+        ],
+        "title": "PassphraseBody",
         "type": "object"
       },
       "PasswordChangeResponse": {
@@ -52132,28 +52226,6 @@
         "title": "ResponseOut",
         "type": "object"
       },
-      "RestoreBody": {
-        "description": "POST /v1/id/login/restore and /login/restore/decline.",
-        "properties": {
-          "login_challenge": {
-            "minLength": 1,
-            "title": "Login Challenge",
-            "type": "string"
-          },
-          "ticket": {
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Ticket",
-            "type": "string"
-          }
-        },
-        "required": [
-          "login_challenge",
-          "ticket"
-        ],
-        "title": "RestoreBody",
-        "type": "object"
-      },
       "RestoreIn": {
         "description": "The `lock_version` of the essay the client read.",
         "properties": {
@@ -52167,26 +52239,6 @@
           "lock_version"
         ],
         "title": "RestoreIn",
-        "type": "object"
-      },
-      "RestoreResponse": {
-        "description": "The account is scheduled for deletion on ``deletes_on``: restore or decline.",
-        "properties": {
-          "deletes_on": {
-            "format": "date",
-            "title": "Deletes On",
-            "type": "string"
-          },
-          "ticket": {
-            "title": "Ticket",
-            "type": "string"
-          }
-        },
-        "required": [
-          "ticket",
-          "deletes_on"
-        ],
-        "title": "RestoreResponse",
         "type": "object"
       },
       "RestoreRevisionBody": {
@@ -53206,6 +53258,67 @@
           "subgroup"
         ],
         "title": "RosterStudentResponse",
+        "type": "object"
+      },
+      "RotationResponse": {
+        "description": "Progress of the last (or running) rotation.",
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "state": {
+            "enum": [
+              "idle",
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "unreadable": {
+            "title": "Unreadable",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "state",
+          "total",
+          "done",
+          "unreadable",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "RotationResponse",
         "type": "object"
       },
       "RoundOptionOut": {
@@ -72629,6 +72742,56 @@
         "title": "SyncRunItemResponse",
         "type": "object"
       },
+      "app__interfaces__http__v1__admin_users__essay_keys__schemas__RestoreBody": {
+        "description": "The backup file (its JSON object) and its passphrase.",
+        "properties": {
+          "backup": {
+            "additionalProperties": true,
+            "title": "Backup",
+            "type": "object"
+          },
+          "passphrase": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Passphrase",
+            "type": "string"
+          }
+        },
+        "required": [
+          "backup",
+          "passphrase"
+        ],
+        "title": "RestoreBody",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__admin_users__essay_keys__schemas__RestoreResponse": {
+        "description": "Keys written, keys already present, students whose stored key differs.",
+        "properties": {
+          "conflicts": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Conflicts",
+            "type": "array"
+          },
+          "restored": {
+            "title": "Restored",
+            "type": "integer"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "restored",
+          "skipped",
+          "conflicts"
+        ],
+        "title": "RestoreResponse",
+        "type": "object"
+      },
       "app__interfaces__http__v1__admin_users__schemas__AdminUserResponse": {
         "description": "AdminUser.",
         "properties": {
@@ -75797,6 +75960,48 @@
           "share_slug"
         ],
         "title": "CopyBody",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__id__login__schemas__RestoreBody": {
+        "description": "POST /v1/id/login/restore and /login/restore/decline.",
+        "properties": {
+          "login_challenge": {
+            "minLength": 1,
+            "title": "Login Challenge",
+            "type": "string"
+          },
+          "ticket": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "login_challenge",
+          "ticket"
+        ],
+        "title": "RestoreBody",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__id__login__schemas__RestoreResponse": {
+        "description": "The account is scheduled for deletion on ``deletes_on``: restore or decline.",
+        "properties": {
+          "deletes_on": {
+            "format": "date",
+            "title": "Deletes On",
+            "type": "string"
+          },
+          "ticket": {
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket",
+          "deletes_on"
+        ],
+        "title": "RestoreResponse",
         "type": "object"
       },
       "app__interfaces__http__v1__id__schemas__AuditItemResponse": {
@@ -81603,6 +81808,130 @@
         "summary": "Revoke Device",
         "tags": [
           "faces"
+        ]
+      }
+    },
+    "/v1/admin/essay-keys/backup": {
+      "post": {
+        "description": "The one passphrase-sealed backup of the current generation (409 after it).",
+        "operationId": "post_backup_v1_admin_essay_keys_backup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PassphraseBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Backup file"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Backup",
+        "tags": [
+          "admin-essay-keys"
+        ]
+      }
+    },
+    "/v1/admin/essay-keys/restore": {
+      "post": {
+        "description": "Write the keys missing from Vault; an existing key is never overwritten.",
+        "operationId": "post_restore_v1_admin_essay_keys_restore_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__interfaces__http__v1__admin_users__essay_keys__schemas__RestoreBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__admin_users__essay_keys__schemas__RestoreResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Restore",
+        "tags": [
+          "admin-essay-keys"
+        ]
+      }
+    },
+    "/v1/admin/essay-keys/rotate": {
+      "post": {
+        "description": "Start the rotation in the worker; poll /status for progress.",
+        "operationId": "post_rotate_v1_admin_essay_keys_rotate_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssayKeysStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Post Rotate",
+        "tags": [
+          "admin-essay-keys"
+        ]
+      }
+    },
+    "/v1/admin/essay-keys/status": {
+      "get": {
+        "description": "Students with a key, key generation, its backup and the rotation progress.",
+        "operationId": "get_status_v1_admin_essay_keys_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssayKeysStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Status",
+        "tags": [
+          "admin-essay-keys"
         ]
       }
     },
@@ -97252,6 +97581,56 @@
         ]
       }
     },
+    "/v1/admission/matches/dismissed": {
+      "get": {
+        "description": "Universities the caller marked \"not my vibe\"; Return is the DELETE decision.",
+        "operationId": "admission_list_dismissed_matches",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Dismissed",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/matches/{university_id}/decision": {
       "delete": {
         "description": "Undo a swipe.",
@@ -111300,7 +111679,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RestoreBody"
+                "$ref": "#/components/schemas/app__interfaces__http__v1__id__login__schemas__RestoreBody"
               }
             }
           },
@@ -111342,7 +111721,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RestoreBody"
+                "$ref": "#/components/schemas/app__interfaces__http__v1__id__login__schemas__RestoreBody"
               }
             }
           },

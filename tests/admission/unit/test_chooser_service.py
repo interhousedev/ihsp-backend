@@ -138,6 +138,16 @@ async def test_add_is_idempotent_and_computes_affordability() -> None:
     assert a.affordability and a.affordability.gap == Decimal(45000)
 
 
+async def test_remove_clears_the_deck_decision() -> None:
+    w = World()
+    ctx = await w.student()
+    iid = w.inst()
+    item = await w.lists.add(ctx, iid)
+    w.store.decisions[(STUDENT, iid)] = "interested"
+    await w.lists.remove(ctx, item.entry.id)
+    assert not w.store.list_entries and not w.store.decisions
+
+
 async def test_staff_cannot_edit_and_conflicts_detected() -> None:
     w = World()
     ctx = await w.student()

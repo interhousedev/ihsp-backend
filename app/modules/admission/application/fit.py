@@ -80,6 +80,13 @@ class FitService:
         )
         return student, prefs.weights
 
+    async def budget_band(self, ctx: AdmissionContext) -> str | None:
+        """The caller's stated yearly budget band (survey Q32), if any."""
+        if not ctx.admission.is_applicant:
+            return None
+        student, _ = await self._student(ctx.user_id)
+        return student.budget_band
+
     async def ranking_subjects(self, ctx: AdmissionContext) -> tuple[str, ...]:
         """Ranking subjects of the caller's focus fields and chosen professions."""
         if not ctx.admission.is_applicant:

@@ -461,7 +461,10 @@ class ListService:
         await self._owner(ctx)
         async with self._uow() as uow:
             await self._own_entry(ctx, uow, entry_id)
+            entry = await uow.shortlist.entry(entry_id)
             await uow.shortlist.delete(entry_id)
+            if entry is not None:
+                await uow.decisions.delete(entry.student_id, entry.institution_id)
             await uow.commit()
 
     async def _staff_entry(
