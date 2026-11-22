@@ -88,6 +88,10 @@ class PromptGroupOut(BaseModel):
         description="My short texts for member prompts; only for `short_answer`."
     )
     spread: float
+    similar_keys: list[str] = Field(
+        description="Keys of member prompts that only resemble the rest: shown as "
+        "`similar`, the others are exact matches."
+    )
     prompts: list[PromptRefOut]
     covered: bool = Field(description="An essay or slot already answers a member.")
     essay_ids: list[UUID] = Field(description="My essays targeting a member prompt.")
@@ -109,6 +113,7 @@ class PromptGroupOut(BaseModel):
             category=g.category,
             short_answers=[ShortAnswerOut.of(a) for a in g.short_answers],
             spread=g.group.spread,
+            similar_keys=list(g.group.similar),
             prompts=[PromptRefOut.of(p) for p in g.group.prompts],
             covered=any(p.key in covered for p in g.group.prompts),
             essay_ids=list(g.essay_ids),

@@ -47697,6 +47697,14 @@
             "title": "Short Answers",
             "type": "array"
           },
+          "similar_keys": {
+            "description": "Keys of member prompts that only resemble the rest: shown as `similar`, the others are exact matches.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Similar Keys",
+            "type": "array"
+          },
           "spread": {
             "title": "Spread",
             "type": "number"
@@ -47709,6 +47717,7 @@
           "category",
           "short_answers",
           "spread",
+          "similar_keys",
           "prompts",
           "covered",
           "essay_ids",
