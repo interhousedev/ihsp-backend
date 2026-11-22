@@ -70,6 +70,7 @@ UNLIMITABLE: frozenset[str] = frozenset(
         "admit_app_review_per_week",
         "admit_career_ai_per_week",
         "admit_list_suggest_per_week",
+        "admit_project_ideas_per_week",
         "admit_tasks_suggest_per_week",
         "admit_assistant_per_day",
         "admit_voice_per_day",

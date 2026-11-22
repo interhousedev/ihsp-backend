@@ -39,6 +39,9 @@ from app.modules.admission.infrastructure.ai.prompts import (
     opportunity_plan as admit_opportunity_plan,
 )
 from app.modules.admission.infrastructure.ai.prompts import profile_words as admit_words
+from app.modules.admission.infrastructure.ai.prompts import (
+    project_ideas as admit_project_ideas,
+)
 from app.modules.admission.infrastructure.ai.prompts import research as admit_research
 from app.modules.admission.infrastructure.ai.prompts import tasks_suggest as admit_tasks
 from app.modules.admission.infrastructure.ai.prompts import (
@@ -263,6 +266,13 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         "system",
         "Admission: event post into an opportunity draft (bot intake)",
         admit_opportunity_intake.SYSTEM,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_PROJECT_IDEAS,),
+        "system",
+        "Admission: project ideas for a student, with analogs and first steps",
+        admit_project_ideas.SYSTEM,
         False,
     ),
     (

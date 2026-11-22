@@ -101,6 +101,7 @@ def test_the_catalog_lists_the_places_that_call_a_model() -> None:
         "admit_university_research",
         "admit_goal_plan",
         "admit_opportunity_plan",
+        "admit_project_ideas",
         "admit_career_professions",
         "admit_profession_fill",
         "admit_catalog_research",

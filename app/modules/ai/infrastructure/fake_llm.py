@@ -17,6 +17,7 @@ from app.modules.ai.infrastructure.fake_list_suggest import (
     build_list_brief_document,
     build_list_suggest_document,
 )
+from app.modules.ai.infrastructure.fake_projects import build_project_ideas_document
 from app.modules.ai.infrastructure.fake_schema import document_for
 from app.modules.ai.infrastructure.fake_sources import chat_answer, is_notebook_chat
 from app.modules.ai.infrastructure.fake_structured import BUILDERS, build_document
@@ -126,6 +127,7 @@ class FakeLlmGateway:
             built = built or build_list_brief_document(schema_name, messages)
             built = built or build_tasks_document(schema_name)
             built = built or build_item_grade_document(schema_name)
+            built = built or build_project_ideas_document(schema_name)
             if built is None and schema_name not in BUILDERS:
                 # Schemas of other modules (admission): a valid document by shape.
                 built = document_for(schema)
