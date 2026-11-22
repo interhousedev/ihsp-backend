@@ -145,6 +145,13 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         False,
     ),
     (
+        (AiTask.ADMIT_PROFESSION_FILL,),
+        "system",
+        "Admission career: card of a profession the student typed",
+        admit_career.PROFESSION_FILL,
+        False,
+    ),
+    (
         (AiTask.ADMIT_CAREER_MAJORS,),
         "system",
         "Admission career: fit of majors and minors",

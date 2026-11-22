@@ -248,6 +248,9 @@ class _Catalog:
     async def institution(self, institution_id: UUID) -> CatalogInstitution | None:
         return self.s.institutions.get(institution_id)
 
+    async def countries(self) -> list[str]:
+        return sorted({i.country.upper() for i in self.s.institutions.values()})
+
     async def scholarships(
         self,
         *,
@@ -492,6 +495,15 @@ class _CatalogProposals:
     ) -> UUID:
         self.s.applied.append(proposal)
         return proposal.target_id or new_id()
+
+    async def apply_facts(
+        self,
+        institution_id: UUID,
+        facts: Any,
+        reviewer_id: UUID,
+        now: dt.datetime,
+    ) -> None:
+        return None
 
     async def save_review(
         self, proposal: CatalogProposal, *, expected_lock: int

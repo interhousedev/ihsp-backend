@@ -51,6 +51,7 @@ BUILTIN_PROMPTS: dict[tuple[str, str], str] = {
     },
     (AiTask.ADMIT_APP_REVIEW_LEAD.value, "system"): app_review.LEAD_SYSTEM,
     (AiTask.ADMIT_CAREER_PROFESSIONS.value, "system"): career.PROFESSIONS,
+    (AiTask.ADMIT_PROFESSION_FILL.value, "system"): career.PROFESSION_FILL,
     (AiTask.ADMIT_CAREER_MAJORS.value, "system"): career.MAJORS,
     (AiTask.ADMIT_CAREER_SPIKE.value, "system"): career.SPIKE,
     (AiTask.ADMIT_UNI_ADVICE.value, "system"): uni_advice.SYSTEM,

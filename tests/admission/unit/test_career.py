@@ -21,6 +21,7 @@ from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     ConsentRequiredError,
 )
+from app.modules.admission.domain.professions import Ikigai, ProfessionPlan
 from app.modules.admission.infrastructure.ai.prompt_source import BuiltinPrompts
 from app.modules.admission.infrastructure.ai.prompts import career as prompt
 from app.modules.admission.ports.consent import AI
@@ -140,9 +141,15 @@ class Items:
         return {}
 
 
+class Plans:
+    async def get(self, student_id: UUID) -> ProfessionPlan:
+        return ProfessionPlan(student_id, ikigai=Ikigai(love=("chess",)))
+
+
 class Uow:
     def __init__(self, career: Career) -> None:
         self.career, self.items = career, Items()
+        self.profession_plans = Plans()
 
     async def __aenter__(self) -> "Uow":
         return self
@@ -218,6 +225,7 @@ async def test_suggestions_in_fake_mode_store_drafts() -> None:
     ]
     assert limiter.hits == [(f"admission:career:{USER}", 10)] * 3
     assert "<student_text>" in ai.calls[0]["user"]
+    assert "[ikigai:love] chess" in ai.calls[0]["user"]
 
 
 async def test_shortlisted_professions_survive_new_suggestions() -> None:

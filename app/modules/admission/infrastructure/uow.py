@@ -7,6 +7,9 @@ from app.modules.admission.domain.calendar import TASHKENT
 from app.modules.admission.infrastructure.career_repository import (
     SqlCareerRepository,
 )
+from app.modules.admission.infrastructure.catalog_card_repository import (
+    SqlCatalogCardRepository,
+)
 from app.modules.admission.infrastructure.catalog_proposals_repository import (
     SqlCatalogProposalRepository,
 )
@@ -131,6 +134,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     catalog: SqlCatalogRepository
     catalog_proposals: SqlCatalogProposalRepository
     catalog_staff: SqlCatalogStaffRepository
+    catalog_card: SqlCatalogCardRepository
     shortlist: SqlListRepository
     courses: SqlCourseRepository
     runtime_settings: SqlRuntimeSettingsRepository
@@ -219,6 +223,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.catalog = SqlCatalogRepository(self.session)
         self.catalog_proposals = SqlCatalogProposalRepository(self.session)
         self.catalog_staff = SqlCatalogStaffRepository(self.session)
+        self.catalog_card = SqlCatalogCardRepository(self.session)
         self.shortlist = SqlListRepository(self.session)
         self.courses = SqlCourseRepository(self.session)
         self.runtime_settings = SqlRuntimeSettingsRepository(self.session)

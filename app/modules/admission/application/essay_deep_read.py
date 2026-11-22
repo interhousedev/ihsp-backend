@@ -8,7 +8,6 @@ review service once per target university of the essay.
 """
 
 import datetime as dt
-import re
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from typing import Any, Final, Literal
@@ -33,6 +32,7 @@ from app.modules.admission.domain.errors import (
 )
 from app.modules.admission.domain.essay_flow import DeepRead, Moment, ParagraphRead
 from app.modules.admission.domain.essay_reviews import REVIEW_MIN_WORDS, EssayInput
+from app.modules.admission.domain.essay_text import paragraphs as essay_paragraphs
 from app.modules.admission.domain.essays import Essay, word_count
 from app.modules.admission.infrastructure.ai.prompts import essay_flow as flow
 from app.modules.admission.infrastructure.ai.prompts.essay_review import DIMENSIONS
@@ -52,7 +52,6 @@ _WEEK: Final = 7 * 86400
 _PURPOSE: Final = "essay_deep_read"
 _TOKENS: Final = 3000
 _BODY_TO_MODEL: Final = 12000
-_PARAGRAPHS: Final = re.compile(r"\n\s*\n")
 _ROLES: Final = ("hook", "context", "turn", "evidence", "insight", "close")
 _STRENGTHS: Final = ("strong", "ok", "weak")
 _KINDS: Final = ("surprising", "fresh", "earned")
@@ -65,6 +64,27 @@ class DeepReadResult:
     read: DeepRead
     cached: bool
     stale: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ReadHistoryItem:
+    """One past deep read of an essay, with the universities reviewed after it."""
+
+    id: UUID
+    created_at: dt.datetime
+    words: int
+    summary: str
+    universities: tuple[UUID, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class StoredRead:
+    """One past deep read; `latest` when no newer read exists."""
+
+    id: UUID
+    created_at: dt.datetime
+    read: DeepRead
+    latest: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,8 +112,8 @@ def _int(value: Any, default: int = 0) -> int:
 
 
 def paragraphs_of(body: str) -> list[str]:
-    """The paragraphs of an essay: blocks separated by blank lines."""
-    return [p.strip() for p in _PARAGRAPHS.split(body) if p.strip()]
+    """The paragraphs of an essay: scene breaks are transitions, not paragraphs."""
+    return essay_paragraphs(body)
 
 
 def _read(data: dict[str, Any], body: str) -> DeepRead:
@@ -253,7 +273,7 @@ class EssayDeepReadService:
                     kind="deep",
                     institution_id=None,
                     input_digest=digest,
-                    payload=asdict(read),
+                    payload={**asdict(read), "words": count},
                     model=model,
                     prompt_ref=f"{task.value}/deep",
                     created_at=self._clock.now(),
@@ -275,6 +295,63 @@ class EssayDeepReadService:
             return None
         digest = await self._digest(ctx.user_id, essay_input(essay), locale)
         return DeepReadResult(deep_from(row.payload), True, digest != row.input_digest)
+
+    async def history(
+        self, ctx: AdmissionContext, essay_id: UUID
+    ) -> list[ReadHistoryItem]:
+        """Every stored deep read of my essay, newest first; no model call."""
+        await self._gate.owner(ctx)
+        async with self._uow() as uow:
+            essay = await self._essay(uow, ctx, essay_id)
+            stored = await uow.essay_reviews.list_for_essay(essay.id)
+        reads = sorted(
+            (s for s in stored if s.kind == "deep"),
+            key=lambda s: s.created_at,
+            reverse=True,
+        )
+        unis = [s for s in stored if s.kind == "uni" and s.institution_id]
+        out: list[ReadHistoryItem] = []
+        upper: dt.datetime | None = None
+        for r in reads:
+            ids = [
+                u.institution_id
+                for u in unis
+                if u.institution_id is not None
+                and u.created_at >= r.created_at
+                and (upper is None or u.created_at < upper)
+            ]
+            note = _line(r.payload.get("uniqueness_note"), flow.SUMMARY_MAX)
+            out.append(
+                ReadHistoryItem(
+                    r.id,
+                    r.created_at,
+                    _int(r.payload.get("words")),
+                    note,
+                    tuple(dict.fromkeys(ids)),
+                )
+            )
+            upper = r.created_at
+        return out
+
+    async def stored_read(
+        self, ctx: AdmissionContext, essay_id: UUID, read_id: UUID
+    ) -> StoredRead:
+        """One past deep read of my essay by id."""
+        await self._gate.owner(ctx)
+        async with self._uow() as uow:
+            essay = await self._essay(uow, ctx, essay_id)
+            stored = await uow.essay_reviews.list_for_essay(essay.id)
+        reads = sorted(
+            (s for s in stored if s.kind == "deep"),
+            key=lambda s: s.created_at,
+            reverse=True,
+        )
+        row = next((s for s in reads if s.id == read_id), None)
+        if row is None:
+            raise AdmissionNotFoundError()
+        return StoredRead(
+            row.id, row.created_at, deep_from(row.payload), row is reads[0]
+        )
 
     async def states(
         self, ctx: AdmissionContext, essays: Sequence[Essay], locale: str
@@ -306,12 +383,16 @@ class EssayDeepReadService:
         *,
         refresh: bool,
         locale: str,
+        institution_ids: Sequence[UUID] | None = None,
     ) -> EssayReviews:
         """Review the essay for every university it targets, under that prompt."""
         await self._gate.owner(ctx)
         async with self._uow() as uow:
             essay = await self._essay(uow, ctx, essay_id)
         ids = [t.institution_id for t in essay.targets if t.institution_id is not None]
+        if institution_ids is not None:
+            chosen = set(institution_ids)
+            ids = [i for i in ids if i in chosen]
         return await self._reviews.run(
             ctx, essay_id, list(dict.fromkeys(ids)), refresh=refresh, locale=locale
         )

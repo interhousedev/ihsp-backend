@@ -13,6 +13,7 @@ from app.modules.admission.domain.professions import (
     IKIGAI_ITEMS_MAX,
     MAJOR_GROUPS,
     PROFESSIONS_MAX,
+    TITLE_MAX,
     Ikigai,
     Profession,
 )
@@ -92,6 +93,9 @@ class ProfessionOut(BaseModel):
     salary_band: str | None
     related_fields: list[str]
     sources: list[ProfessionSourceOut]
+    description: str | None = None
+    custom: bool = False
+    isco_id: str | None = None
 
     @classmethod
     def of(cls, p: Profession, locale: str) -> "ProfessionOut":
@@ -107,6 +111,9 @@ class ProfessionOut(BaseModel):
             salary_band=p.salary_band,
             related_fields=list(p.related_fields),
             sources=[ProfessionSourceOut(label=s.label, url=s.url) for s in p.sources],
+            description=p.description(locale),
+            custom=p.custom,
+            isco_id=p.isco_id,
         )
 
 
@@ -145,6 +152,12 @@ class ChosenIn(BaseModel):
 
     profession_id: str
     rank: int = Field(ge=1, le=PROFESSIONS_MAX)
+
+
+class CustomProfessionIn(BaseModel):
+    """A profession title the student typed."""
+
+    title: str = Field(min_length=1, max_length=TITLE_MAX)
 
 
 class ChosenListIn(BaseModel):
@@ -200,6 +213,21 @@ async def search_professions(
     loc = _locale(accept_language)
     found = container.admission.professions.search(q, limit)
     return ProfessionListOut(items=[ProfessionOut.of(p, loc) for p in found])
+
+
+async def fill_custom_profession(
+    body: CustomProfessionIn,
+    container: ContainerDep,
+    ctx: StudentCtx,
+    accept_language: Lang = None,
+) -> ProfessionOut:
+    """Fill the card of a typed-in profession (a model call) and keep it.
+
+    It is ready to pick through `PUT /me/professions` with the returned id.
+    """
+    loc = _locale(accept_language)
+    card = await container.admission.professions.fill(ctx, body.title, loc)
+    return ProfessionOut.of(card, loc)
 
 
 async def get_my_professions(
@@ -309,6 +337,13 @@ router.add_api_route(
     methods=["GET"],
     response_model=ProfessionListOut,
     operation_id="admission_search_professions",
+)
+router.add_api_route(
+    "/me/professions/custom/fill",
+    fill_custom_profession,
+    methods=["POST"],
+    response_model=ProfessionOut,
+    operation_id="admission_fill_custom_profession",
 )
 router.add_api_route(
     "/me/professions",

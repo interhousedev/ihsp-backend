@@ -5,6 +5,7 @@ from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.routes_chooser import _description
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.application.matching import (
     DEFAULT_LIMIT,
@@ -13,9 +14,15 @@ from app.modules.admission.application.matching import (
     PreferenceView,
 )
 from app.modules.admission.domain.admit_rate import intl_admission_rate
+from app.modules.admission.domain.budget import estimated_aid
 from app.modules.admission.domain.chooser import next_deadline_round
 from app.modules.admission.domain.fit import FitResult
 from app.modules.admission.domain.matching import MAJOR_MAX, REGION_MAX
+from app.modules.admission.domain.rankings import (
+    experience_meters,
+    map_url,
+    relevant_rankings,
+)
 from app.shared.clock import local_today
 
 from fastapi import APIRouter, Header, Query, Response, status
@@ -98,6 +105,24 @@ class NextDeadlineOut(BaseModel):
     round: str
 
 
+class RankingOut(BaseModel):
+    """A subject ranking relevant to the student's fields and professions."""
+
+    system: Literal["qs", "the", "arwu", "usnews"]
+    subject: str
+    rank: int | str
+    year: int
+    source_url: str
+
+
+class ExperienceOut(BaseModel):
+    """One 1..5 rating of the campus experience with its short note."""
+
+    key: Literal["social", "research", "work"]
+    score: int = Field(ge=1, le=5)
+    note: str | None = None
+
+
 class MatchOut(BaseModel):
     """A university with its match for the caller."""
 
@@ -121,14 +146,40 @@ class MatchOut(BaseModel):
     intl_acceptance_rate: float | None = Field(default=None, ge=0, le=1)
     meets_full_need: bool | None = None
     next_deadline: NextDeadlineOut | None = None
+    description: str | None = Field(
+        default=None, description="In the request language, else English."
+    )
+    fields: list[str] = []
+    rankings: list[RankingOut] = Field(
+        default=[], description="At most two, relevant to the student; else empty."
+    )
+    cost_usd: float | None = Field(default=None, description="Yearly sticker price.")
+    net_cost_usd: float | None = Field(
+        default=None, description="Sticker price minus the average aid, an estimate."
+    )
+    aid_estimate_usd: float | None = None
+    experience: list[ExperienceOut] = []
+    map_url: str
 
     @classmethod
     def of(
-        cls, m: MatchItem, fit: FitResult | None = None, *, today: dt.date
+        cls,
+        m: MatchItem,
+        fit: FitResult | None = None,
+        *,
+        today: dt.date,
+        locale: str = "en",
+        subjects: tuple[str, ...] = (),
+        maps_template: str | None = None,
     ) -> "MatchOut":
         """Map the application result."""
         i = m.institution
         aid = i.aid_profile
+        aid_usd = estimated_aid(i.coa_total, i.coa_currency, aid)
+        gross = i.coa_total if i.coa_currency == "USD" else None
+        ranks = i.fact("rankings")
+        exp = i.fact("experience_scores")
+        link = i.fact("map_url")
         return cls(
             university_id=i.id,
             name=i.name,
@@ -165,6 +216,30 @@ class MatchOut(BaseModel):
                 NextDeadlineOut(date=due[0], round=due[1])
                 if (due := next_deadline_round(i, today)) is not None
                 else None
+            ),
+            description=_description(i.description, locale),
+            fields=i.fields,
+            rankings=[
+                RankingOut(**r)
+                for r in relevant_rankings(ranks.value if ranks else None, subjects)
+            ],
+            cost_usd=float(gross) if gross is not None else None,
+            net_cost_usd=(
+                float(gross - aid_usd)
+                if gross is not None and aid_usd is not None
+                else None
+            ),
+            aid_estimate_usd=float(aid_usd) if aid_usd is not None else None,
+            experience=[
+                ExperienceOut(**x)
+                for x in experience_meters(exp.value if exp else None, locale)
+            ],
+            map_url=map_url(
+                i.name,
+                i.city,
+                i.country,
+                override=str(link.value) if link else None,
+                template=maps_template,
             ),
         )
 
@@ -214,8 +289,21 @@ async def list_matches(
         container.clock.now().year,
     )
     today = local_today(container.clock)
+    locale = _locale(accept_language)
+    subjects = await container.admission.fit.ranking_subjects(ctx)
+    template = await container.admission.maps_settings.get()
     return MatchListOut(
-        items=[MatchOut.of(m, fits.get(m.institution.id), today=today) for m in rows]
+        items=[
+            MatchOut.of(
+                m,
+                fits.get(m.institution.id),
+                today=today,
+                locale=locale,
+                subjects=subjects,
+                maps_template=template,
+            )
+            for m in rows
+        ]
     )
 
 

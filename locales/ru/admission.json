@@ -17,6 +17,7 @@
   "admission-eligibility-unknown": "Пока нельзя определить, подходите ли вы.",
   "admission-invalid-proof-url": "Ссылка на подтверждение недействительна.",
   "admission-invalid-media-url": "Ссылка на изображение должна быть адресом https.",
+  "admission-media-unreachable": "Не удалось загрузить изображение. Проверьте ссылку: нужен PNG, JPEG, WebP или GIF до 5 МБ.",
   "admission-test-score-invalid": "Запись о тесте недопустима. Проверьте баллы, даты и обязательные поля.",
   "admission-invalid-transition": "Этот шаг недоступен в текущем состоянии.",
   "admission-pickup-not-set": "Место получения ещё не указано.",
@@ -54,5 +55,6 @@
   "admission-exemplar-duplicate": "Это эссе-образец уже есть в библиотеке.",
   "admission-kb-body-invalid": "Текст статьи не принят. Допустимо не более 3 блоков OpenUI по 6000 символов и только ссылки https, mailto или относительные.",
   "admission-essay-key-unavailable": "Ваши эссе временно недоступны. Попробуйте позже или обратитесь в поддержку.",
-  "admission-catalog-cycle": "Цикл должен быть текущим или следующим приёмным циклом в формате 2026-27 (цикл: {cycle})."
+  "admission-catalog-cycle": "Цикл должен быть текущим или следующим приёмным циклом в формате 2026-27 (цикл: {cycle}).",
+  "admission-scorecard-unavailable": "College Scorecard сейчас недоступен. Попробуйте позже."
 }

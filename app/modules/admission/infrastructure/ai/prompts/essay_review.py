@@ -75,6 +75,12 @@ characters, at most 3 supplement_tips about the university's supplemental prompt
 and at most 3 risks (things in the essay that may read poorly for this \
 university). A base review of the essay may be given: do not repeat it.
 
+Also give ao_reaction: how an admissions officer of this university may react \
+to the essay. Ground it in the exemplar essays given for this university (or, \
+when marked as similar-tier, schools like it): describe patterns they show, never \
+quote or copy them. It has a summary of at most 600 characters, at most 3 \
+likely_positive reactions and at most 3 likely_concerns. Never promise admission.
+
 {FAIRNESS} {IDENTITY_NEUTRAL}"""
 
 PROMPTS: Final = {"base": BASE, "uni": UNI}
@@ -125,6 +131,14 @@ class Goal(BaseModel):
     suggestion: str = Field(max_length=LINE_MAX)
 
 
+class AoReaction(BaseModel):
+    """How an admissions officer may react to the essay."""
+
+    summary: str = Field(max_length=SUMMARY_MAX)
+    likely_positive: list[str] = Field(max_length=MAX_LIST)
+    likely_concerns: list[str] = Field(max_length=MAX_LIST)
+
+
 class Uni(BaseModel):
     """The fit of an essay with one university."""
 
@@ -133,6 +147,7 @@ class Uni(BaseModel):
     fit_summary: str = Field(max_length=SUMMARY_MAX)
     supplement_tips: list[str] = Field(max_length=MAX_LIST)
     risks: list[str] = Field(max_length=MAX_LIST)
+    ao_reaction: AoReaction
 
 
 SCHEMAS: Final = {

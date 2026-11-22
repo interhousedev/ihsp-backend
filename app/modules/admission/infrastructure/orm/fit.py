@@ -42,3 +42,6 @@ class ProfessionPlanRow(CreatedMixin, UpdatedMixin, Base):
     ikigai: Mapped[dict[str, list[str]]] = mapped_column(
         JSONB, server_default=text("'{}'::jsonb")
     )
+    custom: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, server_default=text("'[]'::jsonb")
+    )

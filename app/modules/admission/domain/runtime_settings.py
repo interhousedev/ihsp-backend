@@ -12,6 +12,8 @@ READINESS_WEIGHTS: Final = "readiness_weights"
 # The school grades the lyceum teaches, e.g. [10, 11]: who is entitled and which
 # grades a student plans activities for. The environment gives the default.
 SCHOOL_GRADES: Final = "school_grades"
+# Link template of "open on a map" (https, one `{query}` placeholder).
+MAPS_URL_TEMPLATE: Final = "maps_url_template"
 SCHOOL_GRADE_MIN: Final = 1
 SCHOOL_GRADE_MAX: Final = 12
 KNOWN_KEYS: Final = frozenset(
@@ -22,6 +24,7 @@ KNOWN_KEYS: Final = frozenset(
         CALENDAR_ALARM_OFFSETS,
         READINESS_WEIGHTS,
         SCHOOL_GRADES,
+        MAPS_URL_TEMPLATE,
     }
 )
 
@@ -54,6 +57,11 @@ class RuntimeSettings:
         """Return the transcript pickup location per locale, or None if unset."""
         value = self.values.get(PICKUP_LOCATION)
         return value if isinstance(value, dict) and value else None
+
+    def maps_url_template(self) -> str | None:
+        """Return the stored map link template, or None for the default."""
+        value = self.values.get(MAPS_URL_TEMPLATE)
+        return value if isinstance(value, str) and value else None
 
     def school_grades(self, default: Collection[int]) -> tuple[int, ...]:
         """Return the stored school grades, else the environment default."""

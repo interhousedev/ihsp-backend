@@ -97,7 +97,12 @@ def _base_key(
     )
 
 
-def _uni_key(essay: EssayInput, locale: str, uni: UniContext) -> str:
+def _uni_key(
+    essay: EssayInput,
+    locale: str,
+    uni: UniContext,
+    matches: tuple[ExemplarMatch, ...] = (),
+) -> str:
     return input_key(
         "uni",
         locale,
@@ -108,6 +113,7 @@ def _uni_key(essay: EssayInput, locale: str, uni: UniContext) -> str:
         essay.body,
         review.UNI,
         *uni_lines(uni),
+        *sorted(str(m.exemplar.id) for m in matches),
     )
 
 
@@ -185,6 +191,19 @@ class EssayReviewService:
                 prompt=essay.prompt_text,
                 body=essay.body,
                 institution_id=None,
+            )
+        )
+
+    async def _uni_exemplars(
+        self, text: EssayInput, institution_id: UUID
+    ) -> tuple[ExemplarMatch, ...]:
+        """Exemplars of this university first, then the closest similar ones."""
+        return tuple(
+            await self._exemplars.closest(
+                kind=text.kind,
+                prompt=text.prompt_text,
+                body=text.body,
+                institution_id=institution_id,
             )
         )
 
@@ -294,7 +313,8 @@ class EssayReviewService:
             )
         uid = essay.student_id
         text = for_university(text, essay, uni.institution_id)
-        digest = await self._digest(uid, _uni_key(text, locale, uni))
+        matches = await self._uni_exemplars(text, uni.institution_id)
+        digest = await self._digest(uid, _uni_key(text, locale, uni, matches))
         async with self._uow() as uow:
             hit = (
                 None
@@ -309,7 +329,13 @@ class EssayReviewService:
             )
         await self._hit(self._uni_quota, "essay_uni_review", uid)
         result, model = await run_uni_review(
-            self._ai, self._prompts, essay=text, uni=uni, base=base, locale=locale
+            self._ai,
+            self._prompts,
+            essay=text,
+            uni=uni,
+            base=base,
+            locale=locale,
+            exemplars=matches,
         )
         async with self._uow() as uow:
             await uow.essay_reviews.save(
@@ -352,12 +378,12 @@ class EssayReviewService:
         for iid, row in latest.items():
             uni = unis[iid]
             result = uni_from(row.payload)
-            stale = uni is None or (
-                await self._digest(
-                    uid, _uni_key(for_university(text, essay, iid), locale, uni)
-                )
-                != row.input_digest
-            )
+            stale = True
+            if uni is not None:
+                utext = for_university(text, essay, iid)
+                matches = await self._uni_exemplars(utext, iid)
+                key = _uni_key(utext, locale, uni, matches)
+                stale = await self._digest(uid, key) != row.input_digest
             name = uni.name if uni is not None else result.institution_name
             entries.append(UniEntry(iid, name, result, True, stale))
         return EssayReviews(base, base_row is not None, base_stale, tuple(entries))

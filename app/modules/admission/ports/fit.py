@@ -37,6 +37,12 @@ class ProfessionPlanRepository(Protocol):
         """Replace the ranked professions."""
         ...
 
+    async def save_custom(
+        self, student_id: UUID, custom: tuple[Profession, ...]
+    ) -> None:
+        """Replace the professions the student typed in."""
+        ...
+
     async def save_ikigai(self, student_id: UUID, ikigai: Ikigai) -> None:
         """Replace the ikigai chips."""
         ...

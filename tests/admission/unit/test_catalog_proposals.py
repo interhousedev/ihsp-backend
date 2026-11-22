@@ -131,7 +131,7 @@ async def _logo_ctx(w: World, who: str) -> AdmissionContext:
     return await w.ctx(STAFF, roles[who])
 
 
-@pytest.mark.parametrize("who", ["admin", "curator"])
+@pytest.mark.parametrize("who", ["admin", "curator", "counselor"])
 async def test_logo_edit_by_curators_is_audited(who: str) -> None:
     w = World()
     ctx = await _logo_ctx(w, who)
@@ -143,7 +143,7 @@ async def test_logo_edit_by_curators_is_audited(who: str) -> None:
     assert w.store.audit[-1].object_id == target
 
 
-@pytest.mark.parametrize("who", ["teacher", "counselor"])
+@pytest.mark.parametrize("who", ["teacher"])
 async def test_logo_edit_needs_a_live_curate_grant(who: str) -> None:
     w = World()
     ctx = await _logo_ctx(w, who)

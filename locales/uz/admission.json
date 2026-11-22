@@ -17,6 +17,7 @@
   "admission-eligibility-unknown": "Mos kelishingizni hozircha aniqlab boʼlmaydi.",
   "admission-invalid-proof-url": "Tasdiq havolasi yaroqsiz.",
   "admission-invalid-media-url": "Rasm havolasi yaroqli https manzil boʻlishi kerak.",
+  "admission-media-unreachable": "Rasmni yuklab boʻlmadi. Havolani tekshiring: PNG, JPEG, WebP yoki GIF, 5 MB gacha.",
   "admission-test-score-invalid": "Test yozuvi yaroqsiz. Ballar, sanalar va majburiy maydonlarni tekshiring.",
   "admission-invalid-transition": "Bu qadam joriy holatda mumkin emas.",
   "admission-pickup-not-set": "Olib ketish joyi hali belgilanmagan.",
@@ -54,5 +55,6 @@
   "admission-exemplar-duplicate": "Bu namuna insho kutubxonada allaqachon bor.",
   "admission-kb-body-invalid": "Maqola matni qabul qilinmadi. OpenUI bloklari 3 tadan oshmasin, har biri 6000 belgigacha boʻlsin; faqat https, mailto yoki nisbiy havolalar mumkin.",
   "admission-essay-key-unavailable": "Insholaringiz vaqtincha mavjud emas. Keyinroq urinib koʻring yoki qoʻllab-quvvatlash xizmatiga murojaat qiling.",
-  "admission-catalog-cycle": "Sikl joriy yoki keyingi qabul sikli boʻlishi kerak, 2026-27 koʻrinishida (sikl: {cycle})."
+  "admission-catalog-cycle": "Sikl joriy yoki keyingi qabul sikli boʻlishi kerak, 2026-27 koʻrinishida (sikl: {cycle}).",
+  "admission-scorecard-unavailable": "College Scorecard hozir mavjud emas. Keyinroq urinib koʻring."
 }

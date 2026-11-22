@@ -1,7 +1,7 @@
 """SQL repository of catalog proposals."""
 
 import datetime as dt
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import Any, Literal
 from uuid import UUID
@@ -251,19 +251,19 @@ class SqlCatalogProposalRepository:
                 )
             )
         if proposal.facts:
-            await self._apply_facts(row.id, proposal, reviewer_id, now)
+            await self.apply_facts(row.id, proposal.facts, reviewer_id, now)
         return row.id  # type: ignore[no-any-return]
 
-    async def _apply_facts(
+    async def apply_facts(
         self,
         institution_id: UUID,
-        proposal: CatalogProposal,
+        facts: Mapping[str, Mapping[str, Any]],
         reviewer_id: UUID,
         now: dt.datetime,
     ) -> None:
         """Upsert each fact in place and mirror cost and aid into their tables."""
         sources: dict[str, UUID] = {}
-        for key, fact in clean_facts(proposal.facts).items():
+        for key, fact in clean_facts(facts).items():
             if fact.source_url not in sources:
                 src = SourceRow(
                     id=new_id(),

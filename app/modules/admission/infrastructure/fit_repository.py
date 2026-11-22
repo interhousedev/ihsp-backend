@@ -1,11 +1,13 @@
 """SQLAlchemy repositories of fit preferences and the professions plan."""
 
 import datetime as dt
+from typing import Any
 from uuid import UUID
 
 from app.modules.admission.domain.professions import (
     ChosenProfession,
     Ikigai,
+    Profession,
     ProfessionPlan,
 )
 from app.modules.admission.infrastructure.orm.fit import (
@@ -44,6 +46,37 @@ class SqlFitPreferenceRepository:
         return res.scalar_one()
 
 
+def _custom_dump(p: Profession) -> dict[str, Any]:
+    return {
+        "id": p.id,
+        "group": p.group,
+        "names": p.names,
+        "descriptions": p.descriptions,
+        "ai_exposure": p.ai_exposure,
+        "ai_risk": p.ai_risk,
+        "horizon": p.horizon,
+        "related_fields": list(p.related_fields),
+        "salary_band": p.salary_band,
+        "isco_id": p.isco_id,
+    }
+
+
+def _custom_of(d: dict[str, Any]) -> Profession:
+    return Profession(
+        id=d["id"],
+        group=d["group"],
+        names=d["names"],
+        ai_exposure=d["ai_exposure"],
+        ai_risk=d["ai_risk"],
+        horizon=d["horizon"],
+        related_fields=tuple(d["related_fields"]),
+        salary_band=d.get("salary_band"),
+        descriptions=d.get("descriptions") or {},
+        custom=True,
+        isco_id=d.get("isco_id"),
+    )
+
+
 class SqlProfessionPlanRepository:
     """Chosen professions and ikigai chips, one row per student."""
 
@@ -65,6 +98,7 @@ class SqlProfessionPlanRepository:
             student_id,
             tuple(chosen),
             Ikigai(**{k: tuple(ik.get(k, ())) for k in _IKIGAI}),
+            tuple(_custom_of(c) for c in row.custom),
         )
 
     async def save_chosen(
@@ -73,6 +107,12 @@ class SqlProfessionPlanRepository:
         """Replace the ranked professions."""
         value = [{"profession_id": c.profession_id, "rank": c.rank} for c in chosen]
         await self._upsert(student_id, {"chosen": value})
+
+    async def save_custom(
+        self, student_id: UUID, custom: tuple[Profession, ...]
+    ) -> None:
+        """Replace the professions the student typed in."""
+        await self._upsert(student_id, {"custom": [_custom_dump(p) for p in custom]})
 
     async def save_ikigai(self, student_id: UUID, ikigai: Ikigai) -> None:
         """Replace the ikigai chips."""

@@ -109,6 +109,13 @@ class InvalidMediaUrlError(ValidationFailedError):
     message_key = "admission-invalid-media-url"
 
 
+class MediaUnreachableError(ValidationFailedError):
+    """A logo or cover URL could not be fetched as an allowed image."""
+
+    code = "admission/media_unreachable"
+    message_key = "admission-media-unreachable"
+
+
 class ProofSourceError(ValidationFailedError):
     """A proof needs exactly one of link, file or pasted text."""
 
@@ -217,6 +224,7 @@ ALL_ERRORS: tuple[type[BaseError], ...] = (
     ProofSourceError,
     InvalidProofUrlError,
     InvalidMediaUrlError,
+    MediaUnreachableError,
     InvalidTransitionError,
     PickupNotSetError,
     UndoExpiredError,
@@ -278,6 +286,14 @@ class CatalogFactInvalidError(ValidationFailedError):
 
     code = "admission/catalog_fact_invalid"
     message_key = "admission-catalog-fact-invalid"
+
+
+class ScorecardUnavailableError(BaseError):
+    """The College Scorecard service did not answer usefully."""
+
+    code = "admission/scorecard_unavailable"
+    status = 502
+    message_key = "admission-scorecard-unavailable"
 
 
 class CatalogDuplicateError(ConflictError):

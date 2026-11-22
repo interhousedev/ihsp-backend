@@ -46,6 +46,13 @@ FACT_LABELS: Final[dict[str, Labels]] = {
     "city_type": ("Setting", "Окружение", "Joylashuv"),
     "institution_type": ("Type", "Тип", "Turi"),
     "fields": ("Fields of study", "Направления", "Yoʻnalishlar"),
+    "map_url": ("Map link", "Ссылка на карту", "Xarita havolasi"),
+    "rankings": ("Subject rankings", "Предметные рейтинги", "Fan reytinglari"),
+    "experience_scores": (
+        "Student experience scores",
+        "Оценки студенческого опыта",
+        "Talaba tajribasi baholari",
+    ),
     "application_platforms": (
         "Application platforms",
         "Платформы подачи",
@@ -359,6 +366,12 @@ _SHAPES: Final[dict[str, str]] = {
     '"YYYY-MM-DD", "cycle": "YYYY-YY", "binding"?: bool, "time_zone"?: IANA zone, '
     '"note"?: text <= 200}], at most 12',
     "study_fields": "a list of 1-40 field-of-study names or canonical ids",
+    "url": "an https URL",
+    "rankings": '[{"system": qs|the|arwu|usnews, "subject": slug such as '
+    'computer_science, "rank": whole number or band "201-250", "year": '
+    '2000-2100, "source_url": https URL}], at most 40',
+    "experience_scores": '{"social"?: 1-5, "research"?: 1-5, "work"?: 1-5, '
+    '"notes"?: {part: {"en"|"ru"|"uz": text <= 160}}}, at least one score',
 }
 
 
@@ -382,6 +395,17 @@ def _example(spec: FactSpec) -> Any:
         "factors": {part.key: first} if part else {},
         "deadlines": [{"plan": "RD", "date": "2027-01-05", "cycle": "2026-27"}],
         "study_fields": ["Computer science"],
+        "url": "https://www.google.com/maps/place/Campus",
+        "rankings": [
+            {
+                "system": "qs",
+                "subject": "computer_science",
+                "rank": 12,
+                "year": 2026,
+                "source_url": "https://www.topuniversities.com/",
+            }
+        ],
+        "experience_scores": {"social": 4, "research": 5, "work": 3},
     }
     return examples[spec.kind]
 

@@ -110,8 +110,10 @@ class AiTask(StrEnum):
     ADMIT_ALIGNMENT_REFRESH = "admit_alignment_refresh"
     ADMIT_PROOF_EXTRACT = "admit_proof_extract"
     ADMIT_UNIVERSITY_RESEARCH = "admit_university_research"
+    ADMIT_CATALOG_RESEARCH = "admit_catalog_research"
     ADMIT_GOAL_PLAN = "admit_goal_plan"
     ADMIT_CAREER_PROFESSIONS = "admit_career_professions"
+    ADMIT_PROFESSION_FILL = "admit_profession_fill"
     ADMIT_CAREER_MAJORS = "admit_career_majors"
     ADMIT_CAREER_SPIKE = "admit_career_spike"
     ADMIT_UNI_ADVICE = "admit_uni_advice"
@@ -185,6 +187,12 @@ def _admission(
 TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     AiTask.ADMIT_CAREER_PROFESSIONS: _admission(
         "Admission: professions that fit an applicant's interests and activities.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_PROFESSION_FILL: _admission(
+        "Admission: fills the card of a profession the student typed in.",
         model=NOTEBOOK_MODEL,
         budget_weight=1,
         reasoning_effort=_NO_REASONING,
@@ -608,6 +616,13 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
         model=NOTEBOOK_MODEL,
         budget_weight=1,
         reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_CATALOG_RESEARCH: _admission(
+        "Admission: subject rankings and experience ratings of a university, "
+        "from web pages.",
+        model=SMART_MODEL,
+        budget_weight=SMART_BUDGET_WEIGHT,
+        reasoning_effort=SMART_REASONING,
     ),
     AiTask.ADMIT_UNIVERSITY_RESEARCH: _admission(
         "Admission: staff research of a university with web search.",

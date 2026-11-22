@@ -119,6 +119,14 @@ class GoalAlignmentOut(BaseModel):
     suggestion: str
 
 
+class AoReactionOut(BaseModel):
+    """How an admissions officer of the university may react (patterns only)."""
+
+    summary: str
+    likely_positive: list[str]
+    likely_concerns: list[str]
+
+
 class UniReviewOut(BaseModel):
     """The fit with one university; `alignment` is 0 to 100."""
 
@@ -128,6 +136,7 @@ class UniReviewOut(BaseModel):
     supplement_tips: list[str]
     risks: list[str]
     sourced: bool
+    ao_reaction: AoReactionOut | None = None
 
     @classmethod
     def of(cls, u: UniReview) -> "UniReviewOut":
@@ -149,6 +158,15 @@ class UniReviewOut(BaseModel):
             supplement_tips=list(u.supplement_tips),
             risks=list(u.risks),
             sourced=u.sourced,
+            ao_reaction=(
+                None
+                if u.ao_reaction is None
+                else AoReactionOut(
+                    summary=u.ao_reaction.summary,
+                    likely_positive=list(u.ao_reaction.likely_positive),
+                    likely_concerns=list(u.ao_reaction.likely_concerns),
+                )
+            ),
         )
 
 
