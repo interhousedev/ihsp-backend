@@ -15490,6 +15490,61 @@
         "title": "CountryProfileOut",
         "type": "object"
       },
+      "CountryPushIn": {
+        "description": "A batch of countries, upserted by ISO code as drafts.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CountryPushItemIn"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          },
+          "overwrite_verified": {
+            "default": false,
+            "description": "Replace countries a curator already verified.",
+            "title": "Overwrite Verified",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CountryPushIn",
+        "type": "object"
+      },
+      "CountryPushItemIn": {
+        "description": "One country in the shape of `country_facts.json`; checked per item.",
+        "properties": {
+          "as_of": {
+            "description": "Month of the facts, `YYYY-MM`.",
+            "maxLength": 16,
+            "title": "As Of",
+            "type": "string"
+          },
+          "country": {
+            "description": "ISO 3166-1 alpha-2 code.",
+            "maxLength": 8,
+            "title": "Country",
+            "type": "string"
+          },
+          "facts": {
+            "additionalProperties": true,
+            "description": "Facts keyed by fact name, as `PUT .../countries/{code}` takes.",
+            "title": "Facts",
+            "type": "object"
+          }
+        },
+        "required": [
+          "country",
+          "as_of",
+          "facts"
+        ],
+        "title": "CountryPushItemIn",
+        "type": "object"
+      },
       "CountryRankingOut": {
         "description": "One ranking of an institution (`overall` or a subject).",
         "properties": {
@@ -17158,7 +17213,8 @@
                 "admission:memory",
                 "admission:docs",
                 "admission:documents",
-                "admission:catalog"
+                "admission:catalog",
+                "admission:catalog-write"
               ],
               "type": "string"
             },
@@ -30950,6 +31006,27 @@
           "next_cursor"
         ],
         "title": "InstitutionPageOut",
+        "type": "object"
+      },
+      "InstitutionPushIn": {
+        "description": "A batch of institutions in the seed catalog shape, upserted by slug.",
+        "properties": {
+          "items": {
+            "description": "Seed `Institution` entries, optionally with `logo_url`, `cover_url` (https; mirrored into our storage).",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 25,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "InstitutionPushIn",
         "type": "object"
       },
       "IntakeDraftIO": {
@@ -54202,6 +54279,77 @@
           "auth"
         ],
         "title": "PushKeys",
+        "type": "object"
+      },
+      "PushResultListOut": {
+        "description": "One result per pushed item, in order.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PushResultOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PushResultListOut",
+        "type": "object"
+      },
+      "PushResultOut": {
+        "description": "What happened to one item of the batch.",
+        "properties": {
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The invalid field when `invalid`.",
+            "title": "Field"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "key": {
+            "description": "ISO code or institution slug.",
+            "title": "Key",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "created",
+              "updated",
+              "unchanged",
+              "skipped",
+              "invalid"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "warnings": {
+            "description": "Fields saved without their value, e.g. a logo not fetched.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "index",
+          "key",
+          "status",
+          "field",
+          "warnings"
+        ],
+        "title": "PushResultOut",
         "type": "object"
       },
       "PushSubscriptionBody": {
@@ -110960,6 +111108,90 @@
           }
         },
         "summary": "Review Catalog Proposal",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/catalog/push/countries": {
+      "post": {
+        "description": "Upsert country facts by ISO code as drafts; verified ones are skipped.",
+        "operationId": "admission_catalog_push_countries",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CountryPushIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushResultListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Push Catalog Countries",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/catalog/push/institutions": {
+      "post": {
+        "description": "Upsert institutions in the seed shape by slug.",
+        "operationId": "admission_catalog_push_institutions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstitutionPushIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushResultListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Push Catalog Institutions",
         "tags": [
           "admission"
         ]
