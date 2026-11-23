@@ -174,7 +174,7 @@ services:
 
   # S3-compatible object store (MinIO images are no longer distributed).
   s3:
-    image: rustfs/rustfs:1.0.4
+    image: rustfs/rustfs:1.0.6
     restart: unless-stopped
     logging: *logging
     environment:
