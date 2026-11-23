@@ -33,7 +33,7 @@ FROM python:3.13.18-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf
 # Debian security fixes newer than the pinned base image come in with the upgrade.
 # python-magic needs libmagic at import time; ffmpeg cuts the audio out of bot videos.
 # Bump this date to re-run the upgrade when the gha layer cache holds an outdated one.
-ARG APT_REFRESH=2026-11-11
+ARG APT_REFRESH=2026-11-23
 RUN apt-get update \
     && apt-get upgrade -y --no-install-recommends \
     && apt-get install -y --no-install-recommends libmagic1 ffmpeg \
