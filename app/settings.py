@@ -1211,6 +1211,11 @@ class LimitsSettings(BaseModel):
     0 switches the smart tier off for students; -1 means no cap. A soft default: admins
     can change it at runtime and per user. Staff are not limited."""
 
+    ai_lms_tutor_per_day_student: int = Field(default=30, ge=-1)
+    """Questions a student may ask the lesson tutor per day (Tashkent date), all
+    steps together. 0 turns the tutor off for students; -1 means no cap. Staff are
+    not limited."""
+
     ai_max_tool_steps: int = 8
     """Most model requests (tool rounds) in one assistant turn."""
 

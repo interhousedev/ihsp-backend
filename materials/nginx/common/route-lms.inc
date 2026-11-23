@@ -7,4 +7,15 @@ location ^~ /v1/lms/h5p/ {
     proxy_pass $up_api;
 }
 
+# Author-uploaded HTML widgets (GET /v1/lms/html-widgets/<signed token>/<path>): same scheme as
+# H5P. The api sets the sandbox CSP on every response; the cookies of the LMS host never reach
+# the api from here and no cookie comes back.
+location ^~ /v1/lms/html-widgets/ {
+    include /etc/nginx/ihsp/proxy.inc;
+    proxy_set_header Cookie "";
+    proxy_set_header Authorization "";
+    proxy_hide_header Set-Cookie;
+    proxy_pass $up_api;
+}
+
 include /etc/nginx/ihsp/route-static.inc;
