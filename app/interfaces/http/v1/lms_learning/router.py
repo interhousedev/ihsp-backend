@@ -1,6 +1,12 @@
 """Routes of the LMS learning side (catalog, enrollment, attempts, review)."""
 
 from app.interfaces.http.v1.lms_learning.handlers.enroll import enroll
+from app.interfaces.http.v1.lms_learning.handlers.exam import (
+    get_exam_session,
+    save_exam_answers,
+    start_exam_module,
+    submit_exam_module,
+)
 from app.interfaces.http.v1.lms_learning.handlers.get_attempt import get_attempt
 from app.interfaces.http.v1.lms_learning.handlers.get_course import get_course
 from app.interfaces.http.v1.lms_learning.handlers.get_course_landing import (
@@ -8,6 +14,7 @@ from app.interfaces.http.v1.lms_learning.handlers.get_course_landing import (
 )
 from app.interfaces.http.v1.lms_learning.handlers.get_step import get_step
 from app.interfaces.http.v1.lms_learning.handlers.get_video_stream import (
+    get_video_captions,
     get_video_stream,
 )
 from app.interfaces.http.v1.lms_learning.handlers.h5p import (
@@ -15,6 +22,10 @@ from app.interfaces.http.v1.lms_learning.handlers.h5p import (
     get_h5p_file,
     get_h5p_launch,
     record_h5p_result,
+)
+from app.interfaces.http.v1.lms_learning.handlers.html_widget import (
+    get_html_widget_file,
+    get_html_widget_launch,
 )
 from app.interfaces.http.v1.lms_learning.handlers.join import join
 from app.interfaces.http.v1.lms_learning.handlers.list_courses import list_courses
@@ -36,6 +47,10 @@ from app.interfaces.http.v1.lms_learning.handlers.review_card import review_card
 from app.interfaces.http.v1.lms_learning.handlers.save_answers import save_answers
 from app.interfaces.http.v1.lms_learning.handlers.start_attempt import start_attempt
 from app.interfaces.http.v1.lms_learning.handlers.submit_attempt import submit_attempt
+from app.interfaces.http.v1.lms_learning.handlers.widget_result import (
+    get_hidden_tests,
+    record_widget_result,
+)
 
 from fastapi import APIRouter
 
@@ -61,6 +76,11 @@ router.add_api_route(
     get_video_stream,
     methods=["GET"],
 )
+router.add_api_route(
+    "/courses/{course_id}/steps/{step_id}/blocks/{block_id}/captions",
+    get_video_captions,
+    methods=["GET"],
+)
 router.add_api_route("/steps/{step_id}/viewed", mark_viewed, methods=["POST"])
 router.add_api_route(
     "/steps/{step_id}/blocks/{block_id}/attempts", start_attempt, methods=["POST"]
@@ -82,8 +102,41 @@ router.add_api_route(
     methods=["GET"],
 )
 router.add_api_route(
+    "/courses/{course_id}/steps/{step_id}/blocks/{block_id}/html-widget",
+    get_html_widget_launch,
+    methods=["GET"],
+)
+router.add_api_route(
     "/steps/{step_id}/blocks/{block_id}/h5p-result",
     record_h5p_result,
+    methods=["POST"],
+)
+router.add_api_route(
+    "/courses/{course_id}/steps/{step_id}/blocks/{block_id}/result",
+    record_widget_result,
+    methods=["POST"],
+)
+router.add_api_route(
+    "/courses/{course_id}/steps/{step_id}/blocks/{block_id}/hidden-tests",
+    get_hidden_tests,
+    methods=["POST"],
+)
+router.add_api_route(
+    "/steps/{step_id}/blocks/{block_id}/exam", get_exam_session, methods=["GET"]
+)
+router.add_api_route(
+    "/steps/{step_id}/blocks/{block_id}/exam/start",
+    start_exam_module,
+    methods=["POST"],
+)
+router.add_api_route(
+    "/steps/{step_id}/blocks/{block_id}/exam/answers",
+    save_exam_answers,
+    methods=["PUT"],
+)
+router.add_api_route(
+    "/steps/{step_id}/blocks/{block_id}/exam/submit",
+    submit_exam_module,
     methods=["POST"],
 )
 router.add_api_route(
@@ -94,6 +147,12 @@ router.add_api_route(
 router.add_api_route(
     "/h5p/{token}/{path:path}",
     get_h5p_file,
+    methods=["GET"],
+    include_in_schema=False,
+)
+router.add_api_route(
+    "/html-widgets/{token}/{path:path}",
+    get_html_widget_file,
     methods=["GET"],
     include_in_schema=False,
 )

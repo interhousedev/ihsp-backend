@@ -399,3 +399,21 @@ async def test_patch_preferences_stores_and_validates_bottom_nav(api: Api) -> No
     assert ok.status_code == 200 and ok.json()["bottom_nav"] == ["today", "grades"]
     assert bad.status_code == 422
     assert after.json()["preferences"]["bottom_nav"] == ["today", "grades"]
+
+
+async def test_patch_preferences_round_trips_lms_skin(api: Api) -> None:
+    """The LMS skin: unset until chosen, then stored; only the two known skins."""
+    user = await api.world.add_user()
+    api.login_as(user)
+
+    before = await api.client.get(ME)
+    ok = await api.client.patch(f"{ME}/preferences", json={"lms_skin": "playful"})
+    bad = await api.client.patch(f"{ME}/preferences", json={"lms_skin": "neon"})
+    after = await api.client.get(ME)
+    cleared = await api.client.patch(f"{ME}/preferences", json={"lms_skin": None})
+
+    assert before.json()["preferences"]["lms_skin"] is None
+    assert ok.status_code == 200 and ok.json()["lms_skin"] == "playful"
+    assert bad.status_code == 422
+    assert after.json()["preferences"]["lms_skin"] == "playful"
+    assert cleared.status_code == 200 and cleared.json()["lms_skin"] is None

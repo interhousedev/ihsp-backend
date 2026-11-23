@@ -87,6 +87,21 @@ async def test_mark_values_and_drop_alerts_are_toggles(harness: Harness) -> None
     assert "⬜ bot-set-drops" in harness.last_labels()
 
 
+async def test_lms_nudges_are_off_by_default_and_toggle_on(harness: Harness) -> None:
+    """LMS nudges are opt-in: all three start off; a press turns one on."""
+    await harness.press("st:open:marks")
+    labels = harness.last_labels()
+    for key in ("review", "streak", "deadline"):
+        assert f"⬜ bot-set-lms-nudge-{key}" in labels
+
+    await harness.press("st:nudge:streak")
+
+    assert harness.world.identity_commands.patches == [
+        {"lms_nudges": ["lms_streak_at_risk"]}
+    ]
+    assert "✅ bot-set-lms-nudge-streak" in harness.last_labels()
+
+
 async def test_thresholds_are_chosen_from_presets(harness: Harness) -> None:
     """BOT-12, BOT-13: off or one of the presets."""
     await harness.press("st:gpa_below:4.0")

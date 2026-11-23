@@ -10,5 +10,10 @@
   "cert-download-failed": "The certificate file could not be downloaded.",
   "cert-url-unsafe": "The certificate link is not allowed.",
   "cert-custom-field-required": "The field \"{field}\" is required.",
-  "cert-custom-field-invalid": "The value of the field \"{field}\" is not valid."
+  "cert-custom-field-invalid": "The value of the field \"{field}\" is not valid.",
+  "course-cert-forbidden": "Only the course editors can manage its certificates.",
+  "course-cert-not-found": "The certificate was not found.",
+  "course-cert-invalid": "The value of \"{field}\" is not valid.",
+  "course-cert-upload-rejected": "Upload a PNG, JPEG or PDF file up to 10 MB.",
+  "course-cert-not-eligible": "The certificate is not available."
 }

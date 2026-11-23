@@ -19,5 +19,10 @@
   "lms-learn-video-not-found": "This block has no uploaded video.",
   "lms-media-not-available": "This media link is not available.",
   "lms-learn-h5p-not-found": "This block has no H5P package.",
-  "lms-learn-interaction-not-found": "This video has no such question."
+  "lms-learn-html-widget-not-found": "This block has no HTML widget.",
+  "lms-learn-interaction-not-found": "This video has no such question.",
+  "lms-learn-exam-not-found": "This step has no such exam.",
+  "lms-learn-exam-module-closed": "This exam module is closed: it was submitted or its time is over.",
+  "lms-tutor-disabled": "The lesson tutor is turned off for this course.",
+  "lms-tutor-daily-limit": "You have asked the tutor as many questions as allowed today. Try again tomorrow."
 }

@@ -95,3 +95,16 @@ async def test_the_route_needs_a_token(http_client: HttpClientFactory) -> None:
     client = await http_client(ROUTERS)
 
     assert (await client.get("/v1/app-map")).status_code == 401
+
+
+def test_engagement_pages_point_at_the_real_lms_routes() -> None:
+    """Daily review, XP and streak, and the staff engagement tab exist in LMS."""
+    by_id = {d.id: d for d in APP_MAP}
+    assert by_id["lms-review"].path == "/review/"
+    assert by_id["lms-progress"].path == "/my/"
+    assert by_id["lms-engagement-settings"].path == "/edit/settings/"
+    assert ids("daily review", "en", STUDENT)[0] == "lms-review"
+    assert ids("streak", "en", STUDENT)[0] == "lms-progress"
+    assert ids("серия", "ru", STUDENT)[0] == "lms-progress"
+    assert "lms-engagement-settings" not in ids("engagement", "en", STUDENT)
+    assert ids("engagement threshold", "en", TEACHER)[0] == "lms-engagement-settings"

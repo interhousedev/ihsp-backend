@@ -7,7 +7,11 @@ from app.interfaces.mcp.call_log import LogSpec
 from app.interfaces.mcp.guard import current_actor
 from app.interfaces.mcp.lms.course_scope import ensure_step
 from app.interfaces.mcp.toolkit import ToolKit
-from app.shared.contracts.lms_blocks import BlockInput, BlockInputError, build_block
+from app.shared.contracts.lms_blocks import (
+    AuthorBlockInput,
+    BlockInputError,
+    build_block,
+)
 from app.shared.lms_scopes import MODULES_WRITE
 
 from mcp.server.fastmcp.exceptions import ToolError
@@ -29,7 +33,7 @@ def register(kit: ToolKit) -> None:
             Field(default=None, min_length=1, max_length=200, description="New title."),
         ] = None,
         blocks: Annotated[
-            list[BlockInput] | None,
+            list[AuthorBlockInput] | None,
             Field(
                 default=None,
                 max_length=40,

@@ -10,5 +10,10 @@
   "cert-download-failed": "Sertifikat faylini yuklab boʻlmadi.",
   "cert-url-unsafe": "Sertifikat havolasiga ruxsat berilmagan.",
   "cert-custom-field-required": "«{field}» maydoni majburiy.",
-  "cert-custom-field-invalid": "«{field}» maydonining qiymati yaroqsiz."
+  "cert-custom-field-invalid": "«{field}» maydonining qiymati yaroqsiz.",
+  "course-cert-forbidden": "Kurs sertifikatlarini faqat uning muharrirlari boshqaradi.",
+  "course-cert-not-found": "Sertifikat topilmadi.",
+  "course-cert-invalid": "«{field}» qiymati yaroqsiz.",
+  "course-cert-upload-rejected": "10 MB gacha boʻlgan PNG, JPEG yoki PDF fayl yuklang.",
+  "course-cert-not-eligible": "Sertifikat mavjud emas."
 }

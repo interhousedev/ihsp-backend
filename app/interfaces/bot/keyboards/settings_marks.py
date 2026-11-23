@@ -1,12 +1,18 @@
 """Mark notification settings: types, values, drops and links to subjects and limits."""
 
 from app.interfaces.bot.keyboards.settings_main import open_cb
-from app.interfaces.bot.settings_patch import MARK_TYPES, MARK_VALUES
+from app.interfaces.bot.settings_patch import LMS_NUDGES, MARK_TYPES, MARK_VALUES
 from app.interfaces.bot.utilities.formatting import MARK_TYPE_KEYS
 from app.interfaces.bot.utilities.markup import Rows, cb_button, toggle_text
 from app.shared.contracts.callbacks import SettingsCb
 from app.shared.contracts.identity import UserPreferences
 from app.shared.i18n.core import I18nContext
+
+NUDGE_LABELS = {
+    "review": "bot-set-lms-nudge-review",
+    "streak": "bot-set-lms-nudge-streak",
+    "deadline": "bot-set-lms-nudge-deadline",
+}
 
 
 def _flag(value: bool) -> str:
@@ -40,6 +46,15 @@ def get(i18n: I18nContext, prefs: UserPreferences) -> Rows:
         [cb_button(i18n("bot-btn-subjects"), open_cb("subjects"))],
         [cb_button(toggle_text(i18n("bot-set-drops"), prefs.alerts_drops), drops)],
         [cb_button(i18n("bot-btn-thresholds"), open_cb("thresholds"))],
+        *(
+            [
+                cb_button(
+                    toggle_text(i18n(NUDGE_LABELS[code]), kind in prefs.lms_nudges),
+                    SettingsCb(key="nudge", value=code),
+                )
+            ]
+            for code, kind in LMS_NUDGES.items()
+        ),
         [cb_button(i18n("bot-btn-back"), open_cb("main"))],
     ]
     return rows

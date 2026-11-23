@@ -13,6 +13,12 @@ LEAD_MINUTES = (5, 10, 15)
 RATING_PRESETS = ("3.5", "4.0", "4.5")
 MARK_PRESETS = ("3", "4", "5")
 OFF = "off"
+# Short callback value -> opt-in LMS nudge type (callback data stays small).
+LMS_NUDGES = {
+    "review": "lms_review_due",
+    "streak": "lms_streak_at_risk",
+    "deadline": "lms_deadline_soon",
+}
 
 # Which settings screen a key belongs to (it is shown again after the change).
 SCREEN_OF_KEY = {
@@ -26,6 +32,7 @@ SCREEN_OF_KEY = {
     "mark_below": "thresholds",
     "lead": "lessons",
     "prompt": "lessons",
+    "nudge": "marks",
 }
 
 Patch = dict[str, Any]
@@ -86,6 +93,14 @@ def _prompt(prefs: UserPreferences, value: str) -> Patch:
     return {"lessons_prompt_enabled": value == "1"}
 
 
+def _nudge(prefs: UserPreferences, value: str) -> Patch | None:
+    kind = LMS_NUDGES.get(value)
+    if kind is None:
+        return None
+    order = tuple(LMS_NUDGES.values())
+    return {"lms_nudges": _toggle(list(prefs.lms_nudges), kind, order)}
+
+
 _RULES: dict[str, Callable[[UserPreferences, str], Patch | None]] = {
     "lang": _lang,
     "marks_enabled": _marks_enabled,
@@ -97,6 +112,7 @@ _RULES: dict[str, Callable[[UserPreferences, str], Patch | None]] = {
     "mark_below": _mark_below,
     "lead": _lead,
     "prompt": _prompt,
+    "nudge": _nudge,
 }
 
 

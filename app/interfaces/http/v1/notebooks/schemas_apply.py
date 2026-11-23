@@ -196,13 +196,65 @@ class InteractiveVideoBlock(_Loose):
     interactions: list[dict[str, object]] = Field(default_factory=list)
 
 
+class ExamBlock(_Loose):
+    """An exam block (only shown, as the step already has it)."""
+
+    id: str = ""
+    type: Literal["exam"] = "exam"
+    title: str = ""
+    kind: Literal["sat", "ap", "custom"] = "custom"
+    directions: str = ""
+    reference_sheet: str = ""
+    calculator: Literal["none", "scientific", "graphing"] = "none"
+    sections: list[dict[str, object]] = Field(default_factory=list)
+    scaling: dict[str, int] | None = None
+
+
+class CodeBlock(_Loose):
+    """A runnable code block (only shown, as the step already has it)."""
+
+    id: str = ""
+    type: Literal["code"] = "code"
+    language: Literal["python", "javascript", "sql"] = "python"
+    instructions: str = ""
+    starter: str = ""
+    solution: str = ""
+    tests: list[dict[str, object]] = Field(default_factory=list)
+    time_limit_ms: int = 5000
+    graded: bool = False
+
+
+class HtmlBlock(_Loose):
+    """An HTML widget block (only shown, as the step already has it)."""
+
+    id: str = ""
+    type: Literal["html"] = "html"
+    title: str = ""
+    package_id: str = ""
+    entry: Literal["index.html"] = "index.html"
+    height_px: int = 600
+    allow_fullscreen: bool = False
+    graded: bool = False
+
+
+class AiReviewBlock(_Loose):
+    """An AI review block (only shown, as the step already has it)."""
+
+    id: str = ""
+    type: Literal["ai_review"] = "ai_review"
+
+
 Block = Annotated[
     TextBlock
     | VideoBlock
     | TestBlock
     | FlashcardsBlock
     | H5PBlock
-    | InteractiveVideoBlock,
+    | InteractiveVideoBlock
+    | ExamBlock
+    | CodeBlock
+    | HtmlBlock
+    | AiReviewBlock,
     Field(discriminator="type"),
 ]
 

@@ -269,5 +269,13 @@
   "notify-consult-cancelled-title": "Консультация отменена",
   "notify-consult-cancelled-body": "Консультация «{topic}» отменена.",
   "notify-consult-updated-title": "Консультация изменена",
-  "notify-consult-updated-body": "Консультация «{topic}» изменилась."
+  "notify-consult-updated-body": "Консультация «{topic}» изменилась.",
+  "notify-lms-review-due-title": "Пора повторить",
+  "notify-lms-review-due-body": "Вопросов на повторение: {count}. Несколько минут помогут закрепить материал.",
+  "notify-lms-streak-at-risk-title": "Серия под угрозой",
+  "notify-lms-streak-at-risk-body": "Ваша серия — {streak} дн. Пройдите сегодня хотя бы один шаг, чтобы её сохранить.",
+  "notify-lms-deadline-soon-title": "Задание класса скоро закончится",
+  "notify-lms-deadline-soon-body": "«{title}» заканчивается {date}.",
+  "notify-btn-open-review": "Начать повторение",
+  "notify-btn-open-lms": "Открыть мои курсы"
 }

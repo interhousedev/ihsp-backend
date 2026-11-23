@@ -269,5 +269,13 @@
   "notify-consult-cancelled-title": "Maslahat bekor qilindi",
   "notify-consult-cancelled-body": "«{topic}» maslahati bekor qilindi.",
   "notify-consult-updated-title": "Maslahat yangilandi",
-  "notify-consult-updated-body": "«{topic}» maslahati oʻzgardi."
+  "notify-consult-updated-body": "«{topic}» maslahati oʻzgardi.",
+  "notify-lms-review-due-title": "Takrorlash vaqti",
+  "notify-lms-review-due-body": "Takrorlash uchun savollar: {count}. Bir necha daqiqa oʻrganganlaringizni mustahkamlaydi.",
+  "notify-lms-streak-at-risk-title": "Seriyangiz xavf ostida",
+  "notify-lms-streak-at-risk-body": "Seriyangiz — {streak} kun. Uni saqlash uchun bugun kamida bitta qadamni bajaring.",
+  "notify-lms-deadline-soon-title": "Sinf topshirigʻi tez orada tugaydi",
+  "notify-lms-deadline-soon-body": "«{title}» {date} kuni tugaydi.",
+  "notify-btn-open-review": "Takrorlashni boshlash",
+  "notify-btn-open-lms": "Kurslarimni ochish"
 }

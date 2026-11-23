@@ -1,0 +1,6 @@
+{
+  "lms-badge-invalid": "Значок заполнен неверно: проверьте поле «{field}» ({reason}).",
+  "lms-badge-not-found": "Такого значка в курсе нет.",
+  "lms-badge-award-not-found": "Награда не найдена.",
+  "lms-badge-limit": "В курсе может быть не больше {limit} значков."
+}

@@ -1,0 +1,6 @@
+{
+  "lms-engage-review-item-not-found": "Takrorlash topshirigʼi topilmadi.",
+  "lms-engage-quest-not-found": "Kursda bunday sinf topshirigʼi yoʼq.",
+  "lms-engage-quest-dates-invalid": "Sinf topshirigʼi boshlanish sanasidan oldin tugamasligi va {max_days} kundan oshmasligi kerak.",
+  "lms-engage-section-locked": "Oldingi boʼlim {threshold}% oʼzlashtirilgach, bu boʼlim ochiladi."
+}

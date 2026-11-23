@@ -269,5 +269,13 @@
   "notify-consult-cancelled-title": "Consultation cancelled",
   "notify-consult-cancelled-body": "The consultation \"{topic}\" was cancelled.",
   "notify-consult-updated-title": "Consultation updated",
-  "notify-consult-updated-body": "The consultation \"{topic}\" changed."
+  "notify-consult-updated-body": "The consultation \"{topic}\" changed.",
+  "notify-lms-review-due-title": "Time to review",
+  "notify-lms-review-due-body": "Questions to review: {count}. A few minutes keep what you learned fresh.",
+  "notify-lms-streak-at-risk-title": "Your streak is at risk",
+  "notify-lms-streak-at-risk-body": "Your streak is {streak} days. Do one step today to keep it.",
+  "notify-lms-deadline-soon-title": "Class quest ends soon",
+  "notify-lms-deadline-soon-body": "\"{title}\" ends on {date}.",
+  "notify-btn-open-review": "Start review",
+  "notify-btn-open-lms": "Open my courses"
 }

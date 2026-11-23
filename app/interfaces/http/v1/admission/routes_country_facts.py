@@ -7,6 +7,9 @@ from app.interfaces.http.v1.admission.schemas_country_facts import (
     CountryFactsListOut,
     CountryFactsOut,
     CountryFactsPutIn,
+    CountryOverviewListOut,
+    CountryOverviewOut,
+    CountryProfileOut,
     CountrySummaryListOut,
     CountrySummaryOut,
 )
@@ -15,6 +18,28 @@ from app.modules.admission.domain.country_facts import opportunity_fields_of
 from fastapi import APIRouter, Query
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
+
+
+async def list_countries(
+    container: ContainerDep, ctx: AdmissionCtx
+) -> CountryOverviewListOut:
+    """Countries with facts or catalog institutions: region, scores, counts."""
+    lines = await container.admission.country_facts.overview()
+    return CountryOverviewListOut(items=[CountryOverviewOut.of(o) for o in lines])
+
+
+async def read_country_profile(
+    country: str,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    fields: Annotated[
+        list[str] | None,
+        Query(max_length=10, description="The student's study field names."),
+    ] = None,
+) -> CountryProfileOut:
+    """One country: its facts (null when none yet) and ranked catalog institutions."""
+    profile = await container.admission.country_facts.profile(country, fields or [])
+    return CountryProfileOut.of(profile)
 
 
 async def read_country_facts(
@@ -115,4 +140,19 @@ _R(
     methods=["GET"],
     response_model=CountryFactsOut,
     operation_id="admission_country_facts_read_one",
+)
+_R(
+    "/countries",
+    list_countries,
+    methods=["GET"],
+    response_model=CountryOverviewListOut,
+    operation_id="admission_countries_list",
+)
+_R(
+    "/countries/{country}",
+    read_country_profile,
+    methods=["GET"],
+    response_model=CountryProfileOut,
+    responses={404: {"description": "Not an offered ISO country code."}},
+    operation_id="admission_countries_read",
 )

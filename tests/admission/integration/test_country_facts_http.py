@@ -66,3 +66,61 @@ async def test_curator_edits_and_student_reads_marked_unverified(
 
         switch.set(await _user(container, "cf.admin2", Role.ADMIN))
         assert (await client.post(f"{STAFF}/FR/verify")).json()["verified"] is True
+
+
+async def test_new_fact_keys_and_student_country_routes(
+    make_container: ContainerFactory, overrides_cleaned: list[FastAPI]  # noqa: F811
+) -> None:
+    """Employers and salaries round-trip; the list and profile routes answer."""
+    _, client, _, _ = await _http(
+        make_container, overrides_cleaned, Role.ADMIN, "cf.routes"
+    )
+    src = ["https://example.org/stats"]
+    facts = {
+        **BODY["facts"],  # type: ignore[dict-item]
+        "employers": {
+            "values": {"fields": {"cs_it": [{"name": "Acme", "sector": "Software"}]}},
+            "sources": src,
+        },
+        "salaries": {
+            "values": {
+                "currency": "USD",
+                "year": 2025,
+                "overall_median_annual": 50000,
+                "by_field": {"cs_it": 80000},
+            },
+            "sources": src,
+        },
+    }
+    async with client:
+        put = await client.put(f"{STAFF}/DE", json={**BODY, "facts": facts})
+        assert put.status_code == 200, put.text
+        assert (
+            put.json()["facts"]["employers"]["values"]["fields"]["cs_it"][0]["name"]
+            == "Acme"
+        )
+        eur = {
+            **facts,
+            "salaries": {"values": {"currency": "EUR", "year": 2025}, "sources": src},
+        }
+        bad = await client.put(f"{STAFF}/DE", json={**BODY, "facts": eur})
+        assert bad.status_code == 422, bad.text
+
+        listing = await client.get("/v1/admission/countries")
+        assert listing.status_code == 200, listing.text
+        de = next(i for i in listing.json()["items"] if i["country"] == "DE")
+        assert de["region"] == "europe" and de["median_salary_usd"] == 50000
+        assert de["scores"]["safety"] == 4
+
+        got = await client.get(
+            "/v1/admission/countries/de", params={"fields": "Computer Science"}
+        )
+        assert got.status_code == 200, got.text
+        body = got.json()
+        assert body["highlight"] == ["cs_it"]
+        assert body["facts"]["facts"]["salaries"]["values"]["by_field"] == {
+            "cs_it": 80000
+        }
+        empty = await client.get("/v1/admission/countries/JP")
+        assert empty.status_code == 200 and empty.json()["facts"] is None
+        assert (await client.get("/v1/admission/countries/ZZ")).status_code == 404

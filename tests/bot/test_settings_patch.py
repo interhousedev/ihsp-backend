@@ -28,6 +28,9 @@ import pytest
         ("lead", "10", {"lessons_links_lead_min": 10}),
         ("lead", "7", None),
         ("prompt", "0", {"lessons_prompt_enabled": False}),
+        ("nudge", "review", {"lms_nudges": ["lms_review_due"]}),
+        ("nudge", "deadline", {"lms_nudges": ["lms_deadline_soon"]}),
+        ("nudge", "other", None),
         ("unknown", "1", None),
     ],
 )

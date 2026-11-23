@@ -8,7 +8,7 @@ from app.interfaces.mcp.guard import current_actor
 from app.interfaces.mcp.lms.block_args import block_dict
 from app.interfaces.mcp.lms.course_scope import ensure_course
 from app.interfaces.mcp.toolkit import ToolKit
-from app.shared.contracts.lms_blocks import BlockInput
+from app.shared.contracts.lms_blocks import AuthorBlockInput
 from app.shared.lms_scopes import MODULES_WRITE
 
 from pydantic import BaseModel, Field
@@ -23,7 +23,7 @@ def register(kit: ToolKit) -> None:
         """One step to create."""
 
         title: str = Field(min_length=1, max_length=200)
-        blocks: list[BlockInput] | None = Field(
+        blocks: list[AuthorBlockInput] | None = Field(
             default=None, max_length=40, description="Blocks in reading order."
         )
 
@@ -45,7 +45,9 @@ def register(kit: ToolKit) -> None:
 
         Appends to the draft; nothing is published. Example: sections=[{"title":
         "Week 1", "steps": [{"title": "Intro", "blocks": [{"type": "text",
-        "markdown": "Hello"}]}]}]. Check the result with get_course.
+        "markdown": "Hello"}]}]}]. A lesson video uploaded over HTTP (POST
+        /v1/files with purpose `lms_video`) goes in as {"type": "video_file",
+        "file_id": "..."}. Check the result with get_course.
         """
         actor = current_actor()
         await ensure_course(kit, actor, course_id)
