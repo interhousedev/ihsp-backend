@@ -794,6 +794,7 @@ def upgrade() -> None:
         unique=True,
         schema=S,
     )
+    # nosemgrep: avoid-sqlalchemy-text -- constant schema, bound parameters
     insert = sa.text(
         f"INSERT INTO {S}.trajectories "
         "(id, slug, field, title, description, published, stages, edges) "
