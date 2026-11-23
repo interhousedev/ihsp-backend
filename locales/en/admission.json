@@ -46,6 +46,7 @@
   "admission-catalog-duplicate": "This school is already in the catalog or has a pending proposal.",
   "admission-catalog-in-use": "This entry is used in student data, so it cannot be deleted. Hide it instead.",
   "admission-catalog-proposal-limit": "You have reached the daily limit of {limit} catalog proposals. Try again tomorrow.",
+  "admission-catalog-push-limit": "You have reached the hourly limit of {limit} catalog push batches. Try again in an hour.",
   "admission-fork-last-target": "A supplemental essay needs at least one prompt. Keep this essay on its last prompt or change it instead.",
   "admission-essay-too-short": "The essay is too short to check. Write at least {min} words; it has {count} now.",
   "admission-essay-vault-unavailable": "Essays are locked for a moment because the key service is not answering. Your text is safe; try again in a few minutes.",

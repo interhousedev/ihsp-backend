@@ -385,6 +385,13 @@ class CatalogCycleError(ValidationFailedError):
     message_key = "admission-catalog-cycle"
 
 
+class CatalogPushLimitError(RateLimitedError):
+    """Too many catalog push batches this hour. Params: limit."""
+
+    code = "admission/catalog_push_limit"
+    message_key = "admission-catalog-push-limit"
+
+
 class InviteNotFoundError(NotFoundError):
     """The review link is unknown, expired or revoked (one answer for all)."""
 

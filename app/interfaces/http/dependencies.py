@@ -58,11 +58,15 @@ _CATALOG_ALLOWLIST: tuple[tuple[frozenset[str], re.Pattern[str]], ...] = tuple(
         (("POST",), r"/v1/admission/opportunities/submissions"),
     )
 )
+# The only routes an admission:catalog-write token may call.
+_CATALOG_PUSH = re.compile(rf"{_STAFF_CATALOG}/push/(countries|institutions)")
 
 
 def _personal_token_scope(request: Request) -> PersonalTokenScope | None:
     """Scope a personal token needs for this request; None when none fits."""
     path = request.url.path
+    if request.method == "POST" and _CATALOG_PUSH.fullmatch(path):
+        return PersonalTokenScope.ADMISSION_CATALOG_WRITE
     for methods, pattern in _CATALOG_ALLOWLIST:
         if request.method in methods and pattern.fullmatch(path):
             return PersonalTokenScope.ADMISSION_CATALOG

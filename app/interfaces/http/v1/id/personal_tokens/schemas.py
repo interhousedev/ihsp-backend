@@ -16,6 +16,7 @@ TokenScopeName = Literal[
     "admission:docs",
     "admission:documents",
     "admission:catalog",
+    "admission:catalog-write",
 ]
 
 
