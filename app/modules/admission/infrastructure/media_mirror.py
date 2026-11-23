@@ -15,10 +15,19 @@ import httpx
 from aiobotocore.config import AioConfig
 from aiobotocore.session import get_session
 
-USER_AGENT = "IHT-Admission-MediaMirror/1.0"
+USER_AGENT = (
+    "IHT-Admission-MediaMirror/1.1"
+    " (+https://github.com/interhousedev/ihsp-backend; admission.ihsu.uz)"
+)
+"""Wikimedia rejects or throttles clients without a descriptive agent and contact."""
 MAX_BYTES = 5 * 1024 * 1024
 TIMEOUT_SECONDS = 10.0
 MAX_REDIRECTS = 3
+RETRIES = 4
+"""Extra attempts after HTTP 429 or 503."""
+MAX_RETRY_WAIT = 30.0
+WIKIMEDIA_HOST = "upload.wikimedia.org"
+THUMB_WIDTH = 500
 PREFIX = "admission/org-media/"
 EXTENSIONS = {
     "image/png": "png",
@@ -30,6 +39,38 @@ EXTENSIONS = {
 
 Put = Callable[[str, bytes, str], Awaitable[None]]
 Resolve = Callable[[str], Awaitable[list[str]]]
+Sleep = Callable[[float], Awaitable[None]]
+
+
+class _Throttled(Exception):
+    def __init__(self, wait: float) -> None:
+        self.wait = wait
+
+
+def raster_source(url: str) -> str:
+    """Return the PNG thumbnail address of a Wikimedia SVG original, else `url`.
+
+    `upload.wikimedia.org/wikipedia/<wiki>/<a>/<ab>/<Name>.svg` becomes
+    `.../wikipedia/<wiki>/thumb/<a>/<ab>/<Name>.svg/500px-<Name>.svg.png`.
+    """
+    parts = urlsplit(url)
+    segments = parts.path.split("/")
+    if (
+        parts.hostname != WIKIMEDIA_HOST
+        or len(segments) != 6
+        or segments[1] != "wikipedia"
+        or not segments[5].lower().endswith(".svg")
+    ):
+        return url
+    _, _, wiki, a, ab, name = segments
+    path = f"/wikipedia/{wiki}/thumb/{a}/{ab}/{name}/{THUMB_WIDTH}px-{name}.png"
+    return f"https://{WIKIMEDIA_HOST}{path}"
+
+
+def _retry_wait(response: httpx.Response, attempt: int) -> float:
+    value = response.headers.get("retry-after", "")
+    wait = float(value) if value.isdigit() else 2.0 ** (attempt + 1)
+    return min(wait, MAX_RETRY_WAIT)
 
 
 def sniff_type(data: bytes) -> str | None:
@@ -106,6 +147,7 @@ class HttpS3MediaMirror:
         *,
         transport: httpx.AsyncBaseTransport | None = None,
         resolve: Resolve = resolve_host,
+        sleep: Sleep = asyncio.sleep,
     ) -> None:
         """`public_base` is `<public endpoint>/<bucket>`, without a trailing slash."""
         self._put = put
@@ -113,12 +155,13 @@ class HttpS3MediaMirror:
         self.own_prefix = f"{self._base}/{PREFIX}"
         self._transport = transport
         self._resolve = resolve
+        self._sleep = sleep
 
     async def mirror(self, url: str) -> str:
         """Return the storage URL for `url`; own URLs are kept."""
         if url.startswith(self.own_prefix):
             return url
-        data = await self._download(url)
+        data = await self._download(raster_source(url), url)
         content_type = sniff_type(data)
         if content_type is None:
             raise MediaUnreachableError(params={"url": url})
@@ -129,24 +172,37 @@ class HttpS3MediaMirror:
             raise MediaUnreachableError(params={"url": url}) from exc
         return f"{self._base}/{key}"
 
-    async def _download(self, url: str) -> bytes:
+    async def _download(self, source: str, url: str) -> bytes:
+        """Fetch `source`, waiting and retrying when the host throttles."""
         try:
             async with httpx.AsyncClient(
                 timeout=httpx.Timeout(TIMEOUT_SECONDS),
                 headers={"User-Agent": USER_AGENT, "Accept": "image/*"},
                 transport=self._transport,
             ) as client:
-                current = url
-                for _ in range(MAX_REDIRECTS + 1):
-                    await self._check_host(current)
-                    async with client.stream("GET", current) as response:
-                        if response.is_redirect:
-                            current = urljoin(current, response.headers["location"])
-                            continue
-                        return await self._read(response)
+                for attempt in range(RETRIES + 1):
+                    try:
+                        return await self._fetch(client, source, attempt)
+                    except _Throttled as throttled:
+                        if attempt == RETRIES:
+                            break
+                        await self._sleep(throttled.wait)
         except (httpx.HTTPError, OSError, KeyError, ValueError) as exc:
             raise MediaUnreachableError(params={"url": url}) from exc
         raise MediaUnreachableError(params={"url": url})
+
+    async def _fetch(self, client: httpx.AsyncClient, url: str, attempt: int) -> bytes:
+        current = url
+        for _ in range(MAX_REDIRECTS + 1):
+            await self._check_host(current)
+            async with client.stream("GET", current) as response:
+                if response.is_redirect:
+                    current = urljoin(current, response.headers["location"])
+                    continue
+                if response.status_code in (429, 503):
+                    raise _Throttled(_retry_wait(response, attempt))
+                return await self._read(response)
+        raise ValueError("too many redirects")
 
     async def _check_host(self, url: str) -> None:
         parts = urlsplit(url)

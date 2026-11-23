@@ -5,6 +5,7 @@ from typing import Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.media import served_media
 from app.interfaces.http.v1.admission.routes_chooser import (
     CYCLE_RE,
     AidProfileOut,
@@ -39,7 +40,7 @@ class BudgetInstitutionOut(BaseModel):
         return cls(
             id=i.id,
             name=i.name,
-            logo_url=i.logo_url,
+            logo_url=served_media(i.logo_url),
             logo_fit=resolve_logo_fit(i.logo_fit, i.logo_aspect),
             logo_zoom=i.logo_zoom,
         )
