@@ -57,6 +57,7 @@ class Course:
     navigation: list[dict[str, Any]] = field(default_factory=list)
     publish_state: str = "draft"
     link_report: dict[str, Any] | None = None
+    tutor_enabled: bool = True
 
 
 @dataclass(slots=True)

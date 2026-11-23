@@ -52,11 +52,32 @@ class H5PNotFoundError(NotFoundError):
     message_key = "lms-learn-h5p-not-found"
 
 
+class HtmlWidgetNotFoundError(NotFoundError):
+    """The live step has no HTML block with an uploaded widget and this ID."""
+
+    code = "lms/html-widget-not-found"
+    message_key = "lms-learn-html-widget-not-found"
+
+
 class InteractionNotFoundError(NotFoundError):
     """The interactive video block has no question with this ID."""
 
     code = "lms/interaction-not-found"
     message_key = "lms-learn-interaction-not-found"
+
+
+class ExamNotFoundError(NotFoundError):
+    """The live step has no exam block with this ID."""
+
+    code = "lms/exam-not-found"
+    message_key = "lms-learn-exam-not-found"
+
+
+class ExamModuleClosedError(ConflictError):
+    """No exam module is open: it was submitted or its time is over."""
+
+    code = "lms/exam-module-closed"
+    message_key = "lms-learn-exam-module-closed"
 
 
 class CardNotFoundError(NotFoundError):

@@ -26,6 +26,8 @@ from app.shared.contracts.identity import IdentityDirectory
 
 # Returns the group of an active student, or None.
 StudentGroupLookup = Callable[[UUID], Awaitable[UUID | None]]
+# Raises when a step is locked for the viewer (actor, course_id, step_id).
+StepLock = Callable[[Actor | None, UUID, UUID], Awaitable[None]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +64,8 @@ class AudienceGate:
         """Store collaborators; without a lookup, group rules match nobody."""
         self.identity = identity
         self.student_group = student_group
+        # Mastery unlock check (engagement); set by the wiring.
+        self.step_lock: StepLock | None = None
 
     async def actor_for(self, user_id: UUID) -> Actor:
         """Return an actor with the user's current roles (for user-id callers)."""
@@ -146,6 +150,8 @@ class AudienceGate:
         _raise(
             access.step(step_id), StepNotFoundError(params={"step_id": str(step_id)})
         )
+        if self.step_lock is not None:
+            await self.step_lock(actor, course_id, step_id)
 
     async def contact(
         self, uow: LearningUnitOfWork, course_id: UUID, *, signed_in: bool

@@ -163,6 +163,7 @@ def _to_entity(row: CourseRow) -> Course:
         navigation=list(row.navigation or []),
         publish_state=row.publish_state,
         link_report=row.link_report,
+        tutor_enabled=row.tutor_enabled,
     )
 
 
@@ -207,3 +208,4 @@ def _apply(row: CourseRow, course: Course) -> None:
     # Derived, so it can never disagree with `status` and `live_version_id`.
     row.publish_state = derive_publish_state(course)
     row.link_report = course.link_report
+    row.tutor_enabled = course.tutor_enabled

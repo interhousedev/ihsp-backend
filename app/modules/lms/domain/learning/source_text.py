@@ -20,7 +20,11 @@ from uuid import UUID
 
 from app.modules.lms.domain.authoring.content_edit import FILE_REFERENCE
 from app.modules.lms.domain.step_content import (
+    AiReviewBlock,
+    CodeBlock,
+    ExamBlock,
     FlashcardsBlock,
+    HtmlBlock,
     Question,
     StepContent,
     TestBlock,
@@ -89,7 +93,58 @@ def _piece(block: object, with_answers: bool) -> str:
         return _cards_text(block)
     if isinstance(block, TestBlock):
         return _test_text(block, with_answers)
+    if isinstance(block, ExamBlock):
+        return _exam_text(block, with_answers)
+    if isinstance(block, CodeBlock):
+        return _code_text(block, with_answers)
+    if isinstance(block, HtmlBlock):
+        return f"Interactive widget: {_one_line(block.title)}" if block.title else ""
+    if isinstance(block, AiReviewBlock):  # never the teacher prompt or private topics
+        title = f"AI review: {_one_line(block.title)}\n" if block.title else ""
+        return (title + block.instructions_public.strip()).strip()
     return ""
+
+
+def _exam_text(block: ExamBlock, with_answers: bool) -> str:
+    """Exam structure and directions; its questions only for the authors.
+
+    A student reads exam questions only inside a timed attempt.
+    """
+    lines = [f"Exam ({block.kind}): {_one_line(block.title)}".rstrip(": ")]
+    if block.directions.strip():
+        lines.append(block.directions.strip())
+    for section in block.sections:
+        lines.append(f"Section: {_one_line(section.title)}")
+        for module in section.modules:
+            minutes = module.time_limit_sec // 60
+            lines.append(
+                f"Module: {_one_line(module.title)}, {len(module.questions)}"
+                f" questions, {minutes} min"
+            )
+            if with_answers:
+                lines.extend(
+                    _question_text(n, question, with_answers)
+                    for n, question in enumerate(module.questions, start=1)
+                    if question.prompt.strip()
+                )
+    return BLOCK_SEPARATOR.join(lines)
+
+
+def _code_text(block: CodeBlock, with_answers: bool) -> str:
+    """Instructions, starter code and visible tests; the rest only for authors."""
+    parts = [f"Code exercise ({block.language})."]
+    if block.instructions.strip():
+        parts.append(block.instructions.strip())
+    if block.starter.strip():
+        parts.append(f"Starter code:\n{block.starter.strip()}")
+    for test in block.tests:
+        if test.hidden and not with_answers:
+            parts.append(f"Test {_one_line(test.name)}: hidden")
+        else:
+            parts.append(f"Test {_one_line(test.name)}:\n{test.code.strip()}")
+    if with_answers and block.solution.strip():
+        parts.append(f"Solution:\n{block.solution.strip()}")
+    return BLOCK_SEPARATOR.join(parts)
 
 
 def _one_line(text: str) -> str:

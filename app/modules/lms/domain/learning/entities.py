@@ -44,6 +44,7 @@ class LearningCourse:
     enrolment_starts_at: datetime | None = None
     enrolment_ends_at: datetime | None = None
     publish_state: str = "draft"
+    tutor_enabled: bool = True
 
     @property
     def is_open_for_students(self) -> bool:

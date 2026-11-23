@@ -140,3 +140,41 @@ class LibraryQueries(Protocol):
     ) -> list[ReadingListSummary]:
         """Published lists of the subject that the actor's groups can see."""
         ...
+
+
+@dataclass(frozen=True, slots=True)
+class LibraryBookCard:
+    """A published, hosted book as a list shows it (UniLibrary records excluded)."""
+
+    id: UUID
+    slug: str
+    title: str
+    author_label: str
+    cover_url: str | None
+    language: str
+    year_published: int | None
+    page_count: int | None
+
+
+@dataclass(frozen=True, slots=True)
+class LibraryBookPage:
+    """One page of books and whether more follow."""
+
+    items: list[LibraryBookCard]
+    has_more: bool
+
+
+class LibraryBookCatalogue(Protocol):
+    """Read-only catalogue of published books for other modules (admission)."""
+
+    async def search_books(
+        self, actor: Actor, query: str | None, *, limit: int, offset: int
+    ) -> LibraryBookPage:
+        """Published books the actor may see, by relevance or newest first."""
+        ...
+
+    async def books_by_ids(
+        self, actor: Actor, item_ids: Sequence[UUID]
+    ) -> list[LibraryBookCard]:
+        """The given books that are published and visible to the actor, in order."""
+        ...

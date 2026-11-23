@@ -3,6 +3,9 @@
 from app.modules.certificates.infrastructure.orm.certificate_entry import (
     CertificateEntryRow,
 )
+from app.modules.certificates.infrastructure.orm.course_certificate import (
+    IssuedCourseCertificateRow,
+)
 from app.shared.personal_data import (
     ParentLink,
     PersonalTable,
@@ -17,6 +20,9 @@ _ = ParentLink
 
 SPECS: tuple[PersonalTable, ...] = (
     PersonalTable(CertificateEntryRow, R, owner="student_id", note="school record"),
+    PersonalTable(
+        IssuedCourseCertificateRow, R, owner="user_id", note="issued certificate"
+    ),
 )
 
 

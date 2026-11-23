@@ -4,6 +4,9 @@ from typing import Any, Self
 from uuid import UUID
 
 from app.modules.admission.domain.calendar import TASHKENT
+from app.modules.admission.infrastructure.attached_books_repository import (
+    SqlAttachedBookRepository,
+)
 from app.modules.admission.infrastructure.career_repository import (
     SqlCareerRepository,
 )
@@ -137,6 +140,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     catalog_card: SqlCatalogCardRepository
     shortlist: SqlListRepository
     courses: SqlCourseRepository
+    attached_books: SqlAttachedBookRepository
     runtime_settings: SqlRuntimeSettingsRepository
     profiles: SqlProfileRepository
     reviews: SqlReviewRepository
@@ -230,6 +234,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.catalog_card = SqlCatalogCardRepository(self.session)
         self.shortlist = SqlListRepository(self.session)
         self.courses = SqlCourseRepository(self.session)
+        self.attached_books = SqlAttachedBookRepository(self.session)
         self.runtime_settings = SqlRuntimeSettingsRepository(self.session)
         self.profiles = SqlProfileRepository(self.session)
         self.reviews = SqlReviewRepository(self.session)

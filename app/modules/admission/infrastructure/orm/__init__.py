@@ -3,6 +3,7 @@
 from app.modules.admission.infrastructure.orm.access import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.app_review import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.applications import *  # noqa: F401,F403
+from app.modules.admission.infrastructure.orm.attached_books import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.calendar import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.career import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.catalog import *  # noqa: F401,F403
@@ -28,4 +29,5 @@ from app.modules.admission.infrastructure.orm.supp_prompts import *  # noqa: F40
 from app.modules.admission.infrastructure.orm.tasks import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.test_scores import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.today import *  # noqa: F401,F403
+from app.modules.admission.infrastructure.orm.trajectories import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.uni_chat import *  # noqa: F401,F403

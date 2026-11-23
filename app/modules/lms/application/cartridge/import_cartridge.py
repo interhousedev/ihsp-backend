@@ -156,7 +156,7 @@ class ImportCartridge:
         plan: ImportPlan,
     ) -> CourseStep:
         try:
-            prepared = await self.writer.prepare_new(content)
+            prepared = await self.writer.prepare_new(content, actor=actor)
         except ContentInvalidError:
             plan.report.note(content.title, "step", "content too large, left empty")
             prepared = await self.writer.prepare_new(

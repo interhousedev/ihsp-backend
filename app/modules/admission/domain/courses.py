@@ -56,3 +56,42 @@ def merge(live: Iterable[Course], stored: Iterable[Course]) -> list[Course]:
         by_key.values(),
         key=lambda c: (SOURCE_ORDER[c.source], -(c.year or 0), c.title.casefold()),
     )
+
+
+@dataclass(frozen=True, slots=True)
+class AttachedBook:
+    """A library book a staff member recommended to a student."""
+
+    student_id: UUID
+    item_id: UUID
+    attached_by: UUID
+    note: str | None = None
+    id: UUID | None = None
+    created_at: datetime | None = None
+
+
+CatalogKind = Literal["course", "book"]
+
+
+@dataclass(frozen=True, slots=True)
+class CatalogEntry:
+    """One item of the combined courses-and-books catalogue."""
+
+    kind: CatalogKind
+    id: str
+    title: str
+    summary: str
+    cover_url: str | None
+    url: str
+    enrolled: bool = False
+    language: str | None = None
+    year: int | None = None
+    pages: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class CatalogPage:
+    """A page of catalogue entries."""
+
+    items: list[CatalogEntry]
+    has_more: bool

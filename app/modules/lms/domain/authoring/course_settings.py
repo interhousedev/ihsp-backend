@@ -65,6 +65,7 @@ class CourseSettings:
     enrolment_starts_at: datetime | None
     enrolment_ends_at: datetime | None
     navigation: list[dict[str, Any]]
+    tutor_enabled: bool
 
 
 def derive_publish_state(course: Course) -> str:
@@ -168,6 +169,7 @@ def to_settings(course: Course) -> CourseSettings:
         enrolment_starts_at=course.enrolment_starts_at,
         enrolment_ends_at=course.enrolment_ends_at,
         navigation=list(course.navigation) or default_navigation(),
+        tutor_enabled=course.tutor_enabled,
     )
 
 

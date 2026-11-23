@@ -122,3 +122,5 @@ class Course(IdMixin, TimestampMixin, Base):
         String(16), server_default=text("'draft'")
     )
     link_report: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    # The "Ask about this lesson" tutor (lms_0006); teachers turn it off per course.
+    tutor_enabled: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))

@@ -8,11 +8,13 @@ from typing import Any
 
 from app.modules.ai.domain.prompts import SUMMARY_SYSTEM_PROMPT
 from app.modules.ai.infrastructure.fake_admission import build_admission_document
+from app.modules.ai.infrastructure.fake_ai_review import build_ai_review_document
 from app.modules.ai.infrastructure.fake_author import author_answer, is_author_chat
 from app.modules.ai.infrastructure.fake_career import build_career_document
 from app.modules.ai.infrastructure.fake_course import build_course_document
 from app.modules.ai.infrastructure.fake_essays import build_essay_document
 from app.modules.ai.infrastructure.fake_exercise import build_exercise_document
+from app.modules.ai.infrastructure.fake_lesson_ai import build_lesson_ai_document
 from app.modules.ai.infrastructure.fake_list_suggest import (
     build_list_brief_document,
     build_list_suggest_document,
@@ -120,6 +122,7 @@ class FakeLlmGateway:
                 schema_name, messages, system
             ) or build_exercise_document(schema_name, messages)
             built = built or build_teacher_document(schema_name, messages)
+            built = built or build_ai_review_document(schema_name, system, messages)
             built = built or build_admission_document(schema_name, system)
             built = built or build_essay_document(schema_name, messages)
             built = built or build_career_document(schema_name, messages)
@@ -130,6 +133,7 @@ class FakeLlmGateway:
             built = built or build_item_grade_document(schema_name)
             built = built or build_project_ideas_document(schema_name)
             built = built or build_voice_fill_document(schema_name, messages)
+            built = built or build_lesson_ai_document(schema_name, system, messages)
             if built is None and schema_name not in BUILDERS:
                 # Schemas of other modules (admission): a valid document by shape.
                 built = document_for(schema)

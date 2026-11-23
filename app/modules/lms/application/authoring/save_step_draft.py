@@ -53,7 +53,7 @@ class SaveStepDraft:
             access = await access_to(uow, actor, step.course_id)
             access.require(EDIT)
             access.require_scope(MODULES_WRITE)
-            prepared = await self.writer.prepare(uow, step, content)
+            prepared = await self.writer.prepare(uow, step, content, actor=actor)
             if prepared.content_hash == step.draft_hash:
                 return await self.presenter.step_draft(step)
             await uow.courses.touch_draft(step.course_id, by=actor.user_id, now=now)

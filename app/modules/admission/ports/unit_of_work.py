@@ -13,6 +13,7 @@ from app.modules.admission.ports.consultations import (
     ConsultationRepository,
     ProfileDetailsRepository,
 )
+from app.modules.admission.ports.courses import AttachedBookRepository
 from app.modules.admission.ports.documents import (
     ChecklistRepository,
     DeadlineRepository,
@@ -122,6 +123,11 @@ class AdmissionUnitOfWork(Protocol):
     @property
     def courses(self) -> CourseRepository:
         """Stored course rows."""
+        ...
+
+    @property
+    def attached_books(self) -> AttachedBookRepository:
+        """Library books staff attached to students."""
         ...
 
     @property

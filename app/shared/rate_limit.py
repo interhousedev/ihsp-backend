@@ -23,6 +23,10 @@ class RateLimiter:
             raise RateLimitedError(params={"retry_after": max(ttl, 1)})
         return count
 
+    async def count(self, key: str) -> int:
+        """Return the hits counted in the current window (0 when none)."""
+        return int(await self.redis.get(f"rl:{key}") or 0)
+
     async def check(self, key: str, *, limit: int) -> None:
         """Raise RateLimitedError when the counter already reached the limit.
 

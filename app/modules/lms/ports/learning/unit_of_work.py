@@ -4,6 +4,7 @@ from types import TracebackType
 from typing import Protocol, Self
 
 from app.modules.lms.ports.access_rule_repository import AccessRuleRepository
+from app.modules.lms.ports.badge_repository import BadgeRepository
 from app.modules.lms.ports.learning.attempt_repository import AttemptRepository
 from app.modules.lms.ports.learning.course_repository import CourseRepository
 from app.modules.lms.ports.learning.enrollment_repository import EnrollmentRepository
@@ -69,6 +70,11 @@ class LearningUnitOfWork(Protocol):
     @property
     def access(self) -> AccessRuleRepository:
         """Audience rules of courses and steps."""
+        ...
+
+    @property
+    def badges(self) -> BadgeRepository:
+        """Course badges and learner awards."""
         ...
 
     async def __aenter__(self) -> Self:

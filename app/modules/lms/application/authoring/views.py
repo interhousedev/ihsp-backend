@@ -109,6 +109,31 @@ class H5PLaunchView(BaseModel):
     expires_in: int
 
 
+class HtmlWidgetFileView(BaseModel):
+    """One file of an uploaded HTML widget."""
+
+    path: str
+    byte_size: int
+    content_type: str
+
+
+class HtmlWidgetPackageView(BaseModel):
+    """An uploaded HTML widget; the editor puts its id into an `html` block."""
+
+    package_id: str
+    files: list[HtmlWidgetFileView]
+    file_count: int
+    byte_size: int
+
+
+class HtmlWidgetLaunchView(BaseModel):
+    """Where the frame loads an HTML widget from (signed, short-lived)."""
+
+    base_url: str
+    entry_url: str
+    expires_in: int
+
+
 class VideoStreamView(BaseModel):
     """A short-lived URL that streams an uploaded video (supports ``Range``)."""
 

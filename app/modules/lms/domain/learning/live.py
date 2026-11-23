@@ -19,8 +19,12 @@ from app.modules.lms.domain.learning.points import (
     sum_points,
 )
 from app.modules.lms.domain.step_content import (
+    AiReviewBlock,
+    CodeBlock,
+    ExamBlock,
     FlashcardsBlock,
     H5PBlock,
+    HtmlBlock,
     InteractiveVideoBlock,
     StepContent,
     TestBlock,
@@ -127,11 +131,12 @@ class RenderedRevision:
     card_ids: Mapping[str, tuple[str, ...]]
     test_points: Mapping[str, Decimal]
     scored_points: Mapping[str, Decimal]
+    review_block_ids: tuple[str, ...] = ()
 
     @property
     def gradable_block_ids(self) -> tuple[str, ...]:
-        """Return the tests, H5P blocks and interactive videos of the step."""
-        return (*self.test_block_ids, *self.scored_points)
+        """Return the tests, H5P blocks, interactive videos and AI reviews."""
+        return (*self.test_block_ids, *self.scored_points, *self.review_block_ids)
 
     @property
     def points_total(self) -> Decimal:
@@ -162,8 +167,12 @@ def render_revision(revision_id: UUID, content: StepContent) -> RenderedRevision
         scored_points={
             block.id: scored_block_max_points(block)
             for block in content.blocks
-            if isinstance(block, H5PBlock | InteractiveVideoBlock)
+            if isinstance(block, H5PBlock | InteractiveVideoBlock | ExamBlock)
+            or (isinstance(block, CodeBlock | HtmlBlock) and block.graded)
         },
+        review_block_ids=tuple(
+            block.id for block in content.blocks if isinstance(block, AiReviewBlock)
+        ),
     )
 
 

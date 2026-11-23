@@ -49,6 +49,7 @@ UNLIMITABLE: frozenset[str] = frozenset(
         "ai_session_tokens_student",
         "ai_daily_tokens_student",
         "ai_smart_requests_per_week_student",
+        "ai_lms_tutor_per_day_student",
         "nb_session_tokens_student",
         "nb_daily_tokens_student",
         "nb_artifacts_per_day",

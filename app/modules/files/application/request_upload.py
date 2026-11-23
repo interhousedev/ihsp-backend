@@ -6,6 +6,7 @@ from uuid import UUID
 from app.modules.files.application.file_views import FileView, FileViewBuilder
 from app.modules.files.domain.errors import QuotaExceededError, TypeNotAllowedError
 from app.modules.files.domain.policy import (
+    CAPTION_PURPOSES,
     LIBRARY_PURPOSES,
     PRESIGN_PUT_SECONDS,
     VIDEO_PURPOSES,
@@ -38,10 +39,12 @@ UPLOAD_PURPOSES = (
             FilePurpose.LINK,
             FilePurpose.FEEDBACK,
             FilePurpose.ADMISSION_DOCUMENT,
+            FilePurpose.LMS_AI_REVIEW,
         }
     )
     | LIBRARY_PURPOSES
     | VIDEO_PURPOSES
+    | CAPTION_PURPOSES
 )
 
 

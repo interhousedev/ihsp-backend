@@ -8,6 +8,7 @@ from app.modules.notify.application.course_broadcast import CourseBroadcastServi
 from app.modules.notify.application.dispatch_due import DispatchDue
 from app.modules.notify.application.get_push_config import GetPushConfig
 from app.modules.notify.application.list_notifications import ListNotifications
+from app.modules.notify.application.lms_nudges import QueueLmsNudges
 from app.modules.notify.application.mark_all_read import MarkAllRead
 from app.modules.notify.application.mark_read import MarkRead
 from app.modules.notify.application.public_api import NotifyApiImpl
@@ -49,6 +50,7 @@ class NotifyServices:
     push_config: GetPushConfig
     course_broadcasts: CourseBroadcastService
     register_push_subscription: RegisterPushSubscription
+    lms_nudges: QueueLmsNudges
     remove_push_subscription: RemovePushSubscription
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
     """Things to close with the container (the Web Push HTTP session)."""
@@ -147,6 +149,9 @@ def build(
         remove_push_subscription=RemovePushSubscription(uow_factory=uow_factory),
         course_broadcasts=CourseBroadcastService(
             uow_factory=uow_factory, clock=deps.clock
+        ),
+        lms_nudges=QueueLmsNudges(
+            uow_factory=uow_factory, identity=identity, clock=deps.clock
         ),
         closers=closers,
     )

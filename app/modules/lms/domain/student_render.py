@@ -3,8 +3,12 @@
 from typing import Any
 
 from app.modules.lms.domain.step_content import (
+    AiReviewBlock,
+    CodeBlock,
+    ExamBlock,
     FlashcardsBlock,
     H5PBlock,
+    HtmlBlock,
     InteractiveVideoBlock,
     Question,
     StepContent,
@@ -27,6 +31,26 @@ def render_step(content: StepContent, *, revision_id: str) -> dict[str, Any]:
     return {"revision_id": revision_id, "title": content.title, "blocks": blocks}
 
 
+def render_ai_review(block: AiReviewBlock) -> dict[str, Any]:
+    """The public part of an AI review block.
+
+    The teacher prompt, reference files, private topics and criteria descriptions
+    never leave the server; students see the criteria names and top scores only.
+    """
+    return {
+        "id": block.id,
+        "type": "ai_review",
+        "title": block.title,
+        "instructions_public": block.instructions_public,
+        "output_template": block.output_template,
+        "criteria": [
+            {"name": c.name, "max_score": c.max_score} for c in block.criteria
+        ],
+        "max_submissions": block.max_submissions,
+        "accepted_types": list(block.accepted_types),
+    }
+
+
 def _render_block(
     block: (
         TextBlock
@@ -35,9 +59,17 @@ def _render_block(
         | FlashcardsBlock
         | H5PBlock
         | InteractiveVideoBlock
+        | ExamBlock
+        | CodeBlock
+        | HtmlBlock
+        | AiReviewBlock
     ),
 ) -> dict[str, Any]:
     """Render one block without correctness data."""
+    if isinstance(block, AiReviewBlock):
+        return render_ai_review(block)
+    if isinstance(block, ExamBlock | CodeBlock | HtmlBlock):
+        return _render_widget(block)
     if isinstance(block, H5PBlock):
         return {
             "id": block.id,
@@ -79,6 +111,7 @@ def _render_block(
             "url": block.url,
             "file_id": block.file_id,
             "caption": block.caption,
+            "captions": [track.model_dump() for track in block.captions],
         }
     if isinstance(block, TestBlock):
         config = block.config
@@ -101,6 +134,72 @@ def _render_block(
         "type": "flashcards",
         "cards_count": len(block.cards),
         "due": 0,
+    }
+
+
+def _render_widget(block: ExamBlock | CodeBlock | HtmlBlock) -> dict[str, Any]:
+    """Render an exam, code or HTML block without answers, solution, hidden tests."""
+    if isinstance(block, ExamBlock):
+        return _render_exam(block)
+    if isinstance(block, CodeBlock):
+        return {
+            "id": block.id,
+            "type": "code",
+            "language": block.language,
+            "instructions": block.instructions,
+            "starter": block.starter,
+            "tests": [
+                {
+                    "id": test.id,
+                    "name": test.name,
+                    "hidden": test.hidden,
+                    "code": "" if test.hidden else test.code,
+                }
+                for test in block.tests
+            ],
+            "time_limit_ms": block.time_limit_ms,
+            "graded": block.graded,
+        }
+    return {
+        "id": block.id,
+        "type": "html",
+        "title": block.title,
+        "package_id": block.package_id,
+        "entry": block.entry,
+        "height_px": block.height_px,
+        "allow_fullscreen": block.allow_fullscreen,
+        "graded": block.graded,
+    }
+
+
+def _render_exam(block: ExamBlock) -> dict[str, Any]:
+    """Render an exam: structure and timing only; questions come with an attempt."""
+    return {
+        "id": block.id,
+        "type": "exam",
+        "title": block.title,
+        "kind": block.kind,
+        "directions": block.directions,
+        "reference_sheet": block.reference_sheet,
+        "calculator": block.calculator,
+        "sections": [
+            {
+                "id": section.id,
+                "title": section.title,
+                "adaptive": section.adaptive,
+                "modules": [
+                    {
+                        "id": module.id,
+                        "title": module.title,
+                        "time_limit_sec": module.time_limit_sec,
+                        "questions_count": len(module.questions),
+                    }
+                    for module in section.modules
+                ],
+            }
+            for section in block.sections
+        ],
+        "scaling": block.scaling.model_dump() if block.scaling else None,
     }
 
 

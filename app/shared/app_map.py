@@ -851,7 +851,8 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "/my/",
         _ALL,
         ("Mening kurslarim", "Мои курсы", "My courses"),
-        "mening kurslarim мои курсы my courses progress progress прогресс",
+        "mening kurslarim мои курсы my courses progress progress прогресс "
+        "ai review ИИ-проверка проверка работы ish tekshiruvi",
     ),
     _d(
         "lms-notebooks",
@@ -870,6 +871,53 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "qoshilish вступить код join code kurs курс invite",
     ),
     _d(
+        "lms-badges",
+        "lms",
+        "/profile/",
+        _ALL,
+        ("Mening nishonlarim", "Мои значки", "My badges"),
+        "nishon nishonlar значок значки награды badge badges achievements "
+        "yutuqlar достижения",
+    ),
+    _d(
+        "lms-badge-designer",
+        "lms",
+        "/edit/badges/",
+        _LMSA | _TE,
+        ("Nishon konstruktori", "Конструктор значков", "Badge designer"),
+        "nishon nishonlar значок значки badge badges konstruktor конструктор "
+        "designer qoida правило rule",
+    ),
+    _d(
+        "lms-review",
+        "lms",
+        "/review/",
+        _ALL,
+        ("Kunlik takrorlash", "Ежедневное повторение", "Daily review"),
+        "takrorlash mashq повторение практика ошибки review practice mistakes "
+        "kartochka карточки flashcards daily kunlik ежедневное",
+    ),
+    _d(
+        "lms-progress",
+        "lms",
+        "/my/",
+        _ALL,
+        ("XP, seriya va topshiriqlar", "XP, серия и задания", "XP, streak and quests"),
+        "xp streak seriya серия daraja уровень level topshiriq topshiriqlar квест "
+        "квесты задания quest quests goal maqsad цель mastery oʻzlashtirish "
+        "освоение карта map",
+    ),
+    _d(
+        "lms-engagement-settings",
+        "lms",
+        "/edit/settings/",
+        _LMSA | _TE,
+        ("Faollik sozlamalari", "Настройки вовлечённости", "Engagement settings"),
+        "faollik вовлечённость engagement threshold chegara порог mastery "
+        "oʻzlashtirish освоение quest quests topshiriq квест задания sozlamalar "
+        "настройки settings unlock ochish открытие",
+    ),
+    _d(
         "lms-admin",
         "lms",
         "/admin/",
@@ -877,6 +925,33 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         ("Kurslarni boshqarish", "Управление курсами", "Course authoring"),
         "boshqarish управление авторинг author authoring create yaratish создать "
         "course курс h5p",
+    ),
+    _d(
+        "lms-certificates",
+        "lms",
+        "/edit/certificates/",
+        _LMSA,
+        (
+            "Sertifikat konstruktori",
+            "Конструктор сертификатов",
+            "Certificate designer",
+        ),
+        "sertifikat sertifikatlar сертификат сертификаты certificate certificates "
+        "konstruktor конструктор designer template shablon шаблон partner hamkor "
+        "партнёр",
+    ),
+    _d(
+        "lms-verify",
+        "lms",
+        "/verify/",
+        _ALL,
+        (
+            "Sertifikatni tekshirish",
+            "Проверка сертификата",
+            "Verify a certificate",
+        ),
+        "tekshirish sertifikat проверка проверить сертификат verify certificate "
+        "code kod код qr",
     ),
     # - - - Telegram bot commands (no URL) - - -
     _d(
@@ -947,7 +1022,8 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "/courses/",
         _ST,
         ("Kurslarim", "Мои курсы", "My courses"),
-        "kurslar kurs курсы курс courses course portfolio портфолио",
+        "kurslar kurs kitoblar kitob курсы курс книги книга courses course books "
+        "library portfolio портфолио",
     ),
     _d(
         "admission-review",
@@ -1010,6 +1086,15 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         ),
         "anketa savollar moslik анкета вопросы подбор предпочтения "
         "questionnaire preferences matching algorithm",
+    ),
+    _d(
+        "admission-countries",
+        "admission",
+        "/countries/",
+        _ST,
+        ("Mamlakatlar", "Страны", "Countries"),
+        "mamlakat davlat viza maosh ish beruvchilar страны виза зарплата "
+        "работодатели стоимость жизни countries visa salary employers cost living",
     ),
     _d(
         "admission-colleges-discover",
@@ -1548,6 +1633,30 @@ APP_MAP: Final[tuple[Destination, ...]] = (
             "Admission assistant",
         ),
         "yordamchi AI suhbat помощник ИИ чат assistant ai chat help",
+    ),
+    _d(
+        "admission-trajectories",
+        "admission",
+        "/trajectories/",
+        _ST,
+        (
+            "Taʼlim traektoriyalari",
+            "Образовательные траектории",
+            "Educational trajectories",
+        ),
+        "traektoriya yoʼl xarita траектория дорожная карта путь roadmap path",
+    ),
+    _d(
+        "admission-staff-trajectories",
+        "admission",
+        "/staff/trajectories/",
+        _ADM,
+        (
+            "Traektoriyalar muharriri",
+            "Редактор траекторий",
+            "Trajectory editor",
+        ),
+        "traektoriya muharrir траектории редактор trajectories editor roadmap",
     ),
 )
 

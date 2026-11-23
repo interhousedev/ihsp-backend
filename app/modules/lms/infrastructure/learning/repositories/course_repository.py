@@ -40,6 +40,7 @@ def _to_entity(row: Course) -> LearningCourse:
         enrolment_starts_at=row.enrolment_starts_at,
         enrolment_ends_at=row.enrolment_ends_at,
         publish_state=row.publish_state,
+        tutor_enabled=row.tutor_enabled,
     )
 
 

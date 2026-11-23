@@ -100,6 +100,11 @@ from app.modules.notify.application.renderers.library_suggestion_approved import
 from app.modules.notify.application.renderers.library_suggestion_declined import (
     LibrarySuggestionDeclinedRenderer,
 )
+from app.modules.notify.application.renderers.lms_nudges import (
+    LmsDeadlineSoonRenderer,
+    LmsReviewDueRenderer,
+    LmsStreakAtRiskRenderer,
+)
 from app.modules.notify.application.renderers.login_failures import (
     LoginFailuresRenderer,
 )
@@ -313,4 +318,11 @@ def register_builtin_renderers(
     registry.register(
         NotificationType.TEACHER_TEMPORARY_MARKS,
         TeacherTemporaryMarksRenderer(i18n, urls),
+    )
+    registry.register(NotificationType.LMS_REVIEW_DUE, LmsReviewDueRenderer(i18n, urls))
+    registry.register(
+        NotificationType.LMS_STREAK_AT_RISK, LmsStreakAtRiskRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.LMS_DEADLINE_SOON, LmsDeadlineSoonRenderer(i18n, urls)
     )

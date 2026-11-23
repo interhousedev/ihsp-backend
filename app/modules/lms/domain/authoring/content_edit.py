@@ -50,7 +50,8 @@ def extract_file_ids(content: dict[str, Any]) -> list[UUID]:
     """Return the IDs of files referenced as `/files/{uuid}` anywhere in the content."""
     text = json.dumps(content, ensure_ascii=False)
     found = {UUID(match) for match in FILE_REFERENCE.findall(text)}
-    return sorted(found | set(video_file_ids(content)))
+    found |= set(video_file_ids(content)) | set(caption_file_ids(content))
+    return sorted(found)
 
 
 VIDEO_TYPES = ("video", "interactive_video")
@@ -63,6 +64,20 @@ def video_file_ids(content: dict[str, Any]) -> list[UUID]:
         if block.get("type") in VIDEO_TYPES and block.get("source") == "upload":
             try:
                 ids.append(UUID(str(block.get("file_id"))))
+            except ValueError:
+                continue
+    return ids
+
+
+def caption_file_ids(content: dict[str, Any]) -> list[UUID]:
+    """Return the IDs of the WebVTT caption files of video blocks."""
+    ids: list[UUID] = []
+    for block in content.get("blocks", []):
+        if block.get("type") != "video":
+            continue
+        for track in block.get("captions") or []:
+            try:
+                ids.append(UUID(str(track.get("file_id"))))
             except ValueError:
                 continue
     return ids

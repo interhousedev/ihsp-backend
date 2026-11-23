@@ -42,6 +42,7 @@ class CourseSettingsView(BaseModel):
     enrolment_starts_at: datetime | None
     enrolment_ends_at: datetime | None
     navigation: list[dict[str, object]]
+    tutor_enabled: bool
     publish_state: str
     visibility: str
     invite_code: str | None

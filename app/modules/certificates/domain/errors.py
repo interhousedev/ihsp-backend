@@ -93,3 +93,38 @@ class CustomFieldInvalidError(ValidationFailedError):
 
     code = "certificate_custom_field_invalid"
     message_key = "cert-custom-field-invalid"
+
+
+class CourseCertificateForbiddenError(ForbiddenError):
+    """The caller does not manage the certificates of the course."""
+
+    code = "course_certificate_forbidden"
+    message_key = "course-cert-forbidden"
+
+
+class CourseCertificateNotFoundError(NotFoundError):
+    """The certificate, template, partner or course does not exist (or is hidden)."""
+
+    code = "course_certificate_not_found"
+    message_key = "course-cert-not-found"
+
+
+class CourseCertificateInvalidError(ValidationFailedError):
+    """A setting, tier, layout or partner value is not valid. Params: field."""
+
+    code = "course_certificate_invalid"
+    message_key = "course-cert-invalid"
+
+
+class CertificateUploadRejectedError(ValidationFailedError):
+    """An uploaded image is not a PNG, JPEG or PDF, or is too large. Params: reason."""
+
+    code = "course_certificate_upload_rejected"
+    message_key = "course-cert-upload-rejected"
+
+
+class CourseCertificateNotEligibleError(ConflictError):
+    """The learner has not met the requirements of any certificate tier yet."""
+
+    code = "course_certificate_not_eligible"
+    message_key = "course-cert-not-eligible"

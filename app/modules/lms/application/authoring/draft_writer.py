@@ -5,7 +5,12 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from app.modules.lms.application.learning.ai_review import (
+    reference_file_ids,
+    require_reference_access,
+)
 from app.modules.lms.domain.authoring.content_edit import (
+    caption_file_ids,
     collect_ids,
     extract_file_ids,
     video_file_ids,
@@ -23,6 +28,7 @@ from app.modules.lms.domain.step_content import (
     canonical_hash,
 )
 from app.modules.lms.ports.authoring.unit_of_work import AuthoringUnitOfWork
+from app.shared.actor import Actor
 from app.shared.contracts.files import FilePurpose, FilesApi
 
 UNUSABLE_FILE_STATUSES = frozenset({"deleted", "rejected"})
@@ -56,25 +62,42 @@ class StepDraftWriter:
         self.files = files
 
     async def prepare(
-        self, uow: AuthoringUnitOfWork, step: CourseStep, content: StepContent
+        self,
+        uow: AuthoringUnitOfWork,
+        step: CourseStep,
+        content: StepContent,
+        *,
+        actor: Actor | None = None,
     ) -> PreparedContent:
         """Assign server IDs, hash the content and check the files it references.
 
         Known IDs are those in the current draft and, only when the content brings
         an ID the draft does not have, in every revision of the step (LMS-23).
+        AI review reference files new to the draft must be readable by `actor`.
         """
         existing = collect_ids(step.draft)
         incoming = collect_ids(content.model_dump(mode="json"))
         if incoming - existing:
             existing |= await uow.revisions.known_ids(step.id)
+        await require_reference_access(
+            self.files,
+            actor,
+            content.model_dump(mode="json"),
+            set(reference_file_ids(step.draft or {})),
+        )
         return await self._finish(content, existing)
 
-    async def prepare_new(self, content: StepContent) -> PreparedContent:
+    async def prepare_new(
+        self, content: StepContent, *, actor: Actor | None = None
+    ) -> PreparedContent:
         """Prepare the first content of a step that is being created.
 
         There are no known IDs yet, so every ID in the content is assigned by the
         server; otherwise the same checks as `prepare`.
         """
+        await require_reference_access(
+            self.files, actor, content.model_dump(mode="json"), set()
+        )
         return await self._finish(content, set())
 
     async def _finish(
@@ -93,7 +116,12 @@ class StepDraftWriter:
             )
         file_ids = extract_file_ids(data)
         await self.require_files(file_ids)
-        await self.require_videos(video_file_ids(data))
+        await self.require_purpose(
+            video_file_ids(data), FilePurpose.LMS_VIDEO, "video-file"
+        )
+        await self.require_purpose(
+            caption_file_ids(data), FilePurpose.LMS_CAPTIONS, "caption-file"
+        )
         return PreparedContent(data, canonical_hash(assigned), file_ids)
 
     async def require_files(self, file_ids: list[UUID]) -> None:
@@ -109,8 +137,10 @@ class StepDraftWriter:
         if missing:
             raise FileMissingError(params={"file_ids": missing})
 
-    async def require_videos(self, file_ids: list[UUID]) -> None:
-        """Raise ContentInvalidError unless each file is a finished lesson video."""
+    async def require_purpose(
+        self, file_ids: list[UUID], purpose: FilePurpose, reason: str
+    ) -> None:
+        """Raise ContentInvalidError unless each file is a finished upload of it."""
         if not file_ids:
             return
         found = await self.files.get_many(file_ids)
@@ -118,13 +148,11 @@ class StepDraftWriter:
             str(fid)
             for fid in file_ids
             if fid not in found
-            or found[fid].purpose != FilePurpose.LMS_VIDEO
+            or found[fid].purpose != purpose
             or found[fid].status not in VIDEO_FILE_STATUSES
         ]
         if wrong:
-            raise ContentInvalidError(
-                params={"reason": "video-file", "file_ids": wrong}
-            )
+            raise ContentInvalidError(params={"reason": reason, "file_ids": wrong})
 
     @staticmethod
     def apply(

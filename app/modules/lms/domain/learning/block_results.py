@@ -29,10 +29,11 @@ def stored_result(
 
 
 def passed_block_ids(states: Mapping[str, Mapping[str, Any]]) -> set[str]:
-    """Return the H5P and interactive video blocks the student has finished.
+    """Return the H5P, widget and interactive video blocks the student has finished.
 
-    An H5P block is done when it is passed (completed and above its threshold);
-    an interactive video when every question was answered.
+    An H5P block is done when it is passed (completed and above its threshold),
+    a code or HTML widget when it reported a pass once, an interactive video
+    when every question was answered.
     """
     done: set[str] = set()
     for key, record in states.items():
@@ -40,7 +41,7 @@ def passed_block_ids(states: Mapping[str, Mapping[str, Any]]) -> set[str]:
             continue
         ok = (
             record.get("passed")
-            if record.get("kind") == "h5p"
+            if record.get("kind") in ("h5p", "widget")
             else record.get("completed")
         )
         if ok:
@@ -102,6 +103,26 @@ def merge_h5p(
     best["kind"] = "h5p"
     best["completed"] = bool(best.get("completed")) or result.completed
     best["passed"] = bool(best["completed"]) and float(best["pct"]) >= passing_pct
+    return best
+
+
+def merge_widget(
+    previous: Mapping[str, Any] | None, score_pct: float, passed: bool
+) -> dict[str, Any]:
+    """Return the stored record of a code or HTML widget: best score, sticky pass.
+
+    The browser graded it, so the record is ``verified: False``: the pass
+    completes the block, the score is shown to staff as not verified and earns
+    no points.
+    """
+    best = dict(previous or {})
+    pct = min(100.0, max(0.0, float(score_pct)))
+    if previous is None or pct >= float(best.get("pct", 0)):
+        best.update(score=pct, max_score=100.0, pct=pct)
+    best["kind"] = "widget"
+    best["passed"] = bool(best.get("passed")) or passed
+    best["completed"] = True
+    best["verified"] = False
     return best
 
 

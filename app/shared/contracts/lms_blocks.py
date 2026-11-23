@@ -9,6 +9,7 @@ ids to blocks, questions, options and cards (LMS-23).
 
 from collections.abc import Callable
 from typing import Annotated, Any, Final, Literal
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -473,6 +474,30 @@ BlockInput = Annotated[
 ]
 
 
+class UploadedVideoBlockInput(BaseModel):
+    """A video block that plays a lesson video uploaded to Files.
+
+    Only for authors with a real upload: models never see this type, so they cannot
+    invent a file ID.
+    """
+
+    type: Literal["video_file"] = "video_file"
+    file_id: UUID = Field(
+        description="ID of a ready file uploaded with purpose `lms_video`."
+    )
+    caption: str = Field(default="", max_length=500, description="Caption, optional.")
+
+
+AuthorBlockInput = Annotated[
+    TextBlockInput
+    | VideoBlockInput
+    | UploadedVideoBlockInput
+    | TestBlockInput
+    | FlashcardsBlockInput,
+    Field(discriminator="type"),
+]
+
+
 class StepDraftInput(BaseModel):
     """The content of one step as a model writes it (the ``lesson_draft`` output)."""
 
@@ -485,7 +510,7 @@ class StepDraftInput(BaseModel):
     ]
 
 
-def build_block(block: BlockInput) -> dict[str, Any]:
+def build_block(block: AuthorBlockInput) -> dict[str, Any]:
     """Return one block in the LMS shape.
 
     Raises:
@@ -495,6 +520,15 @@ def build_block(block: BlockInput) -> dict[str, Any]:
         return build_text_block(block.markdown)
     if isinstance(block, VideoBlockInput):
         return build_video_block(block.url, block.caption)
+    if isinstance(block, UploadedVideoBlockInput):
+        return {
+            "id": "",
+            "type": "video",
+            "source": "upload",
+            "url": "",
+            "file_id": str(block.file_id),
+            "caption": block.caption,
+        }
     if isinstance(block, FlashcardsBlockInput):
         return build_flashcards_block(block.cards)
     return build_test_block(block.settings, block.questions)

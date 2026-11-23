@@ -104,6 +104,10 @@ class TeacherContacts(BaseModel):
         return value
 
 
+LmsNudgeType = Literal["lms_review_due", "lms_streak_at_risk", "lms_deadline_soon"]
+"""Opt-in LMS Telegram nudges (the matching notification type values)."""
+
+
 class UserPreferences(BaseModel):
     """User settings (spec → Models → User → preferences)."""
 
@@ -139,6 +143,9 @@ class UserPreferences(BaseModel):
     ]
     onboarding_dismissed: list[str] = []
     bottom_nav: list[str] | None = None  # sp phone bottom bar: up to 4 destination ids
+    lms_skin: Literal["classic", "playful"] | None = None  # None: not chosen yet
+    # LMS Telegram nudges the learner turned on (all off by default)
+    lms_nudges: list[LmsNudgeType] = []
     seen_marks_at: datetime | None = None
     contacts: TeacherContacts = TeacherContacts()  # teachers: shown to students
 
