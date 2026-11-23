@@ -68,3 +68,7 @@ An agent reads `fact-spec` for the typed facts, looks at what the catalog alread
 ## Profile photos
 
 Every role can set its own photo with `PUT /v1/me/photo` and remove it with `DELETE /v1/me/photo`. After an upgrade run `python -m app backfill-profile-photos` once to create photos from enrolled faces.
+
+## Educational trajectories
+
+Trajectories are staff-curated paths of nodes a student works through. Students read `GET /v1/admission/trajectories` and `/trajectories/{slug}` and mark a node with `POST /v1/admission/trajectories/{trajectory_id}/progress/{node_id}`. Staff manage them under `/v1/admission/staff/trajectories` (list, create; get, update, delete by `{trajectory_id}`; `GET /staff/trajectories/resources` lists attachable resources). LMS courses and library books are listed automatically; a book can also be attached manually per student.

@@ -4,6 +4,32 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-11-23
+
+Migrations `admission_0067` to `admission_0068`, `lms_0006` to `lms_0009`, `certificates_0006` and `notify_0022` run forward only.
+
+### Added
+
+- LMS: course info page; Bluebook SAT/AP exam block; sandboxed code execution block; custom HTML widget block with a widget SDK and pass mark; AI Review block.
+- LMS: caption tracks (VTT) on videos; tutor and interactive-video micro-checks.
+- LMS engagement: FSRS daily review, streaks, mastery map, class quests and Telegram nudges (`/v1/lms/engagement/*`).
+- Course certificates: designer, verify URLs with QR, pass mark and honors tiers; course partners.
+- Course badges with a block rule builder.
+- Content publish API for agents: course manifest, video upload and publish through the `lms` MCP server.
+- Admission: LMS courses and library books are listed automatically; manual book attach per student; educational trajectories editor (`/v1/admission/staff/trajectories`); countries panel with deeper data.
+
+### Changed
+
+- Admission settings have no JSON inputs; staff settings are routed to the staff pages.
+- Documentation pages for LMS blocks, engagement, certificates and badges, and the publish API.
+
+### Known issues
+
+- With the tutor off the browser console logs a 403.
+- The last submitted code of a code block is not restored on reopening.
+- Legacy `/course/step/?course=<slug>` links answer 422.
+- Some country facts stay English in the Russian interface; median salary is empty.
+
 ## [1.13.0] - 2026-11-23
 
 Includes the unreleased 1.11.1 and 1.12 work. Migrations `admission_0062` to `admission_0066` run forward only.
