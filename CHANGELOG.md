@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Admission: a catalog push token. Curators create an `admission:catalog-write` token on the staff Catalog page and push country facts and institutions with `POST /v1/admission/staff/catalog/push/{countries,institutions}` or `scripts/push_catalog.py`; each item reports created, updated, unchanged, skipped or invalid.
+
 ## [1.14.0] - 2026-11-23
 
 Migrations `admission_0067` to `admission_0068`, `lms_0006` to `lms_0009`, `certificates_0006` and `notify_0022` run forward only.

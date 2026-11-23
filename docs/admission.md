@@ -59,6 +59,28 @@ The token reaches only these routes (`_CATALOG_ALLOWLIST` in `app/interfaces/htt
 
 An agent reads `fact-spec` for the typed facts, looks at what the catalog already has, researches the official sources and posts a proposal with a cited `source_url` and year for every fact. Proposals are rate limited by `IHSP_ADMISSION__CATALOG_PROPOSALS_PER_DAY`, cannot be approved by the token, and take effect only after a human review. The token cannot read any student data. Exemplar creation is also open to it, so keep it for trusted agents.
 
+## The `admission:catalog-write` token for pushing data
+
+A curator (administrator, counselor or assigned curator) can push country facts and institutions in bulk. On the staff Catalog page (`/staff/catalog`), the token card at the bottom has an Access choice; pick "Push data", a name, 30 or 90 days, then confirm with the one-time code. The token carries `admission:catalog-write` as its sole scope and reaches only:
+
+| Method | Route |
+|---|---|
+| POST | `/v1/admission/staff/catalog/push/countries` (at most 50 items, `overwrite_verified` optional) |
+| POST | `/v1/admission/staff/catalog/push/institutions` (at most 25 items, the seed `Institution` shape) |
+
+Countries are upserted by ISO code as drafts; a country a curator verified is `skipped` unless `overwrite_verified` is true. Institutions are upserted by slug with the seed loader; `logo_url` and `cover_url` must be https and are mirrored into our storage, and an image that cannot be fetched is dropped with a warning. Every item answers `created`, `updated`, `unchanged`, `skipped` or `invalid` (with the field), so a repeated push is harmless. A user may push 200 batches per hour (`admission/catalog_push_limit`), and each batch is audited as `catalog.pushed`.
+
+`scripts/push_catalog.py` pushes `catalog_data/countries/country_facts.json` and the seed catalog. Put the token in a git-ignored env file and run it:
+
+```bash
+IHSP_CATALOG_PUSH_TOKEN=<TOKEN>
+IHSP_CATALOG_PUSH_URL=https://<API_HOST>
+```
+
+```bash
+IHSP_ENV_FILE=<that file> uv run python scripts/push_catalog.py [--dry-run] [--only countries|institutions]
+```
+
 ## Catalog cycles, supplemental prompts and website
 
 - Admission cycles are named `YYYY-YY` (for example `2026-27`) and start in July. A proposal may name only the cycle open on the day it is made or the next one; any other cycle answers `admission/catalog_cycle`.
