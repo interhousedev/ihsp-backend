@@ -9,8 +9,10 @@ Reviewed seed entries (`verified`) are published with `official` facts; the rest
 """
 
 import datetime as dt
+import json
 from dataclasses import dataclass
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid5
 
@@ -32,6 +34,7 @@ from app.modules.admission.infrastructure.orm.catalog import (
     ScholarshipRow,
     SourceRow,
 )
+from app.modules.admission.infrastructure.orm.supp_prompts import SuppPromptRow
 from app.modules.admission.ports.media_mirror import MediaMirror
 
 from sqlalchemy import func, select
@@ -392,8 +395,55 @@ async def load_catalog(
     for p in programs:
         await loader.program(p)
     await load_country_facts(session)
+    await load_supp_prompts(session)
     await session.flush()
     return LoadReport(len(seed), loader.facts, schol + len(programs), enriched)
+
+
+_SUPP_PROMPTS = Path(__file__).parent / "catalog_data" / "supp_prompts" / "prompts.json"
+
+
+async def load_supp_prompts(session: AsyncSession) -> int:
+    """Add the seed supplemental prompts of a school cycle that has none yet.
+
+    Migration `admission_0033` seeded them only for schools already in the catalog,
+    so a database migrated before the catalog was loaded had none. A cycle with any
+    prompt row is left alone: curator edits win. Returns the rows added.
+    """
+    seed: dict[str, Any] = json.loads(_SUPP_PROMPTS.read_text("utf-8"))
+    added = 0
+    for slug, entry in seed.items():
+        inst = await session.scalar(
+            select(InstitutionRow.id).where(InstitutionRow.slug == slug)
+        )
+        if inst is None:
+            continue
+        for cycle, prompts in entry["cycles"].items():
+            has = await session.scalar(
+                select(SuppPromptRow.id)
+                .where(
+                    SuppPromptRow.institution_id == inst, SuppPromptRow.cycle == cycle
+                )
+                .limit(1)
+            )
+            if has is not None:
+                continue
+            for pos, p in enumerate(prompts):
+                session.add(
+                    SuppPromptRow(
+                        id=seed_id("supp_prompt", slug, cycle, pos),
+                        institution_id=inst,
+                        cycle=cycle,
+                        position=pos,
+                        prompt=p["prompt"],
+                        word_limit=p["word_limit"],
+                        required=p["required"],
+                        source_url=entry["source_url"],
+                    )
+                )
+                added += 1
+    await session.flush()
+    return added
 
 
 def _merge_aliases(current: list[str] | None, seed: list[str] | None) -> list[str]:
