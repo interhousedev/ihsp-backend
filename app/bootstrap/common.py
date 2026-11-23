@@ -40,6 +40,11 @@ from app.bootstrap.adapters.guest_knowledge import GuestKnowledgeAdapter
 from app.bootstrap.adapters.lazy_proxy import LazyProxy
 from app.bootstrap.adapters.library_academic import LibraryAcademicAdapter
 from app.bootstrap.adapters.library_lessons import LibraryLessonsAdapter
+from app.bootstrap.adapters.lms_ai_review import (
+    GatewayAiReviewModel,
+    GatewayAiReviewWeb,
+)
+from app.bootstrap.adapters.lms_lesson_ai import LessonModelAdapter
 from app.bootstrap.adapters.mail_suspension import MailSuspensionAdapter
 from app.bootstrap.adapters.mcp_academic import build_academic_tools
 from app.bootstrap.adapters.mcp_content import build_content_tools
@@ -144,6 +149,7 @@ from app.modules.legal.wiring import build as build_legal
 from app.modules.library.wiring import build as build_library
 from app.modules.links.wiring import build as build_links
 from app.modules.lms.wiring import build as build_lms
+from app.modules.lms.wiring_lesson_ai import build_lesson_ai
 from app.modules.notebooks.application.export.render import DocumentExporter
 from app.modules.notebooks.application.llm import NotebookLlm
 from app.modules.notebooks.infrastructure.web_fetcher import HttpWebFetcher
@@ -328,8 +334,8 @@ class _Assembler:
         if self.plan.lms:
             self.build_lms()
         if self.plan.full:
-            self.build_admission()
             self.build_library()
+            self.build_admission()
             self.build_notebooks()
             self.build_mcp_ports()
 
@@ -635,6 +641,7 @@ class _Assembler:
             self.deps,
             membership=AdmissionMembershipAdapter(c.academic.schedule.queries),
             course_sources=course_sources,
+            library_books=c.library.bridge.book_catalogue,
             purpose_consents=SqlPurposeConsents(self.deps.sessionmaker),
             staff_directory=AdmissionStaffDirectoryAdapter(c.identity.directory),
             certificates=AdmissionCertificatesAdapter(
@@ -793,6 +800,26 @@ class _Assembler:
         c.lms.learning.redeem_media_grant.bind_connector_check(
             connector_active_check(c)
         )
+        from app.modules.certificates.wiring_course import build_course_certificates
+        from app.modules.lms.wiring_certificates import build_certificate_facts
+
+        c.course_certificates = build_course_certificates(
+            self.deps,
+            facts=build_certificate_facts(
+                self.deps,
+                c.lms,
+                identity=c.identity.directory,
+                students=c.academic.schedule.queries,
+            ),
+            files=c.files.public,
+            directory=c.identity.directory,
+        )
+        review = c.lms.learning.ai_review
+        if review is not None and c.llm is not None:
+            review.bind_model(
+                GatewayAiReviewModel(llm=c.llm, settings=c.settings),
+                GatewayAiReviewWeb(c.ai.web_search) if c.ai is not None else None,
+            )
 
     def build_library(self) -> None:
         """Library: books, materials and the UniLibrary base; before notebooks."""
@@ -887,6 +914,11 @@ class _Assembler:
         if self.plan.lms:
             c.mcp_files_courses_tools = build_files_courses_tools(c)
             c.lms_ai_tools = LmsAi(llm=c.llm, settings=c.settings)
+            c.lms_lesson_ai = build_lesson_ai(
+                self.deps,
+                learning=c.lms.learning,
+                model=LessonModelAdapter(c.llm, c.settings),
+            )
 
 
 async def build_container(

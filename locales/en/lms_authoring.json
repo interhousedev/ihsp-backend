@@ -26,6 +26,8 @@
   "lms-link-target-forbidden": "This link cannot be checked.",
   "lms-h5p-block-not-found": "This block has no H5P package.",
   "lms-h5p-invalid": "This file is not a valid H5P package.",
+  "lms-html-widget-invalid": "This file is not a usable HTML widget: upload one .html file or a .zip with index.html at its root.",
+  "lms-html-widget-block-not-found": "This block has no HTML widget.",
   "lms-cartridge-invalid": "This file is not a usable IMS Common Cartridge (.imscc).",
   "lms-cartridge-import-not-found": "This import was not found or has expired."
 }

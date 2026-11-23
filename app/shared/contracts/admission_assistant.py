@@ -56,6 +56,7 @@ class CourseHit:
     summary: str
     url: str
     enrolled: bool
+    cover_url: str | None = None
 
 
 class AdmissionAssistantApi(Protocol):

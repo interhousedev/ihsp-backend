@@ -70,6 +70,9 @@ class NotificationType(StrEnum):
     ADMISSION_COMMENT_ADDED = "admission_comment_added"
     ADMISSION_REVIEW_READY = "admission_review_ready"
     ADMISSION_AFFORDABILITY_SIGNOFF = "admission_affordability_signoff"
+    LMS_REVIEW_DUE = "lms_review_due"
+    LMS_STREAK_AT_RISK = "lms_streak_at_risk"
+    LMS_DEADLINE_SOON = "lms_deadline_soon"
 
 
 @dataclass(frozen=True, slots=True)

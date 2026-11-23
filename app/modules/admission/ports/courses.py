@@ -3,7 +3,7 @@
 from typing import Protocol
 from uuid import UUID
 
-from app.modules.admission.domain.courses import Course
+from app.modules.admission.domain.courses import AttachedBook, Course
 from app.shared.actor import Actor
 from app.shared.contracts.admission_assistant import CourseHit
 
@@ -31,4 +31,20 @@ class CourseSources(Protocol):
 
     async def lms_enroll(self, actor: Actor, course_id: UUID) -> None:
         """Enroll the actor in a public LMS course."""
+        ...
+
+
+class AttachedBookRepository(Protocol):
+    """Books staff attached to students."""
+
+    async def list_for(self, student_id: UUID) -> list[AttachedBook]:
+        """Return the student's attachments, newest first."""
+        ...
+
+    async def add(self, book: AttachedBook) -> AttachedBook:
+        """Insert the attachment, or return the existing one (idempotent)."""
+        ...
+
+    async def remove(self, student_id: UUID, item_id: UUID) -> bool:
+        """Delete the attachment; False when there was none."""
         ...

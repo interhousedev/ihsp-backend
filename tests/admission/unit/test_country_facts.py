@@ -5,8 +5,10 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.admission.application.country_facts import CountryFactsService
+from app.modules.admission.domain.countries import COUNTRIES
 from app.modules.admission.domain.country_facts import (
     FACT_KEYS,
+    REGION_OF,
     CountryFacts,
     clean_fact,
     clean_facts,
@@ -69,7 +71,11 @@ def _ctx() -> Any:
 
 def _service(curator: bool = True) -> tuple[CountryFactsService, _Repo]:
     repo = _Repo()
-    return CountryFactsService(repo, lambda _ctx: curator), repo
+
+    async def _none(_country: str | None) -> list[Any]:
+        return []
+
+    return CountryFactsService(repo, lambda _ctx: curator, _none), repo
 
 
 def _fact(**over: Any) -> dict[str, Any]:
@@ -104,6 +110,57 @@ def test_student_fields_map_to_opportunity_keys() -> None:
     names = ["Computer Science", "Computer science"]
     assert opportunity_fields_of(names) == ["cs_it"]
     assert opportunity_fields_of(["no such field xyz"]) == []
+
+
+def test_employers_and_salaries_are_validated() -> None:
+    emp = clean_fact(
+        "employers",
+        _fact(values={"fields": {"cs_it": [{"name": " Acme ", "sector": None}]}}),
+    )
+    assert emp is not None and emp["values"] == {
+        "fields": {"cs_it": [{"name": "Acme"}]}
+    }
+    sal = clean_fact(
+        "salaries",
+        _fact(
+            values={
+                "currency": "USD",
+                "year": 2025,
+                "overall_median_annual": None,
+                "by_field": {"cs_it": 90000},
+            }
+        ),
+    )
+    assert sal is not None and sal["values"]["by_field"] == {"cs_it": 90000}
+    bad = (
+        ("employers", {"fields": {"astrology": [{"name": "X"}]}}),
+        ("employers", {"fields": {"cs_it": [{"name": ""}]}}),
+        ("employers", {"fields": {"cs_it": [{"name": "X", "url": "http://x.y"}]}}),
+        ("salaries", {"currency": "EUR", "year": 2025, "by_field": {"cs_it": 1}}),
+        ("salaries", {"currency": "USD", "year": 1990, "by_field": {"cs_it": 1}}),
+        ("salaries", {"currency": "USD", "year": 2025, "by_field": {"cs_it": -1}}),
+    )
+    for key, values in bad:
+        with pytest.raises(ValidationFailedError):
+            clean_fact(key, _fact(values=values))
+
+
+def test_every_country_has_a_region() -> None:
+    assert set(COUNTRIES) <= set(REGION_OF)
+
+
+async def test_overview_and_profile() -> None:
+    service, repo = _service()
+    repo.rows["US"] = CountryFacts("US", "2026-11", {"safety": _fact()}, "draft")
+    lines = await service.overview()
+    assert [o.country for o in lines] == ["US"]
+    assert lines[0].scores == {"safety": 4} and lines[0].region == "americas"
+    profile = await service.profile("us", ["Computer Science"])
+    assert profile.facts is not None and profile.highlight == ["cs_it"]
+    empty = await service.profile("FR", [])
+    assert empty.facts is None and empty.institutions == []
+    with pytest.raises(AdmissionNotFoundError):
+        await service.profile("ZZ", [])
 
 
 def test_seed_file_is_valid_and_every_number_has_a_source() -> None:

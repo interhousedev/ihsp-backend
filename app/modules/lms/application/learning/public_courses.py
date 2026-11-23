@@ -10,11 +10,16 @@ from app.modules.lms.application.learning.course_page import (
     CoursePageBuilder,
     course_card,
 )
-from app.modules.lms.application.learning.get_step_view import scored_block
+from app.modules.lms.application.learning.get_step_view import (
+    NEW_BLOCK_TYPES,
+    scored_block,
+    widget_block,
+)
 from app.modules.lms.application.learning.revision_loading import load_rendered
 from app.modules.lms.application.learning.step_context import load_live_step
 from app.modules.lms.application.learning.types import UowFactory
 from app.modules.lms.application.learning.views import (
+    LearningAiReviewBlockView,
     LearningCourseCardView,
     LearningFlashcardsBlockView,
     LearningGuestCoursePageView,
@@ -160,6 +165,10 @@ def _guest_block(block: dict[str, Any], rendered: RenderedRevision) -> StepBlock
         )
     if kind in ("h5p", "interactive_video"):
         return scored_block(block, None)
+    if kind in NEW_BLOCK_TYPES:
+        return widget_block(block)
+    if kind == "ai_review":
+        return LearningAiReviewBlockView(**block)
     if kind == "video":
         return LearningVideoBlockView(**block, passed=False)
     return LearningTextBlockView(**block, passed=False)

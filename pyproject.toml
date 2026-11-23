@@ -53,6 +53,7 @@ dependencies = [
     "uvicorn[standard]>=0.54.0",
     "webauthn>=3.0.1",
     "youtube-transcript-api==1.2.4",
+    "segno>=1.6.6",
 ]
 
 [build-system]

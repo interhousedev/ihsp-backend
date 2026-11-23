@@ -14,7 +14,7 @@ from app.modules.admission.domain.chooser import (
     CatalogScholarship,
     ListEntry,
 )
-from app.modules.admission.domain.courses import Course
+from app.modules.admission.domain.courses import AttachedBook, Course
 from app.modules.admission.domain.errors import AdmissionConflictError
 from app.modules.admission.domain.intl_facts import fold_name
 from app.modules.admission.domain.profile import AdmissionProfile
@@ -56,6 +56,7 @@ class FakeStore:
         self.opt_ins: dict[UUID, OptIns] = {}
         self.audit: list[AuditEvent] = []
         self.courses: dict[UUID, Course] = {}
+        self.attached: list[AttachedBook] = []
         self.runtime: dict[str, Any] = {}
         self.runtime_loads = 0
         self.institutions: dict[UUID, CatalogInstitution] = {}
@@ -98,6 +99,31 @@ class _Access:
 
     def audit(self, event: AuditEvent) -> None:
         self.pending.append(event)
+
+
+class _AttachedBooks:
+    def __init__(self, s: FakeStore) -> None:
+        self.s = s
+
+    async def list_for(self, student_id: UUID) -> list[AttachedBook]:
+        return [b for b in reversed(self.s.attached) if b.student_id == student_id]
+
+    async def add(self, book: AttachedBook) -> AttachedBook:
+        for b in self.s.attached:
+            if (b.student_id, b.item_id) == (book.student_id, book.item_id):
+                return b
+        row = replace(book, id=new_id(), created_at=NOW)
+        self.s.attached.append(row)
+        return row
+
+    async def remove(self, student_id: UUID, item_id: UUID) -> bool:
+        before = len(self.s.attached)
+        self.s.attached = [
+            b
+            for b in self.s.attached
+            if (b.student_id, b.item_id) != (student_id, item_id)
+        ]
+        return len(self.s.attached) < before
 
 
 class _Courses:
@@ -596,6 +622,7 @@ class FakeUow:
         self.s = s
         self.access = _Access(s, self._pending)
         self.courses = _Courses(s)
+        self.attached_books = _AttachedBooks(s)
         self.runtime_settings = _Runtime(s)
         self.catalog = _Catalog(s)
         self.catalog_proposals = _CatalogProposals(s)

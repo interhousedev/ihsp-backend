@@ -142,6 +142,13 @@ PAYLOADS: dict[NotificationType, dict[str, Any]] = {
         "event": "requested",
         "path": "/",
     },
+    NotificationType.LMS_REVIEW_DUE: {"count": 5},
+    NotificationType.LMS_STREAK_AT_RISK: {"streak": 4},
+    NotificationType.LMS_DEADLINE_SOON: {
+        "quest_id": "q1",
+        "title": "Read 3 chapters",
+        "ends_on": "2026-11-24",
+    },
     NotificationType.STUDENT_SYNC_FAILED: {"attempts": 6, "student_id": "s"},
     NotificationType.KNOWLEDGE_GAP: {
         "query": "dress code",

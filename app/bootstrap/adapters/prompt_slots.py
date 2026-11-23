@@ -53,6 +53,8 @@ from app.modules.admission.infrastructure.ai.prompts import (
 from app.modules.ai.application import transcribe_audio
 from app.modules.ai.domain import prompts, prompts_author, web_prompts
 from app.modules.ai.domain.prompt_registry import PromptSlot
+from app.modules.lms.domain.learning import ai_review as lms_ai_review
+from app.modules.lms.domain.learning import lesson_ai as lms_lesson_ai
 from app.modules.notebooks.application import (
     extract_source_vision,
     gather_web_materials,
@@ -366,6 +368,13 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         True,
     ),
     (
+        (AiTask.LMS_AI_REVIEW,),
+        "system",
+        "AI review of student work",
+        lms_ai_review.REVIEW_SYSTEM,
+        False,
+    ),
+    (
         (AiTask.CHAT_SUMMARY,),
         "system",
         "Chat history summary",
@@ -497,6 +506,20 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         False,
     ),
     ((AiTask.GUEST_CHAT,), "system", "Guest assistant", guest_assistant.SYSTEM, False),
+    (
+        (AiTask.LMS_TUTOR,),
+        "system",
+        "Courses: lesson tutor (hints, never answers)",
+        lms_lesson_ai.TUTOR_SYSTEM,
+        False,
+    ),
+    (
+        (AiTask.LMS_VIDEO_CHECKS,),
+        "system",
+        "Courses: video pause-and-predict checks",
+        lms_lesson_ai.CHECKS_SYSTEM,
+        False,
+    ),
 )
 
 
@@ -506,6 +529,7 @@ _GUARDS: dict[tuple[AiTask, str], str] = {
     (AiTask.ADMIT_ITEM_INTERVIEW, "system"): admit_items.SAFETY,
     **{(t, "system"): admit_review.SAFETY for t in admit_review.SECTION_TASKS.values()},
     (AiTask.ADMIT_APP_REVIEW_LEAD, "system"): admit_review.SAFETY,
+    (AiTask.LMS_TUTOR, "system"): lms_lesson_ai.TUTOR_GUARD,
 }
 
 

@@ -34,7 +34,11 @@ from app.modules.admission.application.chooser import CatalogService, ListServic
 from app.modules.admission.application.comments import CommentService
 from app.modules.admission.application.config import GetConfig
 from app.modules.admission.application.consultations import ConsultationService
-from app.modules.admission.application.country_facts import CountryFactsService
+from app.modules.admission.application.country_facts import (
+    CountryFactsService,
+    InstitutionsOf,
+)
+from app.modules.admission.application.course_catalog import CourseCatalogService
 from app.modules.admission.application.courses import CourseService
 from app.modules.admission.application.deadlines import DeadlineService
 from app.modules.admission.application.document_process import DocumentProcessService
@@ -109,12 +113,14 @@ from app.modules.admission.application.tasks import TaskService
 from app.modules.admission.application.tasks_suggest import TaskSuggester
 from app.modules.admission.application.test_scores import ScoreService
 from app.modules.admission.application.today import TodayService
+from app.modules.admission.application.trajectories import TrajectoryService
 from app.modules.admission.application.transcripts import TranscriptService
 from app.modules.admission.application.uni_advice import UniAdviceService
 from app.modules.admission.application.uni_chat import UniChatService
 from app.modules.admission.application.voice import VoiceService
 from app.modules.admission.application.voice_fill import VoiceFillService
 from app.modules.admission.application.words import WordsService
+from app.modules.admission.domain.chooser import CatalogInstitution
 from app.modules.admission.infrastructure.ai.prompt_source import BuiltinPrompts
 from app.modules.admission.infrastructure.app_review_repository import (
     SqlAppReviewRepository,
@@ -152,6 +158,10 @@ from app.modules.admission.infrastructure.prompt_vectors import EmbeddingPromptV
 from app.modules.admission.infrastructure.scorecard_client import (
     HttpScorecardClient,
 )
+from app.modules.admission.infrastructure.trajectories_repository import (
+    SqlTrajectoryRepository,
+    TrajectoryResourceFinder,
+)
 from app.modules.admission.infrastructure.uni_chat_repository import (
     SqlUniChatRepository,
 )
@@ -179,6 +189,7 @@ from app.shared.contracts.certificates import CertificateDirectory
 from app.shared.contracts.embeddings import EmbeddingIndex
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
+from app.shared.contracts.library import LibraryBookCatalogue
 from app.shared.contracts.web_search import WebSearchApi, WebSearchGateway
 from app.shared.wiring import ModuleDeps
 
@@ -209,6 +220,7 @@ class AdmissionServices:
     maps_settings: MapsSettingsService
     config: GetConfig
     courses: CourseService
+    course_catalog: CourseCatalogService
     staff: StaffService
     staff_timeline: StaffTimelineService
     comments: CommentService
@@ -279,6 +291,7 @@ class AdmissionServices:
     country_facts: CountryFactsService
     project_ideas: ProjectIdeaService
     project_helpers: ProjectHelperService
+    trajectories: TrajectoryService
     voice_fill: VoiceFillService
     cipher: EssayCipher
     essay_reviews: EssayReviewService
@@ -307,6 +320,7 @@ def build(
     *,
     membership: AcademicMembership,
     course_sources: CourseSources,
+    library_books: LibraryBookCatalogue | None = None,
     purpose_consents: PurposeConsentStore | None = None,
     staff_directory: StaffDirectory | None = None,
     ai: StructuredAi | None = None,
@@ -472,6 +486,14 @@ def build(
         maps_settings=MapsSettingsService(uow_factory, runtime),
         config=GetConfig(settings, runtime, limits, cache(_fields), uow_factory),
         courses=CourseService(uow_factory, access, course_sources),
+        course_catalog=CourseCatalogService(
+            uow_factory,
+            access,
+            course_sources,
+            library_books,
+            deps.settings.urls.lms,
+            deps.settings.urls.library,
+        ),
         staff=staff,
         staff_timeline=StaffTimelineService(
             staff, calendar, task_service, access, deps.clock
@@ -697,7 +719,9 @@ def build(
         ),
         kb=kb,
         country_facts=CountryFactsService(
-            SqlCountryFactsRepository(deps.sessionmaker), curators.can_review
+            SqlCountryFactsRepository(deps.sessionmaker),
+            curators.can_review,
+            _institutions_of(uow_factory),
         ),
         project_ideas=ProjectIdeaService(
             SqlProjectRunRepository(deps.sessionmaker),
@@ -716,6 +740,14 @@ def build(
             uow_factory,
             curators.can_review,
             deps.clock,
+        ),
+        trajectories=TrajectoryService(
+            SqlTrajectoryRepository(deps.sessionmaker),
+            TrajectoryResourceFinder(course_sources, library_books),
+            uow_factory,
+            curators.can_review,
+            deps.settings.urls.lms,
+            deps.settings.urls.library,
         ),
         voice_fill=VoiceFillService(model, consents, texts, deps.rate_limiter),
         memory_notes=MemoryNoteService(uow_factory, access, deps.clock),
@@ -814,3 +846,13 @@ def _sql_uow_factory(deps: ModuleDeps, cipher: EssayCipher) -> UowFactory:
         )
 
     return factory
+
+
+def _institutions_of(uow_factory: UowFactory) -> InstitutionsOf:
+    """Read non-archived catalog institutions, of one country or of all."""
+
+    async def read(country: str | None) -> list[CatalogInstitution]:
+        async with uow_factory() as uow:
+            return await uow.catalog.institutions(country=country)
+
+    return read

@@ -1,0 +1,6 @@
+{
+  "lms-badge-invalid": "Nishon notoʼgʼri toʼldirilgan: «{field}» maydonini tekshiring ({reason}).",
+  "lms-badge-not-found": "Kursda bunday nishon yoʼq.",
+  "lms-badge-award-not-found": "Mukofot topilmadi.",
+  "lms-badge-limit": "Kursda koʼpi bilan {limit} ta nishon boʼlishi mumkin."
+}

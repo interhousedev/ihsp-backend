@@ -57,6 +57,7 @@ NOT_STUDENT_DATA = frozenset(
         "requirements",
         "routes",
         "project_helpers",  # staff-curated helper organizations and mentors
+        "trajectories",  # staff-curated study roadmaps; progress rows are erased
         "runtime_settings",
         "safety_facts",
         "scholarships",

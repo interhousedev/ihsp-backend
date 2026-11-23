@@ -26,6 +26,8 @@
   "lms-link-target-forbidden": "Bu havolani tekshirib boʻlmaydi.",
   "lms-h5p-block-not-found": "Bu blokda H5P paketi yoʻq.",
   "lms-h5p-invalid": "Bu fayl yaroqli H5P paketi emas.",
+  "lms-html-widget-invalid": "Bu fayl HTML vidjet sifatida yaroqsiz: bitta .html fayl yoki ildizida index.html boʻlgan .zip arxivini yuklang.",
+  "lms-html-widget-block-not-found": "Bu blokda HTML vidjet yoʻq.",
   "lms-cartridge-invalid": "Bu fayl yaroqli IMS Common Cartridge (.imscc) paketi emas.",
   "lms-cartridge-import-not-found": "Import topilmadi yoki muddati oʻtgan."
 }

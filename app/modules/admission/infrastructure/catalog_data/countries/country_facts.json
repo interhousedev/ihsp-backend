@@ -63,6 +63,266 @@
           "sources": [
             "https://www.uscis.gov/working-in-the-united-states/students-and-exchange-visitors/optional-practical-training-opt-for-f-1-students"
           ]
+        },
+        "employers": {
+          "score": 5,
+          "values": {
+            "fields": {
+              "cs_it": [
+                {
+                  "name": "Microsoft",
+                  "sector": "Software and cloud",
+                  "url": "https://www.microsoft.com"
+                },
+                {
+                  "name": "Alphabet (Google)",
+                  "sector": "Internet and AI",
+                  "url": "https://abc.xyz"
+                },
+                {
+                  "name": "Amazon",
+                  "sector": "E-commerce and cloud",
+                  "url": "https://www.aboutamazon.com"
+                },
+                {
+                  "name": "Apple",
+                  "sector": "Consumer electronics and software",
+                  "url": "https://www.apple.com"
+                },
+                {
+                  "name": "NVIDIA",
+                  "sector": "Semiconductors and AI",
+                  "url": "https://www.nvidia.com"
+                }
+              ],
+              "engineering": [
+                {
+                  "name": "Boeing",
+                  "sector": "Aerospace",
+                  "url": "https://www.boeing.com"
+                },
+                {
+                  "name": "Lockheed Martin",
+                  "sector": "Aerospace and defense",
+                  "url": "https://www.lockheedmartin.com"
+                },
+                {
+                  "name": "GE Aerospace",
+                  "sector": "Aircraft engines",
+                  "url": "https://www.geaerospace.com"
+                },
+                {
+                  "name": "Tesla",
+                  "sector": "Automotive and energy",
+                  "url": "https://www.tesla.com"
+                },
+                {
+                  "name": "Caterpillar",
+                  "sector": "Heavy machinery",
+                  "url": "https://www.caterpillar.com"
+                }
+              ],
+              "business_econ": [
+                {
+                  "name": "JPMorgan Chase",
+                  "sector": "Banking",
+                  "url": "https://www.jpmorganchase.com"
+                },
+                {
+                  "name": "Goldman Sachs",
+                  "sector": "Investment banking",
+                  "url": "https://www.goldmansachs.com"
+                },
+                {
+                  "name": "Deloitte",
+                  "sector": "Audit and consulting",
+                  "url": "https://www.deloitte.com"
+                },
+                {
+                  "name": "McKinsey & Company",
+                  "sector": "Management consulting",
+                  "url": "https://www.mckinsey.com"
+                },
+                {
+                  "name": "Federal Reserve",
+                  "sector": "Central bank",
+                  "url": "https://www.federalreserve.gov"
+                }
+              ],
+              "medicine_bio": [
+                {
+                  "name": "Pfizer",
+                  "sector": "Pharmaceuticals",
+                  "url": "https://www.pfizer.com"
+                },
+                {
+                  "name": "Johnson & Johnson",
+                  "sector": "Healthcare products",
+                  "url": "https://www.jnj.com"
+                },
+                {
+                  "name": "Mayo Clinic",
+                  "sector": "Hospitals and research",
+                  "url": "https://www.mayoclinic.org"
+                },
+                {
+                  "name": "National Institutes of Health",
+                  "sector": "Biomedical research",
+                  "url": "https://www.nih.gov"
+                },
+                {
+                  "name": "Moderna",
+                  "sector": "Biotechnology",
+                  "url": "https://www.modernatx.com"
+                }
+              ],
+              "natural_sci": [
+                {
+                  "name": "NASA",
+                  "sector": "Space and science agency",
+                  "url": "https://www.nasa.gov"
+                },
+                {
+                  "name": "Dow",
+                  "sector": "Chemicals",
+                  "url": "https://www.dow.com"
+                },
+                {
+                  "name": "ExxonMobil",
+                  "sector": "Energy",
+                  "url": "https://corporate.exxonmobil.com"
+                },
+                {
+                  "name": "NOAA",
+                  "sector": "Climate and weather science",
+                  "url": "https://www.noaa.gov"
+                },
+                {
+                  "name": "Lawrence Livermore National Laboratory",
+                  "sector": "National laboratory",
+                  "url": "https://www.llnl.gov"
+                }
+              ],
+              "social_law": [
+                {
+                  "name": "U.S. Department of Justice",
+                  "sector": "Government and law",
+                  "url": "https://www.justice.gov"
+                },
+                {
+                  "name": "World Bank Group",
+                  "sector": "International development",
+                  "url": "https://www.worldbank.org"
+                },
+                {
+                  "name": "United Nations",
+                  "sector": "International organization",
+                  "url": "https://www.un.org"
+                },
+                {
+                  "name": "Skadden",
+                  "sector": "Law firm",
+                  "url": "https://www.skadden.com"
+                },
+                {
+                  "name": "RAND Corporation",
+                  "sector": "Policy research",
+                  "url": "https://www.rand.org"
+                }
+              ],
+              "arts_media": [
+                {
+                  "name": "The Walt Disney Company",
+                  "sector": "Film and media",
+                  "url": "https://www.thewaltdisneycompany.com"
+                },
+                {
+                  "name": "Netflix",
+                  "sector": "Streaming",
+                  "url": "https://www.netflix.com"
+                },
+                {
+                  "name": "The New York Times",
+                  "sector": "News media",
+                  "url": "https://www.nytimes.com"
+                },
+                {
+                  "name": "Warner Bros. Discovery",
+                  "sector": "Film and television",
+                  "url": "https://www.wbd.com"
+                },
+                {
+                  "name": "Adobe",
+                  "sector": "Creative software",
+                  "url": "https://www.adobe.com"
+                }
+              ],
+              "education_hum": [
+                {
+                  "name": "Harvard University",
+                  "sector": "Higher education",
+                  "url": "https://www.harvard.edu"
+                },
+                {
+                  "name": "Smithsonian Institution",
+                  "sector": "Museums and research",
+                  "url": "https://www.si.edu"
+                },
+                {
+                  "name": "NYC Public Schools",
+                  "sector": "School system",
+                  "url": "https://www.schools.nyc.gov"
+                },
+                {
+                  "name": "Library of Congress",
+                  "sector": "Library and archives",
+                  "url": "https://www.loc.gov"
+                }
+              ]
+            }
+          },
+          "text": {
+            "en": "Examples of major employers by field. The list shows where large employers operate; it is not a ranking or a hiring guarantee.",
+            "ru": "Примеры крупных работодателей по направлениям. Список показывает, где работают крупные организации; это не рейтинг и не гарантия трудоустройства.",
+            "uz": "Yoʼnalishlar boʼyicha yirik ish beruvchilarga misollar. Roʼyxat yirik tashkilotlar qayerda ishlashini koʼrsatadi; bu reyting yoki ishga joylashish kafolati emas."
+          },
+          "sources": [
+            "https://www.microsoft.com",
+            "https://www.boeing.com",
+            "https://www.jpmorganchase.com",
+            "https://www.pfizer.com",
+            "https://www.nasa.gov",
+            "https://www.justice.gov",
+            "https://www.thewaltdisneycompany.com",
+            "https://www.harvard.edu"
+          ]
+        },
+        "salaries": {
+          "score": null,
+          "values": {
+            "currency": "USD",
+            "year": 2025,
+            "overall_median_annual": 50981,
+            "by_field": {
+              "cs_it": 109283,
+              "engineering": 99528,
+              "business_econ": 82659,
+              "medicine_bio": 86528,
+              "natural_sci": 82534,
+              "social_law": 102502,
+              "arts_media": 62754,
+              "education_hum": 60570
+            }
+          },
+          "text": {
+            "en": "Overall median annual earnings: about 50,981 USD in 2025 (all occupations, median hourly wage 24.51 USD × 2,080 hours). By-field values are medians of BLS occupation groups (computer and mathematical; architecture and engineering; business and financial; healthcare practitioners; life, physical and social science; legal; arts, design and media; education and library), annualized at 2,080 hours. Converted at the World Bank 2025 average official exchange rate. Figures are national medians, not earnings by degree.",
+            "ru": "Медианный годовой заработок в целом: около 50 981 USD в 2025 году (все профессии  медианная почасовая ставка 24 51 USD × 2080 часов). Значения по направлениям — медианы профессиональных групп BLS (компьютерные и математические; архитектура и инженерия; бизнес и финансы; медицинские специалисты; естественные и социальные науки; юриспруденция; искусство  дизайн и медиа; образование и библиотеки)  приведённые к году из 2080 часов. Пересчитано по среднегодовому официальному курсу Всемирного банка за 2025 год. Это национальные медианы  а не заработок по специальностям.",
+            "uz": "Umumiy mediana yillik daromad: 2025-yilda taxminan 50 981 USD (barcha kasblar  mediana soatlik stavka 24 51 USD × 2080 soat). Yoʼnalishlar boʼyicha qiymatlar BLS kasb guruhlari medianalaridir (kompyuter va matematika; arxitektura va muhandislik; biznes va moliya; tibbiyot mutaxassislari; tabiiy va ijtimoiy fanlar; huquq; sanʼat  dizayn va media; taʼlim va kutubxona)  yiliga 2080 soat deb hisoblangan. Jahon banki 2025-yil oʼrtacha rasmiy kursi boʼyicha qayta hisoblangan. Bu milliy medianalar  mutaxassislik boʼyicha daromad emas."
+          },
+          "sources": [
+            "https://www.bls.gov/news.release/ocwage.t01.htm",
+            "https://data.worldbank.org/indicator/PA.NUS.FCRF"
+          ]
         }
       }
     },
@@ -143,6 +403,251 @@
           "sources": [
             "https://www.gov.uk/healthcare-immigration-application/how-much-pay"
           ]
+        },
+        "employers": {
+          "score": 4,
+          "values": {
+            "fields": {
+              "cs_it": [
+                {
+                  "name": "Arm",
+                  "sector": "Semiconductor design",
+                  "url": "https://www.arm.com"
+                },
+                {
+                  "name": "BT Group",
+                  "sector": "Telecommunications",
+                  "url": "https://www.bt.com"
+                },
+                {
+                  "name": "Sage",
+                  "sector": "Business software",
+                  "url": "https://www.sage.com"
+                },
+                {
+                  "name": "Google DeepMind",
+                  "sector": "Artificial intelligence",
+                  "url": "https://deepmind.google"
+                },
+                {
+                  "name": "Revolut",
+                  "sector": "Fintech",
+                  "url": "https://www.revolut.com"
+                }
+              ],
+              "engineering": [
+                {
+                  "name": "Rolls-Royce",
+                  "sector": "Aerospace engines",
+                  "url": "https://www.rolls-royce.com"
+                },
+                {
+                  "name": "BAE Systems",
+                  "sector": "Aerospace and defence",
+                  "url": "https://www.baesystems.com"
+                },
+                {
+                  "name": "Jaguar Land Rover",
+                  "sector": "Automotive",
+                  "url": "https://www.jaguarlandrover.com"
+                },
+                {
+                  "name": "Arup",
+                  "sector": "Engineering consultancy",
+                  "url": "https://www.arup.com"
+                },
+                {
+                  "name": "National Grid",
+                  "sector": "Energy networks",
+                  "url": "https://www.nationalgrid.com"
+                }
+              ],
+              "business_econ": [
+                {
+                  "name": "HSBC",
+                  "sector": "Banking",
+                  "url": "https://www.hsbc.com"
+                },
+                {
+                  "name": "Barclays",
+                  "sector": "Banking",
+                  "url": "https://www.barclays.com"
+                },
+                {
+                  "name": "PwC UK",
+                  "sector": "Audit and consulting",
+                  "url": "https://www.pwc.co.uk"
+                },
+                {
+                  "name": "Bank of England",
+                  "sector": "Central bank",
+                  "url": "https://www.bankofengland.co.uk"
+                },
+                {
+                  "name": "Unilever",
+                  "sector": "Consumer goods",
+                  "url": "https://www.unilever.com"
+                }
+              ],
+              "medicine_bio": [
+                {
+                  "name": "NHS",
+                  "sector": "Public healthcare",
+                  "url": "https://www.nhs.uk"
+                },
+                {
+                  "name": "AstraZeneca",
+                  "sector": "Pharmaceuticals",
+                  "url": "https://www.astrazeneca.com"
+                },
+                {
+                  "name": "GSK",
+                  "sector": "Pharmaceuticals",
+                  "url": "https://www.gsk.com"
+                },
+                {
+                  "name": "Wellcome Sanger Institute",
+                  "sector": "Genomics research",
+                  "url": "https://www.sanger.ac.uk"
+                }
+              ],
+              "natural_sci": [
+                {
+                  "name": "Met Office",
+                  "sector": "Weather and climate science",
+                  "url": "https://www.metoffice.gov.uk"
+                },
+                {
+                  "name": "UK Research and Innovation",
+                  "sector": "Research funding",
+                  "url": "https://www.ukri.org"
+                },
+                {
+                  "name": "BP",
+                  "sector": "Energy",
+                  "url": "https://www.bp.com"
+                },
+                {
+                  "name": "Shell",
+                  "sector": "Energy",
+                  "url": "https://www.shell.com"
+                },
+                {
+                  "name": "Diamond Light Source",
+                  "sector": "Synchrotron science",
+                  "url": "https://www.diamond.ac.uk"
+                }
+              ],
+              "social_law": [
+                {
+                  "name": "Linklaters",
+                  "sector": "Law firm",
+                  "url": "https://www.linklaters.com"
+                },
+                {
+                  "name": "Clifford Chance",
+                  "sector": "Law firm",
+                  "url": "https://www.cliffordchance.com"
+                },
+                {
+                  "name": "UK Civil Service",
+                  "sector": "Government",
+                  "url": "https://www.gov.uk"
+                },
+                {
+                  "name": "Citizens Advice",
+                  "sector": "Legal and social advice",
+                  "url": "https://www.citizensadvice.org.uk"
+                }
+              ],
+              "arts_media": [
+                {
+                  "name": "BBC",
+                  "sector": "Public broadcasting",
+                  "url": "https://www.bbc.co.uk"
+                },
+                {
+                  "name": "ITV",
+                  "sector": "Television",
+                  "url": "https://www.itvplc.com"
+                },
+                {
+                  "name": "WPP",
+                  "sector": "Advertising",
+                  "url": "https://www.wpp.com"
+                },
+                {
+                  "name": "Sky",
+                  "sector": "Media and broadband",
+                  "url": "https://www.sky.com"
+                },
+                {
+                  "name": "The Guardian",
+                  "sector": "News media",
+                  "url": "https://www.theguardian.com"
+                }
+              ],
+              "education_hum": [
+                {
+                  "name": "University of Oxford",
+                  "sector": "Higher education",
+                  "url": "https://www.ox.ac.uk"
+                },
+                {
+                  "name": "University of Cambridge",
+                  "sector": "Higher education",
+                  "url": "https://www.cam.ac.uk"
+                },
+                {
+                  "name": "British Council",
+                  "sector": "Education and culture",
+                  "url": "https://www.britishcouncil.org"
+                },
+                {
+                  "name": "Pearson",
+                  "sector": "Educational publishing",
+                  "url": "https://www.pearson.com"
+                },
+                {
+                  "name": "British Museum",
+                  "sector": "Museums",
+                  "url": "https://www.britishmuseum.org"
+                }
+              ]
+            }
+          },
+          "text": {
+            "en": "Examples of major employers by field. The list shows where large employers operate; it is not a ranking or a hiring guarantee.",
+            "ru": "Примеры крупных работодателей по направлениям. Список показывает, где работают крупные организации; это не рейтинг и не гарантия трудоустройства.",
+            "uz": "Yoʼnalishlar boʼyicha yirik ish beruvchilarga misollar. Roʼyxat yirik tashkilotlar qayerda ishlashini koʼrsatadi; bu reyting yoki ishga joylashish kafolati emas."
+          },
+          "sources": [
+            "https://www.arm.com",
+            "https://www.rolls-royce.com",
+            "https://www.hsbc.com",
+            "https://www.nhs.uk",
+            "https://www.metoffice.gov.uk",
+            "https://www.linklaters.com",
+            "https://www.bbc.co.uk",
+            "https://www.ox.ac.uk"
+          ]
+        },
+        "salaries": {
+          "score": null,
+          "values": {
+            "currency": "USD",
+            "year": 2025,
+            "overall_median_annual": 51403
+          },
+          "text": {
+            "en": "Overall median annual earnings: about 51,403 USD in 2025 (39,039 GBP, full-time employees, April 2025). Converted at the World Bank 2025 average official exchange rate. Figures are national medians, not earnings by degree.",
+            "ru": "Медианный годовой заработок в целом: около 51 403 USD в 2025 году (39 039 GBP  работники на полной ставке  апрель 2025). Пересчитано по среднегодовому официальному курсу Всемирного банка за 2025 год. Это национальные медианы  а не заработок по специальностям.",
+            "uz": "Umumiy mediana yillik daromad: 2025-yilda taxminan 51 403 USD (39 039 GBP  toʼliq stavkadagi xodimlar  2025-yil aprel). Jahon banki 2025-yil oʼrtacha rasmiy kursi boʼyicha qayta hisoblangan. Bu milliy medianalar  mutaxassislik boʼyicha daromad emas."
+          },
+          "sources": [
+            "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/bulletins/annualsurveyofhoursandearnings/2025",
+            "https://data.worldbank.org/indicator/PA.NUS.FCRF"
+          ]
         }
       }
     },
@@ -209,6 +714,2308 @@
           },
           "sources": [
             "https://www.make-it-in-germany.com/en/visa-residence/types/study"
+          ]
+        },
+        "employers": {
+          "score": 5,
+          "values": {
+            "fields": {
+              "cs_it": [
+                {
+                  "name": "SAP",
+                  "sector": "Enterprise software",
+                  "url": "https://www.sap.com"
+                },
+                {
+                  "name": "Siemens",
+                  "sector": "Industrial technology",
+                  "url": "https://www.siemens.com"
+                },
+                {
+                  "name": "Deutsche Telekom",
+                  "sector": "Telecommunications",
+                  "url": "https://www.telekom.com"
+                },
+                {
+                  "name": "Zalando",
+                  "sector": "E-commerce",
+                  "url": "https://corporate.zalando.com"
+                },
+                {
+                  "name": "Infineon Technologies",
+                  "sector": "Semiconductors",
+                  "url": "https://www.infineon.com"
+                }
+              ],
+              "engineering": [
+                {
+                  "name": "Volkswagen Group",
+                  "sector": "Automotive",
+                  "url": "https://www.volkswagen-group.com"
+                },
+                {
+                  "name": "BMW Group",
+                  "sector": "Automotive",
+                  "url": "https://www.bmwgroup.com"
+                },
+                {
+                  "name": "Mercedes-Benz Group",
+                  "sector": "Automotive",
+                  "url": "https://group.mercedes-benz.com"
+                },
+                {
+                  "name": "Bosch",
+                  "sector": "Automotive and industrial technology",
+                  "url": "https://www.bosch.com"
+                },
+                {
+                  "name": "Siemens Energy",
+                  "sector": "Energy technology",
+                  "url": "https://www.siemens-energy.com"
+                }
+              ],
+              "business_econ": [
+                {
+                  "name": "Allianz",
+                  "sector": "Insurance",
+                  "url": "https://www.allianz.com"
+                },
+                {
+                  "name": "Deutsche Bank",
+                  "sector": "Banking",
+                  "url": "https://www.db.com"
+                },
+                {
+                  "name": "Munich Re",
+                  "sector": "Reinsurance",
+                  "url": "https://www.munichre.com"
+                },
+                {
+                  "name": "Deutsche Börse",
+                  "sector": "Financial markets",
+                  "url": "https://www.deutsche-boerse.com"
+                },
+                {
+                  "name": "Deutsche Bundesbank",
+                  "sector": "Central bank",
+                  "url": "https://www.bundesbank.de"
+                }
+              ],
+              "medicine_bio": [
+                {
+                  "name": "Bayer",
+                  "sector": "Pharmaceuticals and life sciences",
+                  "url": "https://www.bayer.com"
+                },
+                {
+                  "name": "BioNTech",
+                  "sector": "Biotechnology",
+                  "url": "https://www.biontech.com"
+                },
+                {
+                  "name": "Charité – Universitätsmedizin Berlin",
+                  "sector": "University hospital",
+                  "url": "https://www.charite.de"
+                },
+                {
+                  "name": "Merck KGaA",
+                  "sector": "Pharmaceuticals and chemicals",
+                  "url": "https://www.merckgroup.com"
+                },
+                {
+                  "name": "Boehringer Ingelheim",
+                  "sector": "Pharmaceuticals",
+                  "url": "https://www.boehringer-ingelheim.com"
+                }
+              ],
+              "natural_sci": [
+                {
+                  "name": "BASF",
+                  "sector": "Chemicals",
+                  "url": "https://www.basf.com"
+                },
+                {
+                  "name": "Max Planck Society",
+                  "sector": "Basic research",
+                  "url": "https://www.mpg.de"
+                },
+                {
+                  "name": "Fraunhofer Society",
+                  "sector": "Applied research",
+                  "url": "https://www.fraunhofer.de"
+                },
+                {
+                  "name": "Helmholtz Association",
+                  "sector": "Research",
+                  "url": "https://www.helmholtz.de"
+                },
+                {
+                  "name": "Forschungszentrum Jülich",
+                  "sector": "Research centre",
+                  "url": "https://www.fz-juelich.de"
+                }
+              ],
+              "social_law": [
+                {
+                  "name": "Federal Foreign Office",
+                  "sector": "Government",
+                  "url": "https://www.auswaertiges-amt.de"
+                },
+                {
+                  "name": "Freshfields",
+                  "sector": "Law firm",
+                  "url": "https://www.freshfields.com"
+                },
+                {
+                  "name": "Hengeler Mueller",
+                  "sector": "Law firm",
+                  "url": "https://www.hengeler.com"
+                },
+                {
+                  "name": "GIZ",
+                  "sector": "International cooperation",
+                  "url": "https://www.giz.de"
+                }
+              ],
+              "arts_media": [
+                {
+                  "name": "Bertelsmann",
+                  "sector": "Media",
+                  "url": "https://www.bertelsmann.com"
+                },
+                {
+                  "name": "ZDF",
+                  "sector": "Public broadcasting",
+                  "url": "https://www.zdf.de"
+                },
+                {
+                  "name": "ARD",
+                  "sector": "Public broadcasting",
+                  "url": "https://www.ard.de"
+                },
+                {
+                  "name": "Axel Springer",
+                  "sector": "News publishing",
+                  "url": "https://www.axelspringer.com"
+                },
+                {
+                  "name": "Deutsche Welle",
+                  "sector": "International broadcasting",
+                  "url": "https://www.dw.com"
+                }
+              ],
+              "education_hum": [
+                {
+                  "name": "LMU Munich",
+                  "sector": "Higher education",
+                  "url": "https://www.lmu.de"
+                },
+                {
+                  "name": "Heidelberg University",
+                  "sector": "Higher education",
+                  "url": "https://www.uni-heidelberg.de"
+                },
+                {
+                  "name": "DAAD",
+                  "sector": "Academic exchange",
+                  "url": "https://www.daad.de"
+                },
+                {
+                  "name": "Goethe-Institut",
+                  "sector": "Language and culture",
+                  "url": "https://www.goethe.de"
+                },
+                {
+                  "name": "Humboldt University of Berlin",
+                  "sector": "Higher education",
+                  "url": "https://www.hu-berlin.de"
+                }
+              ]
+            }
+          },
+          "text": {
+            "en": "Examples of major employers by field. The list shows where large employers operate; it is not a ranking or a hiring guarantee.",
+            "ru": "Примеры крупных работодателей по направлениям. Список показывает, где работают крупные организации; это не рейтинг и не гарантия трудоустройства.",
+            "uz": "Yoʼnalishlar boʼyicha yirik ish beruvchilarga misollar. Roʼyxat yirik tashkilotlar qayerda ishlashini koʼrsatadi; bu reyting yoki ishga joylashish kafolati emas."
+          },
+          "sources": [
+            "https://www.sap.com",
+            "https://www.volkswagen-group.com",
+            "https://www.allianz.com",
+            "https://www.bayer.com",
+            "https://www.basf.com",
+            "https://www.auswaertiges-amt.de",
+            "https://www.bertelsmann.com",
+            "https://www.lmu.de"
+          ]
+        },
+        "salaries": {
+          "score": null,
+          "values": {
+            "currency": "USD",
+            "year": 2025,
+            "overall_median_annual": 61094
+          },
+          "text": {
+            "en": "Overall median annual earnings: about 61,094 USD in 2025 (54,066 EUR gross, full-time employees incl. bonuses). Converted at the World Bank 2025 average official exchange rate. Figures are national medians, not earnings by degree.",
+            "ru": "Медианный годовой заработок в целом: около 61 094 USD в 2025 году (54 066 EUR брутто  работники на полной ставке  включая премии). Пересчитано по среднегодовому официальному курсу Всемирного банка за 2025 год. Это национальные медианы  а не заработок по специальностям.",
+            "uz": "Umumiy mediana yillik daromad: 2025-yilda taxminan 61 094 USD (54 066 EUR yalpi  toʼliq stavkadagi xodimlar  mukofotlar bilan). Jahon banki 2025-yil oʼrtacha rasmiy kursi boʼyicha qayta hisoblangan. Bu milliy medianalar  mutaxassislik boʼyicha daromad emas."
+          },
+          "sources": [
+            "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/04/PD26_113_621.html",
+            "https://data.worldbank.org/indicator/PA.NUS.FCRF"
+          ]
+        }
+      }
+    },
+    {
+      "country": "AE",
+      "as_of": "2026-11",
+      "facts": {
+        "employers": {
+          "score": 3,
+          "values": {
+            "fields": {
+              "cs_it": [
+                {
+                  "name": "G42",
+                  "sector": "Artificial intelligence",
+                  "url": "https://www.g42.ai"
+                },
+                {
+                  "name": "e&",
+                  "sector": "Telecommunications",
+                  "url": "https://www.eand.com"
+                },
+                {
+                  "name": "du",
+                  "sector": "Telecommunications",
+                  "url": "https://www.du.ae"
+                },
+                {
+                  "name": "Careem",
+                  "sector": "Ride-hailing and fintech",
+                  "url": "https://www.careem.com"
+                }
+              ],
+              "engineering": [
+                {
+                  "name": "Emirates Global Aluminium",
+                  "sector": "Aluminium",
+                  "url": "https://www.ega.ae"
+                },
+                {
+                  "name": "ADNOC",
+                  "sector": "Oil and gas",
+                  "url": "https://www.adnoc.ae"
+                },
+                {
+                  "name": "DEWA",
+                  "sector": "Electric and water utility",
+                  "url": "https://www.dewa.gov.ae"
+                },
+                {
+                  "name": "Masdar",
+                  "sector": "Renewable energy",
+                  "url": "https://masdar.ae"
+                },
+                {
+                  "name": "EDGE Group",
+                  "sector": "Defence and technology",
+                  "url": "https://www.edgegroup.ae"
+                }
+              ],
+              "business_econ": [
+                {
+                  "name": "Emirates NBD",
+                  "sector": "Banking",
+                  "url": "https://www.emiratesnbd.com"
+                },
+                {
+                  "name": "First Abu Dhabi Bank",
+                  "sector": "Banking",
+                  "url": "https://www.bankfab.com"
+                },
+                {
+                  "name": "Mubadala",
+                  "sector": "Investment",
+                  "url": "https://www.mubadala.com"
+                },
+                {
+                  "name": "DP World",
+                  "sector": "Ports and logistics",
+                  "url": "https://www.dpworld.com"
+                },
+                {
+                  "name": "Abu Dhabi Investment Authority",
+                  "sector": "Sovereign wealth fund",
+                  "url": "https://www.adia.ae"
+                }
+              ],
+              "medicine_bio": [
+                {
+                  "name": "Cleveland Clinic Abu Dhabi",
+                  "sector": "Hospital",
+                  "url": "https://www.clevelandclinicabudhabi.ae"
+                },
+                {
+                  "name": "M42",
+                  "sector": "Healthcare and genomics",
+                  "url": "https://www.m42.ae"
+                },
+                {
+                  "name": "Mediclinic Middle East",
+                  "sector": "Hospitals",
+                  "url": "https://www.mediclinic.ae"
+                },
+                {
+                  "name": "Burjeel Holdings",
+                  "sector": "Hospitals",
+                  "url": "https://www.burjeel.com"
+                }
+              ],
+              "natural_sci": [
+                {
+                  "name": "ADNOC",
+                  "sector": "Oil and gas",
+                  "url": "https://www.adnoc.ae"
+                },
+                {
+                  "name": "Masdar",
+                  "sector": "Renewable energy",
+                  "url": "https://masdar.ae"
+                },
+                {
+                  "name": "Khalifa University",
+                  "sector": "Science and technology university",
+                  "url": "https://www.ku.ac.ae"
+                },
+                {
+                  "name": "Technology Innovation Institute",
+                  "sector": "Applied research",
+                  "url": "https://www.tii.ae"
+                },
+                {
+                  "name": "Mohammed bin Rashid Space Centre",
+                  "sector": "Space agency",
+                  "url": "https://www.mbrsc.ae"
+                }
+              ],
+              "social_law": [
+                {
+                  "name": "Ministry of Foreign Affairs of the UAE",
+                  "sector": "Government",
+                  "url": "https://www.mofa.gov.ae"
+                },
+                {
+                  "name": "Dubai Courts",
+                  "sector": "Judiciary",
+                  "url": "https://www.dubaicourts.ae"
+                },
+                {
+                  "name": "Al Tamimi & Company",
+                  "sector": "Law firm",
+                  "url": "https://www.tamimi.com"
+                },
+                {
+                  "name": "Abu Dhabi Global Market",
+                  "sector": "Financial centre and courts",
+                  "url": "https://www.adgm.com"
+                }
+              ],
+              "arts_media": [
+                {
+                  "name": "twofour54",
+                  "sector": "Media hub",
+                  "url": "https://www.twofour54.com"
+                },
+                {
+                  "name": "MBC Group",
+                  "sector": "Broadcasting",
+                  "url": "https://www.mbc.net"
+                },
+                {
+                  "name": "Sky News Arabia",
+                  "sector": "News broadcasting",
+                  "url": "https://www.skynewsarabia.com"
+                }
+              ],
+              "education_hum": [
+                {
+                  "name": "Khalifa University",
+                  "sector": "Higher education",
+                  "url": "https://www.ku.ac.ae"
+                },
+                {
+                  "name": "United Arab Emirates University",
+                  "sector": "Higher education",
+                  "url": "https://www.uaeu.ac.ae"
+                },
+                {
+                  "name": "NYU Abu Dhabi",
+                  "sector": "Higher education",
+                  "url": "https://nyuad.nyu.edu"
+                },
+                {
+                  "name": "American University of Sharjah",
+                  "sector": "Higher education",
+                  "url": "https://www.aus.edu"
+                },
+                {
+                  "name": "Ministry of Education of the UAE",
+                  "sector": "Government",
+                  "url": "https://www.moe.gov.ae"
+                }
+              ]
+            }
+          },
+          "text": {
+            "en": "Examples of major employers by field. The list shows where large employers operate; it is not a ranking or a hiring guarantee.",
+            "ru": "Примеры крупных работодателей по направлениям. Список показывает, где работают крупные организации; это не рейтинг и не гарантия трудоустройства.",
+            "uz": "Yoʼnalishlar boʼyicha yirik ish beruvchilarga misollar. Roʼyxat yirik tashkilotlar qayerda ishlashini koʼrsatadi; bu reyting yoki ishga joylashish kafolati emas."
+          },
+          "sources": [
+            "https://www.g42.ai",
+            "https://www.ega.ae",
+            "https://www.emiratesnbd.com",
+            "https://www.clevelandclinicabudhabi.ae",
+            "https://www.adnoc.ae",
+            "https://www.mofa.gov.ae",
+            "https://www.twofour54.com",
+            "https://www.ku.ac.ae"
+          ]
+        }
+      }
+    },
+    {
+      "country": "CA",
+      "as_of": "2026-11",
+      "facts": {
+        "employers": {
+          "score": 4,
+          "values": {
+            "fields": {
+              "cs_it": [
+                {
+                  "name": "Shopify",
+                  "sector": "E-commerce software",
+                  "url": "https://www.shopify.com"
+                },
+                {
+                  "name": "OpenText",
+                  "sector": "Enterprise software",
+                  "url": "https://www.opentext.com"
+                },
+                {
+                  "name": "CGI",
+                  "sector": "IT services",
+                  "url": "https://www.cgi.com"
+                },
+                {
+                  "name": "Cohere",
+                  "sector": "Artificial intelligence",
+                  "url": "https://cohere.com"
+                },
+                {
+                  "name": "TELUS",
+                  "sector": "Telecommunications",
+                  "url": "https://www.telus.com"
+                }
+              ],
+              "engineering": [
+                {
+                  "name": "Bombardier",
+                  "sector": "Aerospace",
+                  "url": "https://www.bombardier.com"
+                },
+                {
+                  "name": "AtkinsRéalis",
+                  "sector": "Engineering services",
+                  "url": "https://www.atkinsrealis.com"
+                },
+                {
+                  "name": "Magna International",
+                  "sector": "Automotive parts",
+                  "url": "https://www.magna.com"
+                },
+                {
+                  "name": "CAE",
+                  "sector": "Aviation simulation",
+                  "url": "https://www.cae.com"
+                },
+                {
+                  "name": "Hydro-Québec",
+                  "sector": "Electric utility",
+                  "url": "https://www.hydroquebec.com"
+                }
+              ],
+              "business_econ": [
+                {
+                  "name": "Royal Bank of Canada",
+                  "sector": "Banking",
+                  "url": "https://www.rbc.com"
+                },
+                {
+                  "name": "TD Bank Group",
+                  "sector": "Banking",
+                  "url": "https://www.td.com"
+                },
+                {
+                  "name": "Bank of Canada",
+                  "sector": "Central bank",
+                  "url": "https://www.bankofcanada.ca"
+                },
+                {
+                  "name": "Manulife",
+                  "sector": "Insurance",
+                  "url": "https://www.manulife.com"
+                },
+                {
+                  "name": "Brookfield",
+                  "sector": "Asset management",
+                  "url": "https://www.brookfield.com"
+                }
+              ],
+              "medicine_bio": [
+                {
+                  "name": "University Health Network",
+                  "sector": "Hospitals and research",
+                  "url": "https://www.uhn.ca"
+                },
+                {
+                  "name": "Sunnybrook Health Sciences Centre",
+                  "sector": "Hospital",
+                  "url": "https://sunnybrook.ca"
+                },
+                {
+                  "name": "Canadian Institutes of Health Research",
+                  "sector": "Health research funding",
+                  "url": "https://cihr-irsc.gc.ca"
+                },
+                {
+                  "name": "AbCellera",
+                  "sector": "Biotechnology",
+                  "url": "https://www.abcellera.com"
+                }
+              ],
+              "natural_sci": [
+                {
+                  "name": "Natural Resources Canada",
+                  "sector": "Government science",
+                  "url": "https://natural-resources.canada.ca"
+                },
+                {
+                  "name": "Suncor Energy",
+                  "sector": "Energy",
+                  "url": "https://www.suncor.com"
+                },
+                {
+                  "name": "Teck Resources",
+                  "sector": "Mining",
+                  "url": "https://www.teck.com"
+                },
+                {
+                  "name": "TRIUMF",
+                  "sector": "Particle and nuclear physics",
+                  "url": "https://triumf.ca"
+                }
+              ],
+              "social_law": [
+                {
+                  "name": "Department of Justice Canada",
+                  "sector": "Government and law",
+                  "url": "https://www.justice.gc.ca"
+                },
+                {
+                  "name": "Global Affairs Canada",
+                  "sector": "Government",
+                  "url": "https://www.international.gc.ca"
+                },
+                {
+                  "name": "Osler",
+                  "sector": "Law firm",
+                  "url": "https://www.osler.com"
+                },
+                {
+                  "name": "Blakes",
+                  "sector": "Law firm",
+                  "url": "https://www.blakes.com"
+                },
+                {
+                  "name": "Statistics Canada",
+                  "sector": "Government statistics",
+                  "url": "https://www.statcan.gc.ca"
+                }
+              ],
+              "arts_media": [
+                {
+                  "name": "CBC/Radio-Canada",
+                  "sector": "Public broadcasting",
+                  "url": "https://www.cbc.ca"
+                },
+                {
+                  "name": "Ubisoft Montréal",
+                  "sector": "Video games",
+                  "url": "https://montreal.ubisoft.com"
+                },
+                {
+                  "name": "Corus Entertainment",
+                  "sector": "Media",
+                  "url": "https://www.corusent.com"
+                },
+                {
+                  "name": "National Film Board of Canada",
+                  "sector": "Film",
+                  "url": "https://www.nfb.ca"
+                },
+                {
+                  "name": "Bell Media",
+                  "sector": "Media",
+                  "url": "https://www.bellmedia.ca"
+                }
+              ],
+              "education_hum": [
+                {
+                  "name": "University of Toronto",
+                  "sector": "Higher education",
+                  "url": "https://www.utoronto.ca"
+                },
+                {
+                  "name": "McGill University",
+                  "sector": "Higher education",
+                  "url": "https://www.mcgill.ca"
+                },
+                {
+                  "name": "University of British Columbia",
+                  "sector": "Higher education",
+                  "url": "https://www.ubc.ca"
+                },
+                {
+                  "name": "Toronto District School Board",
+                  "sector": "School system",
+                  "url": "https://www.tdsb.on.ca"
+                }
+              ]
+            }
+          },
+          "text": {
+            "en": "Examples of major employers by field. The list shows where large employers operate; it is not a ranking or a hiring guarantee.",
+            "ru": "Примеры крупных работодателей по направлениям. Список показывает, где работают крупные организации; это не рейтинг и не гарантия трудоустройства.",
+            "uz": "Yoʼnalishlar boʼyicha yirik ish beruvchilarga misollar. Roʼyxat yirik tashkilotlar qayerda ishlashini koʼrsatadi; bu reyting yoki ishga joylashish kafolati emas."
+          },
+          "sources": [
+            "https://www.shopify.com",
+            "https://www.bombardier.com",
+            "https://www.rbc.com",
+            "https://www.uhn.ca",
+            "https://natural-resources.canada.ca",
+            "https://www.justice.gc.ca",
+            "https://www.cbc.ca",
+            "https://www.utoronto.ca"
+          ]
+        },
+        "salaries": {
+          "score": null,
+          "values": {
+            "currency": "USD",
+            "year": 2025,
+            "overall_median_annual": 45777
+          },
+          "text": {
+            "en": "Overall median annual earnings: about 45,777 USD in 2025 (median hourly wage 30.77 CAD × 2,080 hours, all employees incl. part-time). Converted at the World Bank 2025 average official exchange rate. Figures are national medians, not earnings by degree.",
+            "ru": "Медианный годовой заработок в целом: около 45 777 USD в 2025 году (медианная почасовая ставка 30 77 CAD × 2080 часов  все работники  включая занятых неполный день). Пересчитано по среднегодовому официальному курсу Всемирного банка за 2025 год. Это национальные медианы  а не заработок по специальностям.",
+            "uz": "Umumiy mediana yillik daromad: 2025-yilda taxminan 45 777 USD (mediana soatlik stavka 30 77 CAD × 2080 soat  barcha xodimlar  qisman bandlar ham). Jahon banki 2025-yil oʼrtacha rasmiy kursi boʼyicha qayta hisoblangan. Bu milliy medianalar  mutaxassislik boʼyicha daromad emas."
+          },
+          "sources": [
+            "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1410006401",
+            "https://data.worldbank.org/indicator/PA.NUS.FCRF"
+          ]
+        },
+        "work_rights": {
+          "score": null,
+          "values": {
+            "off_campus_hours_per_week": 24
+          },
+          "text": {
+            "en": "Eligible international students may work off campus up to 24 hours per week while classes are in session and full time during scheduled breaks, but only after their program has started.",
+            "ru": "Подходящие иностранные студенты могут работать вне кампуса до 24 часов в неделю во время занятий и полный день во время запланированных каникул, но только после начала программы.",
+            "uz": "Muvofiq xorijiy talabalar oʼqish davrida kampusdan tashqarida haftasiga 24 soatgacha, rejalashtirilgan taʼtillarda esa toʼliq ish kuni ishlashi mumkin, lekin faqat dastur boshlangandan keyin."
+          },
+          "sources": [
+            "https://www.ircc.canada.ca/english/helpcentre/answer.asp?qnum=503&top=15",
+            "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work/work-off-campus.html"
+          ]
+        }
+      }
+    },
+    {
+      "country": "HU",
+      "as_of": "2026-11",
+      "facts": {
+        "employers": {
+          "score": 3,
+          "values": {
+            "fields": {
+              "cs_it": [
+                {
+                  "name": "Prezi",
+                  "sector": "Presentation software",
+                  "url": "https://prezi.com"
+                },
+                {
+                  "name": "Graphisoft",
+                  "sector": "Architecture software",
+                  "url": "https://graphisoft.com"
+                },
+                {
+                  "name": "EPAM",
+                  "sector": "IT services",
+                  "url": "https://www.epam.com"
+                },
+                {
+                  "name": "Magyar Telekom",
+                  "sector": "Telecommunications",
+                  "url": "https://www.telekom.hu"
+                }
+              ],
+              "engineering": [
+                {
+                  "name": "Audi Hungaria",
+                  "sector": "Automotive",
+                  "url": "https://audi.hu"
+                },
+                {
+                  "name": "Bosch Hungary",
+                  "sector": "Automotive and industrial technology",
+                  "url": "https://www.bosch.hu"
+                },
+                {
+                  "name": "MOL Group",
+                  "sector": "Oil, gas and chemicals",
+                  "url": "https://www.mol.hu"
+                },
+                {
+                  "name": "Tungsram",
+                  "sector": "Lighting technology",
+                  "url": "https://www.tungsram.com"
+                }
+              ],
+              "business_econ": [
+                {
+                  "name": "OTP Bank",
+                  "sector": "Banking",
+                  "url": "https://www.otpbank.hu"
+                },
+                {
+                  "name": "MBH Bank",
+                  "sector": "Banking",
+                  "url": "https://www.mbhbank.hu"
+                },
+                {
+                  "name": "Magyar Nemzeti Bank",
+                  "sector": "Central bank",
+                  "url": "https://www.mnb.hu"
+                }
+              ],
+              "medicine_bio": [
+                {
+                  "name": "Gedeon Richter",
+                  "sector": "Pharmaceuticals",
+                  "url": "https://www.richter.hu"
+                },
+                {
+                  "name": "Egis Pharmaceuticals",
+                  "sector": "Pharmaceuticals",
+                  "url": "https://www.egis.hu"
+                },
+                {
+                  "name": "Semmelweis University",
+                  "sector": "Medical university and hospitals",
+                  "url": "https://semmelweis.hu"
+                }
+              ],
+              "natural_sci": [
+                {
+                  "name": "HUN-REN",
+                  "sector": "Research network",
+                  "url": "https://hun-ren.hu"
+                },
+                {
+                  "name": "MOL Group",
+                  "sector": "Oil, gas and chemicals",
+                  "url": "https://www.mol.hu"
+                },
+                {
+                  "name": "Eötvös Loránd University",
+                  "sector": "Higher education and research",
+                  "url": "https://www.elte.hu"
+                },
+                {
+                  "name": "Paks Nuclear Power Plant",
+                  "sector": "Nuclear power",
+                  "url": "https://www.atomeromu.hu"
+                }
+              ],
+              "social_law": [
+                {
+                  "name": "Constitutional Court of Hungary",
+                  "sector": "Judiciary",
+                  "url": "https://hunconcourt.hu"
+                },
+                {
+                  "name": "Government of Hungary",
+                  "sector": "Government",
+                  "url": "https://kormany.hu"
+                },
+                {
+                  "name": "Central European University",
+                  "sector": "Higher education",
+                  "url": "https://www.ceu.edu"
+                }
+              ],
+              "arts_media": [
+                {
+                  "name": "RTL Hungary",
+                  "sector": "Television",
+                  "url": "https://rtl.hu"
+                },
+                {
+                  "name": "MTVA",
+                  "sector": "Public media",
+                  "url": "https://www.mtva.hu"
+                },
+                {
+                  "name": "Hungarian National Film Institute",
+                  "sector": "Film",
+                  "url": "https://nfi.hu"
+                }
+              ],
+              "education_hum": [
+                {
+                  "name": "Eötvös Loránd University",
+                  "sector": "Higher education",
+                  "url": "https://www.elte.hu"
+                },
+                {
+                  "name": "Corvinus University of Budapest",
+                  "sector": "Higher education",
+                  "url": "https://www.uni-corvinus.hu"
+                },
+                {
+                  "name": "University of Szeged",
+                  "sector": "Higher education",
+                  "url": "https://u-szeged.hu"
+                },
+                {
+                  "name": "Tempus Public Foundation",
+                  "sector": "Education programmes",
+                  "url": "https://tpf.hu"
+                }
+              ]
+            }
+          },
+          "text": {
+            "en": "Examples of major employers by field. The list shows where large employers operate; it is not a ranking or a hiring guarantee.",
+            "ru": "Примеры крупных работодателей по направлениям. Список показывает, где работают крупные организации; это не рейтинг и не гарантия трудоустройства.",
+            "uz": "Yoʼnalishlar boʼyicha yirik ish beruvchilarga misollar. Roʼyxat yirik tashkilotlar qayerda ishlashini koʼrsatadi; bu reyting yoki ishga joylashish kafolati emas."
+          },
+          "sources": [
+            "https://prezi.com",
+            "https://audi.hu",
+            "https://www.otpbank.hu",
+            "https://www.richter.hu",
+            "https://hun-ren.hu",
+            "https://hunconcourt.hu",
+            "https://rtl.hu",
+            "https://www.elte.hu"
+          ]
+        }
+      }
+    },
+    {
+      "country": "IT",
+      "as_of": "2026-11",
+      "facts": {
+        "employers": {
+          "score": 3,
+          "values": {
+            "fields": {
+              "cs_it": [
+                {
+                  "name": "Leonardo",
+                  "sector": "Aerospace, defence and IT",
+                  "url": "https://www.leonardo.com"
+                },
+                {
+                  "name": "TIM",
+                  "sector": "Telecommunications",
+                  "url": "https://www.gruppotim.it"
+                },
+                {
+                  "name": "Reply",
+                  "sector": "IT consulting",
+                  "url": "https://www.reply.com"
+                },
+                {
+                  "name": "Engineering Ingegneria Informatica",
+                  "sector": "IT services",
+                  "url": "https://www.eng.it"
+                },
+                {
+                  "name": "Almaviva",
+                  "sector": "IT services",
+                  "url": "https://www.almaviva.it"
+                }
+              ],
+              "engineering": [
+                {
+                  "name": "Ferrari",
+                  "sector": "Automotive",
+                  "url": "https://www.ferrari.com"
+                },
+                {
+                  "name": "Stellantis",
+                  "sector": "Automotive",
+                  "url": "https://www.stellantis.com"
+                },
+                {
+                  "name": "Enel",
+                  "sector": "Electric utility",
+                  "url": "https://www.enel.com"
+                },
+                {
+                  "name": "Pirelli",
+                  "sector": "Tyres",
+                  "url": "https://www.pirelli.com"
+                },
+                {
+                  "name": "Fincantieri",
+                  "sector": "Shipbuilding",
+                  "url": "https://www.fincantieri.com"
+                }
+              ],
+              "business_econ": [
+                {
+                  "name": "Intesa Sanpaolo",
+                  "sector": "Banking",
+                  "url": "https://group.intesasanpaolo.com"
+                },
+                {
+                  "name": "UniCredit",
+                  "sector": "Banking",
+                  "url": "https://www.unicreditgroup.eu"
+                },
+                {
+                  "name": "Generali",
+                  "sector": "Insurance",
+                  "url": "https://www.generali.com"
+                },
+                {
+                  "name": "Banca d'Italia",
+                  "sector": "Central bank",
+                  "url": "https://www.bancaditalia.it"
+                }
+              ],
+              "medicine_bio": [
+                {
+                  "name": "Menarini",
+                  "sector": "Pharmaceuticals",
+                  "url": "https://www.menarini.com"
+                },
+                {
+                  "name": "Chiesi Farmaceutici",
+                  "sector": "Pharmaceuticals",
+                  "url": "https://www.chiesi.com"
+                },
+                {
+                  "name": "Humanitas",
+                  "sector": "Hospital and research",
+                  "url": "https://www.humanitas.it"
+                },
+                {
+                  "name": "Istituto Italiano di Tecnologia",
+                  "sector": "Research institute",
+                  "url": "https://www.iit.it"
+                }
+              ],
+              "natural_sci": [
+                {
+                  "name": "Eni",
+                  "sector": "Energy",
+                  "url": "https://www.eni.com"
+                },
+                {
+                  "name": "CNR",
+                  "sector": "National research council",
+                  "url": "https://www.cnr.it"
+                },
+                {
+                  "name": "INFN",
+                  "sector": "Nuclear and particle physics",
+                  "url": "https://home.infn.it"
+                },
+                {
+                  "name": "Italian Space Agency",
+                  "sector": "Space agency",
+                  "url": "https://www.asi.it"
+                },
+                {
+                  "name": "ENEA",
+                  "sector": "Energy and environment research",
+                  "url": "https://www.enea.it"
+                }
+              ],
+              "social_law": [
+                {
+                  "name": "Ministry of Foreign Affairs of Italy",
+                  "sector": "Government",
+                  "url": "https://www.esteri.it"
+                },
+                {
+                  "name": "BonelliErede",
+                  "sector": "Law firm",
+                  "url": "https://www.belex.com"
+                },
+                {
+                  "name": "Chiomenti",
+                  "sector": "Law firm",
+                  "url": "https://www.chiomenti.net"
+                },
+                {
+                  "name": "Constitutional Court of Italy",
+                  "sector": "Judiciary",
+                  "url": "https://www.cortecostituzionale.it"
+                }
+              ],
+              "arts_media": [
+                {
+                  "name": "RAI",
+                  "sector": "Public broadcasting",
+                  "url": "https://www.rai.it"
+                },
+                {
+                  "name": "MFE-MediaForEurope",
+                  "sector": "Media",
+                  "url": "https://www.mfemediaforeurope.com"
+                },
+                {
+                  "name": "Armani Group",
+                  "sector": "Fashion",
+                  "url": "https://www.armani.com"
+                },
+                {
+                  "name": "Prada Group",
+                  "sector": "Fashion",
+                  "url": "https://www.pradagroup.com"
+                },
+                {
+                  "name": "EssilorLuxottica",
+                  "sector": "Eyewear and design",
+                  "url": "https://www.essilorluxottica.com"
+                }
+              ],
+              "education_hum": [
+                {
+                  "name": "University of Bologna",
+                  "sector": "Higher education",
+                  "url": "https://www.unibo.it"
+                },
+                {
+                  "name": "Sapienza University of Rome",
+                  "sector": "Higher education",
+                  "url": "https://www.uniroma1.it"
+                },
+                {
+                  "name": "Politecnico di Milano",
+                  "sector": "Technical university",
+                  "url": "https://www.polimi.it"
+                },
+                {
+                  "name": "Ministry of University and Research",
+                  "sector": "Government",
+                  "url": "https://www.mur.gov.it"
+                },
+                {
+                  "name": "Scuola Normale Superiore",
+                  "sector": "Higher education",
+                  "url": "https://www.sns.it"
+                }
+              ]
+            }
+          },
+          "text": {
+            "en": "Examples of major employers by field. The list shows where large employers operate; it is not a ranking or a hiring guarantee.",
+            "ru": "Примеры крупных работодателей по направлениям. Список показывает, где работают крупные организации; это не рейтинг и не гарантия трудоустройства.",
+            "uz": "Yoʼnalishlar boʼyicha yirik ish beruvchilarga misollar. Roʼyxat yirik tashkilotlar qayerda ishlashini koʼrsatadi; bu reyting yoki ishga joylashish kafolati emas."
+          },
+          "sources": [
+            "https://www.leonardo.com",
+            "https://www.ferrari.com",
+            "https://group.intesasanpaolo.com",
+            "https://www.menarini.com",
+            "https://www.eni.com",
+            "https://www.esteri.it",
+            "https://www.rai.it",
+            "https://www.unibo.it"
+          ]
+        },
+        "work_rights": {
+          "score": null,
+          "values": {
+            "hours_per_week": 20,
+            "hours_per_year": 1040
+          },
+          "text": {
+            "en": "Students may work up to 20 hours per week, with a maximum of 1,040 hours within 52 weeks.",
+            "ru": "Студенты могут работать до 20 часов в неделю, но не более 1040 часов за 52 недели.",
+            "uz": "Talabalar haftasiga 20 soatgacha ishlashi mumkin, 52 hafta ichida eng koʼpi 1040 soat."
+          },
+          "sources": [
+            "https://home-affairs.ec.europa.eu/policies/migration-and-asylum/eu-immigration-portal/student-italy_en"
+          ]
+        },
+        "post_study": {
+          "score": null,
+          "values": {
+            "job_search_permit_months": 12
+          },
+          "text": {
+            "en": "After a bachelor's or master's degree, the study permit can be converted into a one-year permit for job search.",
+            "ru": "После бакалавриата или магистратуры разрешение на учёбу можно преобразовать в годовое разрешение для поиска работы.",
+            "uz": "Bakalavr yoki magistratura tugagach, oʼqish ruxsatnomasini ish izlash uchun bir yillik ruxsatnomaga aylantirish mumkin."
+          },
+          "sources": [
+            "https://home-affairs.ec.europa.eu/policies/migration-and-asylum/eu-immigration-portal/student-italy_en"
+          ]
+        }
+      }
+    },
+    {
+      "country": "JP",
+      "as_of": "2026-11",
+      "facts": {
+        "employers": {
+          "score": 4,
+          "values": {
+            "fields": {
+              "cs_it": [
+                {
+                  "name": "NTT",
+                  "sector": "Telecommunications and IT",
+                  "url": "https://group.ntt"
+                },
+                {
+                  "name": "Fujitsu",
+                  "sector": "IT services",
+                  "url": "https://www.fujitsu.com"
+                },
+                {
+                  "name": "Rakuten",
+                  "sector": "E-commerce and fintech",
+                  "url": "https://global.rakuten.com"
+                },
+                {
+                  "name": "Sony Group",
+                  "sector": "Electronics and entertainment",
+                  "url": "https://www.sony.com"
+                },
+                {
+                  "name": "NEC",
+                  "sector": "IT and electronics",
+                  "url": "https://www.nec.com"
+                }
+              ],
+              "engineering": [
+                {
+                  "name": "Toyota Motor",
+                  "sector": "Automotive",
+                  "url": "https://global.toyota"
+                },
+                {
+                  "name": "Honda",
+                  "sector": "Automotive",
+                  "url": "https://global.honda"
+                },
+                {
+                  "name": "Hitachi",
+                  "sector": "Industrial technology",
+                  "url": "https://www.hitachi.com"
+                },
+                {
+                  "name": "Mitsubishi Heavy Industries",
+                  "sector": "Heavy industry",
+                  "url": "https://www.mhi.com"
+                },
+                {
+                  "name": "Denso",
+                  "sector": "Automotive parts",
+                  "url": "https://www.denso.com"
+                }
+              ],
+              "business_econ": [
+                {
+                  "name": "Mitsubishi UFJ Financial Group",
+                  "sector": "Banking",
+                  "url": "https://www.mufg.jp"
+                },
+                {
+                  "name": "Mitsui & Co.",
+                  "sector": "Trading company",
+                  "url": "https://www.mitsui.com"
+                },
+                {
+                  "name": "Nomura Holdings",
+                  "sector": "Securities",
+                  "url": "https://www.nomuraholdings.com"
+                },
+                {
+                  "name": "Sumitomo Mitsui Financial Group",
+                  "sector": "Banking",
+                  "url": "https://www.smfg.co.jp"
+                },
+                {
+                  "name": "Mitsubishi Corporation",
+                  "sector": "Trading company",
+                  "url": "https://www.mitsubishicorp.com"
+                }
+              ],
+              "medicine_bio": [
+                {
+                  "name": "Takeda Pharmaceutical",
+                  "sector": "Pharmaceuticals",
+                  "url": "https://www.takeda.com"
+                },
+                {
+                  "name": "Astellas Pharma",
+                  "sector": "Pharmaceuticals",
+                  "url": "https://www.astellas.com"
+                },
+                {
+                  "name": "Daiichi Sankyo",
+                  "sector": "Pharmaceuticals",
+                  "url": "https://www.daiichisankyo.com"
+                },
+                {
+                  "name": "RIKEN",
+                  "sector": "Research institute",
+                  "url": "https://www.riken.jp"
+                },
+                {
+                  "name": "Olympus",
+                  "sector": "Medical devices",
+                  "url": "https://www.olympus-global.com"
+                }
+              ],
+              "natural_sci": [
+                {
+                  "name": "JAXA",
+                  "sector": "Space agency",
+                  "url": "https://www.jaxa.jp"
+                },
+                {
+                  "name": "Shin-Etsu Chemical",
+                  "sector": "Chemicals and materials",
+                  "url": "https://www.shinetsu.co.jp"
+                },
+                {
+                  "name": "Mitsubishi Chemical Group",
+                  "sector": "Chemicals",
+                  "url": "https://www.mitsubishi-chem.com"
+                },
+                {
+                  "name": "AIST",
+                  "sector": "National research institute",
+                  "url": "https://www.aist.go.jp"
+                }
+              ],
+              "social_law": [
+                {
+                  "name": "Ministry of Foreign Affairs of Japan",
+                  "sector": "Government",
+                  "url": "https://www.mofa.go.jp"
+                },
+                {
+                  "name": "JICA",
+                  "sector": "International cooperation",
+                  "url": "https://www.jica.go.jp"
+                },
+                {
+                  "name": "Nishimura & Asahi",
+                  "sector": "Law firm",
+                  "url": "https://www.nishimura.com"
+                },
+                {
+                  "name": "Anderson Mori & Tomotsune",
+                  "sector": "Law firm",
+                  "url": "https://www.amt-law.com"
+                }
+              ],
+              "arts_media": [
+                {
+                  "name": "Toei Animation",
+                  "sector": "Animation",
+                  "url": "https://www.toei-anim.co.jp"
+                },
+                {
+                  "name": "Studio Ghibli",
+                  "sector": "Animation",
+                  "url": "https://www.ghibli.jp"
+                },
+                {
+                  "name": "NHK",
+                  "sector": "Public broadcasting",
+                  "url": "https://www.nhk.or.jp"
+                },
+                {
+                  "name": "Nintendo",
+                  "sector": "Video games",
+                  "url": "https://www.nintendo.com"
+                },
+                {
+                  "name": "Dentsu Group",
+                  "sector": "Advertising",
+                  "url": "https://www.group.dentsu.com"
+                }
+              ],
+              "education_hum": [
+                {
+                  "name": "University of Tokyo",
+                  "sector": "Higher education",
+                  "url": "https://www.u-tokyo.ac.jp"
+                },
+                {
+                  "name": "Kyoto University",
+                  "sector": "Higher education",
+                  "url": "https://www.kyoto-u.ac.jp"
+                },
+                {
+                  "name": "Benesse Holdings",
+                  "sector": "Education services",
+                  "url": "https://www.benesse-hd.co.jp"
+                },
+                {
+                  "name": "Japan Foundation",
+                  "sector": "Language and culture",
+                  "url": "https://www.jpf.go.jp"
+                },
+                {
+                  "name": "MEXT",
+                  "sector": "Government education ministry",
+                  "url": "https://www.mext.go.jp"
+                }
+              ]
+            }
+          },
+          "text": {
+            "en": "Examples of major employers by field. The list shows where large employers operate; it is not a ranking or a hiring guarantee.",
+            "ru": "Примеры крупных работодателей по направлениям. Список показывает, где работают крупные организации; это не рейтинг и не гарантия трудоустройства.",
+            "uz": "Yoʼnalishlar boʼyicha yirik ish beruvchilarga misollar. Roʼyxat yirik tashkilotlar qayerda ishlashini koʼrsatadi; bu reyting yoki ishga joylashish kafolati emas."
+          },
+          "sources": [
+            "https://group.ntt",
+            "https://global.toyota",
+            "https://www.mufg.jp",
+            "https://www.takeda.com",
+            "https://www.jaxa.jp",
+            "https://www.mofa.go.jp",
+            "https://www.toei-anim.co.jp",
+            "https://www.u-tokyo.ac.jp"
+          ]
+        },
+        "work_rights": {
+          "score": null,
+          "values": {
+            "work_without_permission": false
+          },
+          "text": {
+            "en": "The Student status does not by itself permit work. Before any part-time job you must apply to the regional immigration bureau for permission to engage in activity outside your status.",
+            "ru": "Статус «Студент» сам по себе не разрешает работать. Перед любой подработкой нужно подать заявление в региональное иммиграционное бюро на разрешение заниматься деятельностью вне статуса.",
+            "uz": "“Talaba” maqomi oʼzi ishlashga ruxsat bermaydi. Har qanday qoʼshimcha ishdan oldin maqomdan tashqari faoliyatga ruxsat olish uchun hududiy immigratsiya byurosiga ariza berish kerak."
+          },
+          "sources": [
+            "https://www.studyinjapan.go.jp/en/assets/pdf/sgtj_2026_english.pdf",
+            "https://www.moj.go.jp/isa/applications/procedures/nyuukokukanri07_00045.html"
+          ]
+        }
+      }
+    },
+    {
+      "country": "KR",
+      "as_of": "2026-11",
+      "facts": {
+        "employers": {
+          "score": 4,
+          "values": {
+            "fields": {
+              "cs_it": [
+                {
+                  "name": "Samsung Electronics",
+                  "sector": "Electronics and semiconductors",
+                  "url": "https://www.samsung.com"
+                },
+                {
+                  "name": "NAVER",
+                  "sector": "Internet and AI",
+                  "url": "https://www.navercorp.com"
+                },
+                {
+                  "name": "Kakao",
+                  "sector": "Internet platforms",
+                  "url": "https://www.kakaocorp.com"
+                },
+                {
+                  "name": "SK hynix",
+                  "sector": "Semiconductors",
+                  "url": "https://www.skhynix.com"
+                },
+                {
+                  "name": "Coupang",
+                  "sector": "E-commerce",
+                  "url": "https://www.aboutcoupang.com"
+                }
+              ],
+              "engineering": [
+                {
+                  "name": "Hyundai Motor Company",
+                  "sector": "Automotive",
+                  "url": "https://www.hyundai.com"
+                },
+                {
+                  "name": "Kia",
+                  "sector": "Automotive",
+                  "url": "https://www.kia.com"
+                },
+                {
+                  "name": "POSCO",
+                  "sector": "Steel",
+                  "url": "https://www.posco.co.kr"
+                },
+                {
+                  "name": "Hanwha Aerospace",
+                  "sector": "Aerospace and defense",
+                  "url": "https://www.hanwhaaerospace.com"
+                },
+                {
+                  "name": "Doosan Enerbility",
+                  "sector": "Power equipment",
+                  "url": "https://www.doosanenerbility.com"
+                }
+              ],
+              "business_econ": [
+                {
+                  "name": "KB Financial Group",
+                  "sector": "Banking",
+                  "url": "https://www.kbfg.com"
+                },
+                {
+                  "name": "Shinhan Financial Group",
+                  "sector": "Banking",
+                  "url": "https://www.shinhangroup.com"
+                },
+                {
+                  "name": "Bank of Korea",
+                  "sector": "Central bank",
+                  "url": "https://www.bok.or.kr"
+                },
+                {
+                  "name": "Hana Financial Group",
+                  "sector": "Banking",
+                  "url": "https://www.hanafn.com"
+                }
+              ],
+              "medicine_bio": [
+                {
+                  "name": "Samsung Biologics",
+                  "sector": "Biopharmaceutical manufacturing",
+                  "url": "https://samsungbiologics.com"
+                },
+                {
+                  "name": "Celltrion",
+                  "sector": "Biopharmaceuticals",
+                  "url": "https://www.celltrion.com"
+                },
+                {
+                  "name": "Seoul National University Hospital",
+                  "sector": "University hospital",
+                  "url": "https://www.snuh.org"
+                },
+                {
+                  "name": "Asan Medical Center",
+                  "sector": "Hospital",
+                  "url": "https://eng.amc.seoul.kr"
+                },
+                {
+                  "name": "SK bioscience",
+                  "sector": "Vaccines",
+                  "url": "https://www.skbioscience.com"
+                }
+              ],
+              "natural_sci": [
+                {
+                  "name": "KAIST",
+                  "sector": "Science and technology university",
+                  "url": "https://www.kaist.ac.kr"
+                },
+                {
+                  "name": "LG Chem",
+                  "sector": "Chemicals and batteries",
+                  "url": "https://www.lgchem.com"
+                },
+                {
+                  "name": "Korea Aerospace Research Institute",
+                  "sector": "Aerospace research",
+                  "url": "https://www.kari.re.kr"
+                },
+                {
+                  "name": "Korea Institute of Science and Technology",
+                  "sector": "Research institute",
+                  "url": "https://www.kist.re.kr"
+                },
+                {
+                  "name": "ETRI",
+                  "sector": "Electronics research",
+                  "url": "https://www.etri.re.kr"
+                }
+              ],
+              "social_law": [
+                {
+                  "name": "Kim & Chang",
+                  "sector": "Law firm",
+                  "url": "https://www.kimchang.com"
+                },
+                {
+                  "name": "Ministry of Foreign Affairs of Korea",
+                  "sector": "Government",
+                  "url": "https://www.mofa.go.kr"
+                },
+                {
+                  "name": "Lee & Ko",
+                  "sector": "Law firm",
+                  "url": "https://www.leeko.com"
+                },
+                {
+                  "name": "Yulchon",
+                  "sector": "Law firm",
+                  "url": "https://www.yulchon.com"
+                },
+                {
+                  "name": "Korea Development Institute",
+                  "sector": "Policy research",
+                  "url": "https://www.kdi.re.kr"
+                }
+              ],
+              "arts_media": [
+                {
+                  "name": "CJ ENM",
+                  "sector": "Film and television",
+                  "url": "https://www.cjenm.com"
+                },
+                {
+                  "name": "HYBE",
+                  "sector": "Music entertainment",
+                  "url": "https://www.hybecorp.com"
+                },
+                {
+                  "name": "SM Entertainment",
+                  "sector": "Music entertainment",
+                  "url": "https://www.smentertainment.com"
+                },
+                {
+                  "name": "KBS",
+                  "sector": "Public broadcasting",
+                  "url": "https://www.kbs.co.kr"
+                },
+                {
+                  "name": "JYP Entertainment",
+                  "sector": "Music entertainment",
+                  "url": "https://www.jype.com"
+                }
+              ],
+              "education_hum": [
+                {
+                  "name": "Seoul National University",
+                  "sector": "Higher education",
+                  "url": "https://www.snu.ac.kr"
+                },
+                {
+                  "name": "Yonsei University",
+                  "sector": "Higher education",
+                  "url": "https://www.yonsei.ac.kr"
+                },
+                {
+                  "name": "Korea University",
+                  "sector": "Higher education",
+                  "url": "https://www.korea.edu"
+                },
+                {
+                  "name": "Ministry of Education of Korea",
+                  "sector": "Government",
+                  "url": "https://english.moe.go.kr"
+                }
+              ]
+            }
+          },
+          "text": {
+            "en": "Examples of major employers by field. The list shows where large employers operate; it is not a ranking or a hiring guarantee.",
+            "ru": "Примеры крупных работодателей по направлениям. Список показывает, где работают крупные организации; это не рейтинг и не гарантия трудоустройства.",
+            "uz": "Yoʼnalishlar boʼyicha yirik ish beruvchilarga misollar. Roʼyxat yirik tashkilotlar qayerda ishlashini koʼrsatadi; bu reyting yoki ishga joylashish kafolati emas."
+          },
+          "sources": [
+            "https://www.samsung.com",
+            "https://www.hyundai.com",
+            "https://www.kbfg.com",
+            "https://samsungbiologics.com",
+            "https://www.kaist.ac.kr",
+            "https://www.kimchang.com",
+            "https://www.cjenm.com",
+            "https://www.snu.ac.kr"
+          ]
+        },
+        "work_rights": {
+          "score": null,
+          "values": {
+            "permission_required": true
+          },
+          "text": {
+            "en": "D-2 student visa holders need permission from the immigration office before part-time work. Allowed hours depend on the program level and Korean language proficiency (TOPIK).",
+            "ru": "Обладателям студенческой визы D-2 перед подработкой нужно разрешение иммиграционной службы. Допустимое число часов зависит от уровня программы и владения корейским языком (TOPIK).",
+            "uz": "D-2 talaba vizasi egalari qoʼshimcha ishdan oldin immigratsiya xizmatidan ruxsat olishi kerak. Ruxsat etilgan soatlar dastur darajasi va koreys tili bilimi (TOPIK) ga bogʼliq."
+          },
+          "sources": [
+            "https://www.studyinkorea.go.kr/en/life/residenceAndStayInfo.do?tab=part-time-job"
+          ]
+        }
+      }
+    },
+    {
+      "country": "KZ",
+      "as_of": "2026-11",
+      "facts": {
+        "employers": {
+          "score": 2,
+          "values": {
+            "fields": {
+              "cs_it": [
+                {
+                  "name": "Kaspi.kz",
+                  "sector": "Fintech and e-commerce",
+                  "url": "https://kaspi.kz"
+                },
+                {
+                  "name": "Kazakhtelecom",
+                  "sector": "Telecommunications",
+                  "url": "https://telecom.kz"
+                },
+                {
+                  "name": "Kcell",
+                  "sector": "Telecommunications",
+                  "url": "https://www.kcell.kz"
+                },
+                {
+                  "name": "Beeline Kazakhstan",
+                  "sector": "Telecommunications",
+                  "url": "https://beeline.kz"
+                }
+              ],
+              "engineering": [
+                {
+                  "name": "KEGOC",
+                  "sector": "Electric grid operator",
+                  "url": "https://www.kegoc.kz"
+                },
+                {
+                  "name": "Kazatomprom",
+                  "sector": "Uranium mining",
+                  "url": "https://www.kazatomprom.kz"
+                },
+                {
+                  "name": "ERG",
+                  "sector": "Mining and metals",
+                  "url": "https://www.erg.kz"
+                },
+                {
+                  "name": "KazMunayGas",
+                  "sector": "Oil and gas",
+                  "url": "https://www.kmg.kz"
+                },
+                {
+                  "name": "Samruk-Energy",
+                  "sector": "Power generation",
+                  "url": "https://www.samruk-energy.kz"
+                }
+              ],
+              "business_econ": [
+                {
+                  "name": "Halyk Bank",
+                  "sector": "Banking",
+                  "url": "https://halykbank.kz"
+                },
+                {
+                  "name": "National Bank of Kazakhstan",
+                  "sector": "Central bank",
+                  "url": "https://www.nationalbank.kz"
+                },
+                {
+                  "name": "Samruk-Kazyna",
+                  "sector": "Sovereign wealth fund",
+                  "url": "https://www.sk.kz"
+                },
+                {
+                  "name": "Kaspi.kz",
+                  "sector": "Banking and fintech",
+                  "url": "https://kaspi.kz"
+                }
+              ],
+              "medicine_bio": [
+                {
+                  "name": "Nazarbayev University School of Medicine",
+                  "sector": "Medical education and research",
+                  "url": "https://nusom.nu.edu.kz"
+                },
+                {
+                  "name": "Asfendiyarov Kazakh National Medical University",
+                  "sector": "Medical university",
+                  "url": "https://kaznmu.edu.kz"
+                },
+                {
+                  "name": "Ministry of Health of Kazakhstan",
+                  "sector": "Government",
+                  "url": "https://www.gov.kz"
+                }
+              ],
+              "natural_sci": [
+                {
+                  "name": "National Nuclear Center",
+                  "sector": "Nuclear research",
+                  "url": "https://nnc.kz"
+                },
+                {
+                  "name": "Institute of Nuclear Physics",
+                  "sector": "Nuclear research",
+                  "url": "https://inp.kz"
+                },
+                {
+                  "name": "Kazhydromet",
+                  "sector": "Weather and environment service",
+                  "url": "https://www.kazhydromet.kz"
+                },
+                {
+                  "name": "Tengizchevroil",
+                  "sector": "Oil production",
+                  "url": "https://www.tengizchevroil.com"
+                }
+              ],
+              "social_law": [
+                {
+                  "name": "Astana International Financial Centre",
+                  "sector": "Financial centre",
+                  "url": "https://aifc.kz"
+                },
+                {
+                  "name": "AIFC Court",
+                  "sector": "Judiciary",
+                  "url": "https://court.aifc.kz"
+                },
+                {
+                  "name": "Ministry of Foreign Affairs of Kazakhstan",
+                  "sector": "Government",
+                  "url": "https://www.gov.kz"
+                }
+              ],
+              "arts_media": [
+                {
+                  "name": "Khabar Agency",
+                  "sector": "Public broadcasting",
+                  "url": "https://khabar.kz"
+                },
+                {
+                  "name": "Kazinform",
+                  "sector": "News agency",
+                  "url": "https://www.inform.kz"
+                },
+                {
+                  "name": "Kazakhfilm",
+                  "sector": "Film studio",
+                  "url": "https://kazakhfilm.kz"
+                }
+              ],
+              "education_hum": [
+                {
+                  "name": "Nazarbayev University",
+                  "sector": "Higher education",
+                  "url": "https://nu.edu.kz"
+                },
+                {
+                  "name": "Al-Farabi Kazakh National University",
+                  "sector": "Higher education",
+                  "url": "https://www.kaznu.edu.kz"
+                },
+                {
+                  "name": "Satbayev University",
+                  "sector": "Technical university",
+                  "url": "https://satbayev.university"
+                },
+                {
+                  "name": "Nazarbayev Intellectual Schools",
+                  "sector": "School network",
+                  "url": "https://www.nis.edu.kz"
+                }
+              ]
+            }
+          },
+          "text": {
+            "en": "Examples of major employers by field. The list shows where large employers operate; it is not a ranking or a hiring guarantee.",
+            "ru": "Примеры крупных работодателей по направлениям. Список показывает, где работают крупные организации; это не рейтинг и не гарантия трудоустройства.",
+            "uz": "Yoʼnalishlar boʼyicha yirik ish beruvchilarga misollar. Roʼyxat yirik tashkilotlar qayerda ishlashini koʼrsatadi; bu reyting yoki ishga joylashish kafolati emas."
+          },
+          "sources": [
+            "https://kaspi.kz",
+            "https://www.kegoc.kz",
+            "https://halykbank.kz",
+            "https://nusom.nu.edu.kz",
+            "https://nnc.kz",
+            "https://aifc.kz",
+            "https://khabar.kz",
+            "https://nu.edu.kz"
+          ]
+        },
+        "cost_of_living": {
+          "score": null,
+          "values": {
+            "planned_min_wage_kzt_month_2027": 110000
+          },
+          "text": {
+            "en": "The Ministry of National Economy announced that the monthly minimum wage will rise to 110,000 tenge from 1 January 2027 (planned value, not yet in force).",
+            "ru": "Министерство национальной экономики сообщило, что минимальная месячная заработная плата вырастет до 110 000 тенге с 1 января 2027 года (плановое значение, ещё не действует).",
+            "uz": "Milliy iqtisodiyot vazirligi minimal oylik ish haqi 2027-yil 1-yanvardan 110 000 tangagacha oshishini maʼlum qildi (rejalashtirilgan qiymat, hali kuchga kirmagan)."
+          },
+          "sources": [
+            "https://www.gov.kz/org/economy/press/news/details/1320329?lang=en"
+          ]
+        }
+      }
+    },
+    {
+      "country": "MY",
+      "as_of": "2026-11",
+      "facts": {
+        "employers": {
+          "score": 3,
+          "values": {
+            "fields": {
+              "cs_it": [
+                {
+                  "name": "MIMOS",
+                  "sector": "Applied ICT research",
+                  "url": "https://www.mimos.my"
+                },
+                {
+                  "name": "Maxis",
+                  "sector": "Telecommunications",
+                  "url": "https://www.maxis.com.my"
+                },
+                {
+                  "name": "Telekom Malaysia",
+                  "sector": "Telecommunications",
+                  "url": "https://www.tm.com.my"
+                },
+                {
+                  "name": "CelcomDigi",
+                  "sector": "Telecommunications",
+                  "url": "https://www.celcomdigi.com"
+                }
+              ],
+              "engineering": [
+                {
+                  "name": "PETRONAS",
+                  "sector": "Oil, gas and energy",
+                  "url": "https://www.petronas.com"
+                },
+                {
+                  "name": "Tenaga Nasional",
+                  "sector": "Electric utility",
+                  "url": "https://www.tnb.com.my"
+                },
+                {
+                  "name": "Proton",
+                  "sector": "Automotive",
+                  "url": "https://www.proton.com"
+                },
+                {
+                  "name": "Press Metal",
+                  "sector": "Aluminium",
+                  "url": "https://www.pressmetal.com"
+                }
+              ],
+              "business_econ": [
+                {
+                  "name": "Maybank",
+                  "sector": "Banking",
+                  "url": "https://www.maybank.com"
+                },
+                {
+                  "name": "CIMB Group",
+                  "sector": "Banking",
+                  "url": "https://www.cimb.com"
+                },
+                {
+                  "name": "Public Bank",
+                  "sector": "Banking",
+                  "url": "https://www.publicbank.com.my"
+                },
+                {
+                  "name": "Bank Negara Malaysia",
+                  "sector": "Central bank",
+                  "url": "https://www.bnm.gov.my"
+                }
+              ],
+              "medicine_bio": [
+                {
+                  "name": "IHH Healthcare",
+                  "sector": "Hospitals",
+                  "url": "https://www.ihhhealthcare.com"
+                },
+                {
+                  "name": "KPJ Healthcare",
+                  "sector": "Hospitals",
+                  "url": "https://www.kpjhealth.com.my"
+                },
+                {
+                  "name": "Top Glove",
+                  "sector": "Medical gloves",
+                  "url": "https://www.topglove.com"
+                },
+                {
+                  "name": "Hartalega",
+                  "sector": "Medical gloves",
+                  "url": "https://www.hartalega.com.my"
+                }
+              ],
+              "natural_sci": [
+                {
+                  "name": "PETRONAS",
+                  "sector": "Oil, gas and energy",
+                  "url": "https://www.petronas.com"
+                },
+                {
+                  "name": "SD Guthrie",
+                  "sector": "Plantations",
+                  "url": "https://www.sdguthrie.com"
+                },
+                {
+                  "name": "Malaysian Palm Oil Board",
+                  "sector": "Palm oil research",
+                  "url": "https://mpob.gov.my"
+                },
+                {
+                  "name": "Malaysian Nuclear Agency",
+                  "sector": "Nuclear research",
+                  "url": "https://www.nuclearmalaysia.gov.my"
+                }
+              ],
+              "social_law": [
+                {
+                  "name": "Skrine",
+                  "sector": "Law firm",
+                  "url": "https://www.skrine.com"
+                },
+                {
+                  "name": "Shearn Delamore & Co.",
+                  "sector": "Law firm",
+                  "url": "https://www.shearndelamore.com"
+                },
+                {
+                  "name": "Ministry of Foreign Affairs of Malaysia",
+                  "sector": "Government",
+                  "url": "https://www.kln.gov.my"
+                },
+                {
+                  "name": "Securities Commission Malaysia",
+                  "sector": "Regulator",
+                  "url": "https://www.sc.com.my"
+                }
+              ],
+              "arts_media": [
+                {
+                  "name": "Astro",
+                  "sector": "Television and media",
+                  "url": "https://www.astro.com.my"
+                },
+                {
+                  "name": "Media Prima",
+                  "sector": "Media",
+                  "url": "https://www.mediaprima.com.my"
+                },
+                {
+                  "name": "RTM",
+                  "sector": "Public broadcasting",
+                  "url": "https://www.rtm.gov.my"
+                },
+                {
+                  "name": "Les' Copaque Production",
+                  "sector": "Animation",
+                  "url": "https://www.lescopaque.com"
+                }
+              ],
+              "education_hum": [
+                {
+                  "name": "Universiti Malaya",
+                  "sector": "Higher education",
+                  "url": "https://www.um.edu.my"
+                },
+                {
+                  "name": "Universiti Sains Malaysia",
+                  "sector": "Higher education",
+                  "url": "https://www.usm.my"
+                },
+                {
+                  "name": "Universiti Kebangsaan Malaysia",
+                  "sector": "Higher education",
+                  "url": "https://www.ukm.my"
+                },
+                {
+                  "name": "Ministry of Education Malaysia",
+                  "sector": "Government",
+                  "url": "https://www.moe.gov.my"
+                }
+              ]
+            }
+          },
+          "text": {
+            "en": "Examples of major employers by field. The list shows where large employers operate; it is not a ranking or a hiring guarantee.",
+            "ru": "Примеры крупных работодателей по направлениям. Список показывает, где работают крупные организации; это не рейтинг и не гарантия трудоустройства.",
+            "uz": "Yoʼnalishlar boʼyicha yirik ish beruvchilarga misollar. Roʼyxat yirik tashkilotlar qayerda ishlashini koʼrsatadi; bu reyting yoki ishga joylashish kafolati emas."
+          },
+          "sources": [
+            "https://www.mimos.my",
+            "https://www.petronas.com",
+            "https://www.maybank.com",
+            "https://www.ihhhealthcare.com",
+            "https://www.petronas.com",
+            "https://www.skrine.com",
+            "https://www.astro.com.my",
+            "https://www.um.edu.my"
+          ]
+        },
+        "salaries": {
+          "score": null,
+          "values": {
+            "currency": "USD",
+            "year": 2025,
+            "overall_median_annual": 8234
+          },
+          "text": {
+            "en": "Overall median annual earnings: about 8,234 USD in 2025 (median monthly salary of citizens 2,940 MYR × 12). Converted at the World Bank 2025 average official exchange rate. Figures are national medians, not earnings by degree.",
+            "ru": "Медианный годовой заработок в целом: около 8 234 USD в 2025 году (медианная месячная зарплата граждан 2940 MYR × 12). Пересчитано по среднегодовому официальному курсу Всемирного банка за 2025 год. Это национальные медианы  а не заработок по специальностям.",
+            "uz": "Umumiy mediana yillik daromad: 2025-yilda taxminan 8 234 USD (fuqarolarning mediana oylik ish haqi 2940 MYR × 12). Jahon banki 2025-yil oʼrtacha rasmiy kursi boʼyicha qayta hisoblangan. Bu milliy medianalar  mutaxassislik boʼyicha daromad emas."
+          },
+          "sources": [
+            "https://storage.dosm.gov.my/labour/salaries_wages_2025.pdf",
+            "https://data.worldbank.org/indicator/PA.NUS.FCRF"
+          ]
+        }
+      }
+    },
+    {
+      "country": "TR",
+      "as_of": "2026-11",
+      "facts": {
+        "employers": {
+          "score": 3,
+          "values": {
+            "fields": {
+              "cs_it": [
+                {
+                  "name": "Turkcell",
+                  "sector": "Telecommunications",
+                  "url": "https://www.turkcell.com.tr"
+                },
+                {
+                  "name": "Trendyol",
+                  "sector": "E-commerce",
+                  "url": "https://www.trendyol.com"
+                },
+                {
+                  "name": "Baykar",
+                  "sector": "Defense technology",
+                  "url": "https://www.baykartech.com"
+                },
+                {
+                  "name": "ASELSAN",
+                  "sector": "Defense electronics",
+                  "url": "https://www.aselsan.com"
+                },
+                {
+                  "name": "Hepsiburada",
+                  "sector": "E-commerce",
+                  "url": "https://www.hepsiburada.com"
+                }
+              ],
+              "engineering": [
+                {
+                  "name": "Ford Otosan",
+                  "sector": "Automotive",
+                  "url": "https://www.fordotosan.com.tr"
+                },
+                {
+                  "name": "Turkish Aerospace",
+                  "sector": "Aerospace",
+                  "url": "https://www.tusas.com"
+                },
+                {
+                  "name": "Arçelik",
+                  "sector": "Home appliances",
+                  "url": "https://www.arcelikglobal.com"
+                },
+                {
+                  "name": "Koç Holding",
+                  "sector": "Industrial conglomerate",
+                  "url": "https://www.koc.com.tr"
+                },
+                {
+                  "name": "ASELSAN",
+                  "sector": "Defense electronics",
+                  "url": "https://www.aselsan.com"
+                }
+              ],
+              "business_econ": [
+                {
+                  "name": "Garanti BBVA",
+                  "sector": "Banking",
+                  "url": "https://www.garantibbva.com.tr"
+                },
+                {
+                  "name": "Türkiye İş Bankası",
+                  "sector": "Banking",
+                  "url": "https://www.isbank.com.tr"
+                },
+                {
+                  "name": "Akbank",
+                  "sector": "Banking",
+                  "url": "https://www.akbank.com"
+                },
+                {
+                  "name": "Sabancı Holding",
+                  "sector": "Conglomerate",
+                  "url": "https://www.sabanci.com"
+                }
+              ],
+              "medicine_bio": [
+                {
+                  "name": "Acıbadem Healthcare Group",
+                  "sector": "Hospitals",
+                  "url": "https://www.acibadem.com.tr"
+                },
+                {
+                  "name": "Abdi İbrahim",
+                  "sector": "Pharmaceuticals",
+                  "url": "https://www.abdiibrahim.com.tr"
+                },
+                {
+                  "name": "Memorial Healthcare Group",
+                  "sector": "Hospitals",
+                  "url": "https://www.memorial.com.tr"
+                },
+                {
+                  "name": "Eczacıbaşı",
+                  "sector": "Pharmaceuticals and industry",
+                  "url": "https://www.eczacibasi.com.tr"
+                }
+              ],
+              "natural_sci": [
+                {
+                  "name": "TÜBİTAK",
+                  "sector": "Research council",
+                  "url": "https://www.tubitak.gov.tr"
+                },
+                {
+                  "name": "TPAO",
+                  "sector": "Oil and gas",
+                  "url": "https://www.tpao.gov.tr"
+                },
+                {
+                  "name": "Tüpraş",
+                  "sector": "Refining",
+                  "url": "https://www.tupras.com.tr"
+                },
+                {
+                  "name": "Petkim",
+                  "sector": "Petrochemicals",
+                  "url": "https://www.petkim.com.tr"
+                }
+              ],
+              "social_law": [
+                {
+                  "name": "Ministry of Foreign Affairs of Türkiye",
+                  "sector": "Government",
+                  "url": "https://www.mfa.gov.tr"
+                },
+                {
+                  "name": "Constitutional Court of Türkiye",
+                  "sector": "Judiciary",
+                  "url": "https://www.anayasa.gov.tr/en/"
+                },
+                {
+                  "name": "TÜSİAD",
+                  "sector": "Business association",
+                  "url": "https://tusiad.org"
+                }
+              ],
+              "arts_media": [
+                {
+                  "name": "TRT",
+                  "sector": "Public broadcasting",
+                  "url": "https://www.trt.net.tr"
+                },
+                {
+                  "name": "Anadolu Agency",
+                  "sector": "News agency",
+                  "url": "https://www.aa.com.tr"
+                },
+                {
+                  "name": "Hürriyet",
+                  "sector": "News media",
+                  "url": "https://www.hurriyet.com.tr"
+                }
+              ],
+              "education_hum": [
+                {
+                  "name": "Boğaziçi University",
+                  "sector": "Higher education",
+                  "url": "https://www.boun.edu.tr"
+                },
+                {
+                  "name": "Middle East Technical University",
+                  "sector": "Higher education",
+                  "url": "https://www.metu.edu.tr"
+                },
+                {
+                  "name": "Istanbul University",
+                  "sector": "Higher education",
+                  "url": "https://www.istanbul.edu.tr"
+                },
+                {
+                  "name": "Ministry of National Education",
+                  "sector": "Government",
+                  "url": "https://www.meb.gov.tr"
+                }
+              ]
+            }
+          },
+          "text": {
+            "en": "Examples of major employers by field. The list shows where large employers operate; it is not a ranking or a hiring guarantee.",
+            "ru": "Примеры крупных работодателей по направлениям. Список показывает, где работают крупные организации; это не рейтинг и не гарантия трудоустройства.",
+            "uz": "Yoʼnalishlar boʼyicha yirik ish beruvchilarga misollar. Roʼyxat yirik tashkilotlar qayerda ishlashini koʼrsatadi; bu reyting yoki ishga joylashish kafolati emas."
+          },
+          "sources": [
+            "https://www.turkcell.com.tr",
+            "https://www.fordotosan.com.tr",
+            "https://www.garantibbva.com.tr",
+            "https://www.acibadem.com.tr",
+            "https://www.tubitak.gov.tr",
+            "https://www.mfa.gov.tr",
+            "https://www.trt.net.tr",
+            "https://www.boun.edu.tr"
           ]
         }
       }

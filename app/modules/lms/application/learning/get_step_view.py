@@ -25,10 +25,14 @@ from app.modules.lms.application.learning.step_context import (
 )
 from app.modules.lms.application.learning.types import UowFactory
 from app.modules.lms.application.learning.views import (
+    LearningAiReviewBlockView,
     LearningAttemptResultView,
     LearningBlockResultView,
+    LearningCodeBlockView,
+    LearningExamBlockView,
     LearningFlashcardsBlockView,
     LearningH5PBlockView,
+    LearningHtmlBlockView,
     LearningInteractiveVideoBlockView,
     LearningQuizBlockView,
     LearningQuizRulesView,
@@ -146,10 +150,10 @@ class GetStepView:
                 views.append(await self._cards(actor, block, rendered, cards))
             elif block["type"] in ("h5p", "interactive_video"):
                 views.append(scored_block(block, stored_result(cards, block["id"])))
-            elif block["type"] == "video":
-                views.append(LearningVideoBlockView(**block, passed=state is not None))
+            elif block["type"] in NEW_BLOCK_TYPES:
+                views.append(widget_block(block, stored_result(cards, block["id"])))
             else:
-                views.append(LearningTextBlockView(**block, passed=state is not None))
+                views.append(_viewed_block(block, state is not None, cards))
         return views
 
     async def _quiz(
@@ -215,6 +219,31 @@ class GetStepView:
         )
 
 
+NEW_BLOCK_TYPES = ("exam", "code", "html")
+
+
+def widget_block(
+    block: dict[str, Any], stored: Mapping[str, Any] | None = None
+) -> LearningExamBlockView | LearningCodeBlockView | LearningHtmlBlockView:
+    """Return an exam, code or HTML block with my best (or exam) result."""
+    result = (
+        LearningBlockResultView(
+            score=float(stored.get("score", 0)),
+            max_score=float(stored.get("max_score", 0)),
+            completed=bool(stored.get("passed")),
+            verified=stored.get("kind") != "widget",
+        )
+        if stored
+        else None
+    )
+    passed = bool(stored and stored.get("passed"))
+    if block["type"] == "exam":
+        return LearningExamBlockView(**block, result=result, passed=passed)
+    if block["type"] == "code":
+        return LearningCodeBlockView(**block, result=result, passed=passed)
+    return LearningHtmlBlockView(**block, result=result, passed=passed)
+
+
 def scored_block(
     block: dict[str, Any], stored: Mapping[str, Any] | None
 ) -> LearningH5PBlockView | LearningInteractiveVideoBlockView:
@@ -246,3 +275,15 @@ def _scored_earned(rendered: RenderedRevision, cards: Mapping[str, Any]) -> floa
         float(scored_earned_points(stored_result(cards, block_id), total))
         for block_id, total in rendered.scored_points.items()
     )
+
+
+def _viewed_block(
+    block: dict[str, Any], viewed: bool, cards: Mapping[str, Any]
+) -> StepBlockView:
+    """An AI review (passed once reviewed), a video or a text block (once viewed)."""
+    if block["type"] == "ai_review":
+        marker = stored_result(cards, block["id"]) or {}
+        return LearningAiReviewBlockView(**block, passed=bool(marker.get("passed")))
+    if block["type"] == "video":
+        return LearningVideoBlockView(**block, passed=viewed)
+    return LearningTextBlockView(**block, passed=viewed)

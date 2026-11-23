@@ -19,5 +19,10 @@
   "lms-learn-video-not-found": "Bu blokda yuklangan video yo'q.",
   "lms-media-not-available": "Bu materialga havola mavjud emas.",
   "lms-learn-h5p-not-found": "Bu blokda H5P paketi yoʻq.",
-  "lms-learn-interaction-not-found": "Bu videoda bunday savol yoʻq."
+  "lms-learn-html-widget-not-found": "Bu blokda HTML vidjet yoʻq.",
+  "lms-learn-interaction-not-found": "Bu videoda bunday savol yoʻq.",
+  "lms-learn-exam-not-found": "Bu qadamda bunday imtihon yoʻq.",
+  "lms-learn-exam-module-closed": "Imtihonning bu moduli yopilgan: u topshirilgan yoki vaqti tugagan.",
+  "lms-tutor-disabled": "Ushbu kurs uchun dars yordamchisi oʼchirilgan.",
+  "lms-tutor-daily-limit": "Bugun yordamchiga ruxsat etilgan barcha savollarni berdingiz. Ertaga qayta urinib koʼring."
 }

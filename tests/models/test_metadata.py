@@ -160,7 +160,7 @@ EXPECTED_TABLES = {
     "admin.telegram_bots",
     "admin.telegram_bot_members",
     "mail.mail_messages",
-    # lms (10)
+    # lms (20)
     "lms.courses",
     "lms.course_staff",
     "lms.course_steps",
@@ -171,6 +171,16 @@ EXPECTED_TABLES = {
     "lms.test_attempts",
     "lms.media_grants",
     "lms.access_rules",
+    "lms.ai_review_sessions",
+    "lms.ai_review_messages",
+    "lms.xp_events",
+    "lms.engagement_profiles",
+    "lms.review_items",
+    "lms.course_engagement_settings",
+    "lms.class_quests",
+    "lms.badges",
+    "lms.badge_awards",
+    "lms.badge_settings",
     # notebooks (12)
     "notebooks.notebooks",
     "notebooks.sources",
@@ -228,10 +238,14 @@ EXPECTED_TABLES = {
     "vectors.embeddings",
     # dashboard (1)
     "dashboard.layouts",
-    # certificates (3)
+    # certificates (7)
     "certificates.types",
     "certificates.entries",
     "certificates.entry_files",
+    "certificates.course_settings",
+    "certificates.course_templates",
+    "certificates.course_partners",
+    "certificates.issued_course_certificates",
     # knowledge (1)
     "knowledge.entries",
     # posts (2)
@@ -273,6 +287,9 @@ EXPECTED_TABLES = {
     "admission.project_idea_runs",
     "admission.project_helpers",
     "admission.country_facts",
+    "admission.attached_books",
+    "admission.trajectories",
+    "admission.trajectory_progress",
     "ai.ai_requests",
     "ai.connectors",
     "ai.pipeline_routes",
@@ -281,10 +298,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """spec -> Models plus the later modules (253 tables)."""
+    """spec -> Models plus the later modules (270 tables)."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 253
+    assert len(EXPECTED_TABLES) == 270
     assert actual == EXPECTED_TABLES
 
 

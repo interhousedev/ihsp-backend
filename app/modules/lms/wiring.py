@@ -2,16 +2,22 @@
 
 import hashlib
 import hmac
+from collections.abc import Callable
 from dataclasses import dataclass
 from uuid import UUID
 
 from app.modules.ai.domain.requests import AiRequestSpec
+from app.modules.lms.application.badges import BadgeService
+from app.modules.lms.application.engagement.service import EngagementService
 from app.modules.lms.application.h5p_links import H5PLinks
+from app.modules.lms.application.html_widget_links import HtmlWidgetLinks
 from app.modules.lms.application.learning.audience import StudentGroupLookup
 from app.modules.lms.application.public_course_ops import LmsCourseOpsImpl
+from app.modules.lms.infrastructure.learning.uow import SqlLearningUnitOfWork
 from app.modules.lms.ports.h5p_store import H5PObjectStore
 from app.modules.lms.wiring_authoring import AuthoringServices, build_authoring
 from app.modules.lms.wiring_cartridge import CartridgeServices, build_cartridge
+from app.modules.lms.wiring_engagement import build_engagement
 from app.modules.lms.wiring_learning import LearningServices, build_learning
 from app.shared.contracts.academic import GroupDirectory, ScheduleQueries
 from app.shared.contracts.files import FilesApi
@@ -30,12 +36,17 @@ class LmsModule:
     learning: LearningServices
     cartridge: CartridgeServices
     course_ops: LmsCourseOpsImpl
+    engagement: EngagementService
+    badges: BadgeService
 
 
-def h5p_signing_key(deps: ModuleDeps) -> bytes:
-    """Derive the H5P URL signing key from the S3 secret (a production secret)."""
+def h5p_signing_key(deps: ModuleDeps, label: bytes = b"ihsp-lms-h5p-links") -> bytes:
+    """Derive a URL signing key from the S3 secret (a production secret).
+
+    H5P packages and HTML widgets use different labels, so their tokens differ.
+    """
     secret = deps.settings.s3.secret_key.get_secret_value().encode()
-    return hmac.new(secret, b"ihsp-lms-h5p-links", hashlib.sha256).digest()
+    return hmac.new(secret, label, hashlib.sha256).digest()
 
 
 def build(
@@ -54,16 +65,28 @@ def build(
     of a student for the audience rules; without it group rules match nobody.
     """
     links = H5PLinks(h5p_signing_key(deps), deps.clock, h5p_store)
-    authoring = build_authoring(
-        deps, identity=identity, files=files, h5p_links=links, groups=groups
+    widget_links = HtmlWidgetLinks(
+        h5p_signing_key(deps, b"ihsp-lms-html-widget-links"), deps.clock, h5p_store
     )
+    authoring = build_authoring(
+        deps,
+        identity=identity,
+        files=files,
+        h5p_links=links,
+        widget_links=widget_links,
+        groups=groups,
+    )
+    student_group = _student_group(students) if students is not None else None
+    engagement = build_engagement(deps, identity=identity, student_group=student_group)
     learning = build_learning(
         deps,
         identity=identity,
         preview_revisions=authoring.ensure_preview_revision,
         files=files,
         h5p_links=links,
-        student_group=_student_group(students) if students is not None else None,
+        widget_links=widget_links,
+        student_group=student_group,
+        step_lock=engagement.require_unlocked,
     )
     cartridge = build_cartridge(deps, identity=identity, files=files)
     course_ops = LmsCourseOpsImpl(
@@ -89,7 +112,23 @@ def build(
         learning=learning,
         cartridge=cartridge,
         course_ops=course_ops,
+        engagement=engagement,
+        badges=BadgeService(_learning_uow(deps), files, deps.clock),
     )
+
+
+def _learning_uow(deps: ModuleDeps) -> Callable[[], SqlLearningUnitOfWork]:
+    """Return a factory of learning transactions."""
+
+    def factory() -> SqlLearningUnitOfWork:
+        return SqlLearningUnitOfWork(
+            deps.sessionmaker,
+            deps.outbox_writer,
+            deps.audit_writer,
+            deps.outbox_committed_hook,
+        )
+
+    return factory
 
 
 def _student_group(students: ScheduleQueries) -> StudentGroupLookup:

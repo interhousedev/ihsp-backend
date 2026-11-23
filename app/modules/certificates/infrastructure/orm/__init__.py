@@ -7,5 +7,19 @@ from app.modules.certificates.infrastructure.orm.certificate_entry import (
 from app.modules.certificates.infrastructure.orm.certificate_type import (
     CertificateTypeRow,
 )
+from app.modules.certificates.infrastructure.orm.course_certificate import (
+    CourseCertificateSettingsRow,
+    CourseCertificateTemplateRow,
+    CoursePartnerRow,
+    IssuedCourseCertificateRow,
+)
 
-__all__ = ["CertificateEntryFileRow", "CertificateEntryRow", "CertificateTypeRow"]
+__all__ = [
+    "CertificateEntryFileRow",
+    "CertificateEntryRow",
+    "CertificateTypeRow",
+    "CourseCertificateSettingsRow",
+    "CourseCertificateTemplateRow",
+    "CoursePartnerRow",
+    "IssuedCourseCertificateRow",
+]

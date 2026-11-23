@@ -36,6 +36,8 @@ FACT_KEYS: Final[tuple[str, ...]] = (
     "health",
     "aid",
     "tolerance",
+    "employers",
+    "salaries",
 )
 """Every fact a country may carry; coverage is the share of these that are filled."""
 
@@ -50,6 +52,39 @@ OPPORTUNITY_FIELDS: Final[tuple[str, ...]] = (
     "education_hum",
 )
 """Keys of `opportunities.values`, each scored 1-5."""
+
+REGIONS: Final[dict[str, tuple[str, ...]]] = {
+    "central_asia": ("AM", "AZ", "GE", "KG", "KZ", "TJ", "TM", "UZ"),
+    "europe": tuple(
+        "AD AL AT BA BE BG BY CH CY CZ DE DK EE ES FI FR GB GR HR HU IE IS IT LI "
+        "LT LU LV MC MD ME MK MT NL NO PL PT RO RS RU SE SI SK SM UA VA XK".split()
+    ),
+    "middle_east": tuple("AE BH IL IQ IR JO KW LB OM PS QA SA SY TR YE".split()),
+    "asia": tuple(
+        "AF BD BN BT CN ID IN JP KH KP KR LA LK MM MN MV MY NP PH PK SG TH TL "
+        "VN".split()
+    ),
+    "africa": tuple(
+        "AO BF BI BJ BW CD CF CG CI CM CV DJ DZ EG ER ET GA GH GM GN GQ GW KE KM "
+        "LR LS LY MA MG ML MR MU MW MZ NA NE NG RW SC SD SL SN SO SS ST SZ TD TG "
+        "TN TZ UG ZA ZM ZW".split()
+    ),
+    "americas": tuple(
+        "AG AR BB BO BR BS BZ CA CL CO CR CU DM DO EC GD GT GY HN HT JM KN LC MX "
+        "NI PA PE PY SR SV TT US UY VC VE".split()
+    ),
+    "oceania": tuple("AU FJ FM KI MH NR NZ PG PW SB TO TV VU WS".split()),
+}
+"""World region of every offered country, for the student country list filter."""
+
+REGION_OF: Final[dict[str, str]] = {
+    code: region for region, codes in REGIONS.items() for code in codes
+}
+
+EMPLOYERS_MAX: Final = 12
+EMPLOYER_NAME_MAX: Final = 120
+EMPLOYER_SECTOR_MAX: Final = 80
+SALARY_MAX: Final = 10_000_000
 
 GROUP_TO_OPPORTUNITY_FIELD: Final[dict[str, str]] = {
     "computer_data": "cs_it",
@@ -140,13 +175,99 @@ def _clean_sources(raw: Any, name: str) -> list[str]:
     for url in raw:
         if not isinstance(url, str):
             raise _bad(name)
-        url = url.strip()
-        parsed = urlparse(url)
-        if parsed.scheme != "https" or not parsed.netloc or len(url) > URL_MAX:
-            raise _bad(name)
+        url = _clean_url(url, name)
         if url not in out:
             out.append(url)
     return out
+
+
+def _clean_url(raw: Any, name: str) -> str:
+    if not isinstance(raw, str):
+        raise _bad(name)
+    url = raw.strip()
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or not parsed.netloc or len(url) > URL_MAX:
+        raise _bad(name)
+    return url
+
+
+def _clean_label(raw: Any, limit: int, name: str) -> str:
+    """A stripped one-line label; empty when absent."""
+    if raw is None:
+        return ""
+    if not isinstance(raw, str) or len(raw.strip()) > limit:
+        raise _bad(name)
+    return raw.strip()
+
+
+def _clean_employer(raw: Any, name: str) -> dict[str, str]:
+    if not isinstance(raw, dict) or not set(raw) <= {"name", "sector", "url"}:
+        raise _bad(name)
+    out = {"name": _clean_label(raw.get("name"), EMPLOYER_NAME_MAX, name)}
+    if not out["name"]:
+        raise _bad(name)
+    sector = _clean_label(raw.get("sector"), EMPLOYER_SECTOR_MAX, name)
+    if sector:
+        out["sector"] = sector
+    if raw.get("url") is not None:
+        out["url"] = _clean_url(raw["url"], name)
+    return out
+
+
+def _clean_employers(raw: dict[str, Any], name: str) -> dict[str, Any]:
+    """`{fields: {<opportunity field>: [{name, sector?, url?}]}}`."""
+    if set(raw) != {"fields"} or not isinstance(raw["fields"], dict):
+        raise _bad(name)
+    fields: dict[str, list[dict[str, str]]] = {}
+    for fkey, items in raw["fields"].items():
+        where = f"{name}.fields.{fkey}"
+        if fkey not in OPPORTUNITY_FIELDS or not isinstance(items, list):
+            raise _bad(where)
+        if len(items) > EMPLOYERS_MAX:
+            raise _bad(where)
+        cleaned = [_clean_employer(x, where) for x in items]
+        if cleaned:
+            fields[fkey] = cleaned
+    return {"fields": fields} if fields else {}
+
+
+def _is_amount(v: Any) -> bool:
+    return (
+        isinstance(v, int | float) and not isinstance(v, bool) and 0 < v <= SALARY_MAX
+    )
+
+
+def _clean_salaries(raw: dict[str, Any], name: str) -> dict[str, Any]:
+    """`{currency: USD, year, overall_median_annual: number|null, by_field: {...}}`."""
+    allowed = {"currency", "year", "overall_median_annual", "by_field"}
+    if not set(raw) <= allowed or raw.get("currency") != "USD":
+        raise _bad(f"{name}.currency" if set(raw) <= allowed else name)
+    year = raw.get("year")
+    if isinstance(year, bool) or not isinstance(year, int) or not 2000 <= year <= 2100:
+        raise _bad(f"{name}.year")
+    overall = raw.get("overall_median_annual")
+    if overall is not None and not _is_amount(overall):
+        raise _bad(f"{name}.overall_median_annual")
+    by_raw = raw.get("by_field") or {}
+    if not isinstance(by_raw, dict):
+        raise _bad(f"{name}.by_field")
+    by_field: dict[str, int | float] = {}
+    for fkey, amount in by_raw.items():
+        if fkey not in OPPORTUNITY_FIELDS or not _is_amount(amount):
+            raise _bad(f"{name}.by_field.{fkey}")
+        by_field[fkey] = amount
+    if overall is None and not by_field:
+        return {}
+    return {
+        "currency": "USD",
+        "year": year,
+        "overall_median_annual": overall,
+        "by_field": by_field,
+    }
+
+
+_NESTED_VALUES: Final = {"employers": _clean_employers, "salaries": _clean_salaries}
+"""Fact keys whose `values` have a fixed nested shape instead of flat values."""
 
 
 def _is_score(v: Any) -> bool:
@@ -170,6 +291,9 @@ def _clean_values(key: str, raw: Any, name: str) -> dict[str, Any]:
         return {}
     if not isinstance(raw, dict) or len(raw) > VALUES_MAX:
         raise _bad(name)
+    nested = _NESTED_VALUES.get(key)
+    if nested is not None:
+        return nested(raw, name) if raw else {}
     scored = _SCORED_VALUES.get(key, ())
     out: dict[str, Any] = {}
     for vname, value in raw.items():

@@ -894,6 +894,34 @@ def _admission_affordability_signoff(p: dict[str, Any], v: _View) -> Description
     )
 
 
+def _lms_review_due(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-lms-review-due-title"),
+        v.t("notify-lms-review-due-body", count=p.get("count", 0)),
+        f"{v.urls.lms}/review/",
+    )
+
+
+def _lms_streak_at_risk(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-lms-streak-at-risk-title"),
+        v.t("notify-lms-streak-at-risk-body", streak=p.get("streak", 0)),
+        f"{v.urls.lms}/my/",
+    )
+
+
+def _lms_deadline_soon(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-lms-deadline-soon-title"),
+        v.t(
+            "notify-lms-deadline-soon-body",
+            title=p.get("title", ""),
+            date=fmt_date(p.get("ends_on")),
+        ),
+        f"{v.urls.lms}/my/",
+    )
+
+
 _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.MARKS: _marks,
     NotificationType.RESULT_DROP: _result_drop,
@@ -953,6 +981,9 @@ _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.ADMISSION_COMMENT_ADDED: _admission_comment_added,
     NotificationType.ADMISSION_REVIEW_READY: _admission_review_ready,
     NotificationType.ADMISSION_AFFORDABILITY_SIGNOFF: _admission_affordability_signoff,
+    NotificationType.LMS_REVIEW_DUE: _lms_review_due,
+    NotificationType.LMS_STREAK_AT_RISK: _lms_streak_at_risk,
+    NotificationType.LMS_DEADLINE_SOON: _lms_deadline_soon,
 }
 
 

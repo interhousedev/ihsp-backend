@@ -45,6 +45,7 @@ class SettingsDetailsBody(BaseModel):
     enrolment_starts_at: datetime | None = None
     enrolment_ends_at: datetime | None = None
     navigation: list[NavigationItem] | None = Field(default=None, max_length=32)
+    tutor_enabled: bool | None = None
 
 
 NOT_NULLABLE = frozenset(
@@ -59,6 +60,7 @@ NOT_NULLABLE = frozenset(
         "audience_group_ids",
         "enrolment_open",
         "navigation",
+        "tutor_enabled",
     }
 )
 

@@ -1,0 +1,7 @@
+{
+  "lms-ai-review-session-not-found": "Bu tekshiruv suhbati topilmadi.",
+  "lms-ai-review-no-submissions-left": "Siz bu topshiriq uchun barcha urinishlardan foydalandingiz.",
+  "lms-ai-review-closed": "Bu ish allaqachon tekshirilgan. Yangi suhbat boshlang.",
+  "lms-ai-review-file-rejected": "Bu faylni tekshiruvga yuborib boʼlmaydi: uning turi va hajmini tekshiring.",
+  "lms-ai-review-unavailable": "AI tekshiruvi hozir mavjud emas. Keyinroq urinib koʼring."
+}

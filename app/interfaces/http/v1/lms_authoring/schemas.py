@@ -10,6 +10,8 @@ from app.modules.lms.application.authoring.views import (
     CourseStaffItemView,
     H5PLaunchView,
     H5PPackageView,
+    HtmlWidgetLaunchView,
+    HtmlWidgetPackageView,
     InviteCodeView,
     OutlineSectionView,
     OutlineStepView,
@@ -72,6 +74,14 @@ class H5PPackageResponse(H5PPackageView):
 
 class H5PLaunchResponse(H5PLaunchView):
     """The signed base URL of an H5P package."""
+
+
+class HtmlWidgetPackageResponse(HtmlWidgetPackageView):
+    """An uploaded HTML widget."""
+
+
+class HtmlWidgetLaunchResponse(HtmlWidgetLaunchView):
+    """The signed URL of an HTML widget."""
 
 
 class VideoStreamResponse(VideoStreamView):

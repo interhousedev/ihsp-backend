@@ -3,6 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
+from app.modules.lms.application.badges import award_badges
 from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.domain.learning.entities import (
     Enrollment,
@@ -36,6 +37,7 @@ async def refresh_progress(
     if enrollment.progress_pct == 100 and enrollment.completed_at is None:
         enrollment.completed_at = now
     await uow.enrollments.save(enrollment)
+    await award_badges(uow, enrollment, version.manifest, now)
 
 
 async def ensure_progress(

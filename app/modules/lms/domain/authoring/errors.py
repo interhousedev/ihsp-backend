@@ -159,6 +159,20 @@ class H5PPackageInvalidError(ValidationFailedError):
     message_key = "lms-h5p-invalid"
 
 
+class HtmlWidgetInvalidError(ValidationFailedError):
+    """The upload is not an acceptable HTML widget (``reason`` says why)."""
+
+    code = "lms/html-widget-invalid"
+    message_key = "lms-html-widget-invalid"
+
+
+class HtmlWidgetBlockNotFoundError(NotFoundError):
+    """The step has no HTML block with an uploaded widget and this ID."""
+
+    code = "lms/html-widget-not-found"
+    message_key = "lms-html-widget-block-not-found"
+
+
 class ContentInvalidError(ValidationFailedError):
     """Step content is invalid (for example duplicate IDs)."""
 

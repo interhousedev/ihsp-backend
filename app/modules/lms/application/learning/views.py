@@ -195,6 +195,14 @@ class LearningTextBlockView(BaseModel):
     passed: bool = False
 
 
+class LearningCaptionTrackView(BaseModel):
+    """A WebVTT caption track of a video block (its file comes from `/captions`)."""
+
+    lang: Literal["uz", "ru", "en"]
+    label: str
+    default: bool = False
+
+
 class LearningVideoBlockView(BaseModel):
     """A video block of a step."""
 
@@ -204,6 +212,7 @@ class LearningVideoBlockView(BaseModel):
     url: str
     file_id: str | None = None
     caption: str = ""
+    captions: list[LearningCaptionTrackView] = Field(default_factory=list)
     passed: bool = False
 
 
@@ -211,6 +220,22 @@ class VideoStreamView(BaseModel):
     """A short-lived URL that streams an uploaded video (supports ``Range``)."""
 
     url: str
+    expires_in: int
+
+
+class CaptionUrlView(BaseModel):
+    """A short-lived URL of one WebVTT caption track."""
+
+    lang: Literal["uz", "ru", "en"]
+    label: str
+    default: bool
+    url: str
+
+
+class VideoCaptionsView(BaseModel):
+    """The caption tracks of a video block with short-lived URLs."""
+
+    tracks: list[CaptionUrlView]
     expires_in: int
 
 
@@ -247,11 +272,16 @@ class LearningFlashcardsBlockView(BaseModel):
 
 
 class LearningBlockResultView(BaseModel):
-    """My result of an H5P or interactive video block (best H5P score)."""
+    """My result of an H5P, interactive video, code or HTML block (best score).
+
+    ``verified`` is false for code and HTML widgets: the browser graded them, so
+    the score is self-reported and earns no points.
+    """
 
     score: float = 0.0
     max_score: float = 0.0
     completed: bool = False
+    verified: bool = True
 
 
 class LearningH5PBlockView(BaseModel):
@@ -324,13 +354,208 @@ class H5PLaunchView(BaseModel):
     expires_in: int
 
 
+class HtmlWidgetLaunchView(BaseModel):
+    """Where the frame loads an HTML widget from (signed, short-lived)."""
+
+    base_url: str
+    entry_url: str
+    expires_in: int
+
+
+class LearningExamModuleView(BaseModel):
+    """A timed module of an exam section, without its questions."""
+
+    id: str
+    title: str = ""
+    time_limit_sec: int
+    questions_count: int
+
+
+class LearningExamSectionView(BaseModel):
+    """A section of an exam."""
+
+    id: str
+    title: str = ""
+    adaptive: bool = False
+    modules: list[LearningExamModuleView] = Field(default_factory=list)
+
+
+class LearningExamScalingView(BaseModel):
+    """The scaled score range of every section."""
+
+    min_score: int
+    max_score: int
+
+
+class LearningExamBlockView(BaseModel):
+    """An exam block: structure, directions and timing; no questions or answers."""
+
+    id: str
+    type: Literal["exam"]
+    title: str = ""
+    kind: Literal["sat", "ap", "custom"]
+    directions: str = ""
+    reference_sheet: str = ""
+    calculator: Literal["none", "scientific", "graphing"]
+    sections: list[LearningExamSectionView] = Field(default_factory=list)
+    scaling: LearningExamScalingView | None = None
+    passed: bool = False
+    result: LearningBlockResultView | None = None
+
+
+ExamStatus = Literal["not_started", "in_module", "between", "finished"]
+
+
+class LearningExamModuleRefView(BaseModel):
+    """Where a module sits in an exam (1-based numbers, as Bluebook shows them)."""
+
+    section_id: str
+    module_id: str
+    section_title: str = ""
+    module_title: str = ""
+    section_no: int
+    module_no: int
+    time_limit_sec: int
+    questions_count: int
+
+
+class LearningExamModuleRunView(LearningExamModuleRefView):
+    """The open module: its questions (no answers) and the server-side timer."""
+
+    started_at: datetime
+    deadline_at: datetime
+    questions: list["LearningAttemptQuestionView"]
+    answers: dict[str, dict[str, Any]]
+
+
+class LearningExamSectionScoreView(BaseModel):
+    """The raw and scaled score of one section."""
+
+    section_id: str
+    title: str = ""
+    score: float
+    max_score: float
+    scaled_score: int | None = None
+
+
+class LearningExamModuleReviewView(LearningExamModuleRefView):
+    """A finished module with my answers, correct answers and explanations."""
+
+    late: bool = False
+    score: float
+    max_score: float
+    questions: list["LearningAttemptQuestionView"]
+    answers: dict[str, dict[str, Any]]
+    review: list[LearningReviewItemView]
+
+
+class LearningExamResultView(BaseModel):
+    """The graded exam: section scores, total and the review of every module."""
+
+    finished_at: datetime
+    score: float
+    max_score: float
+    scaled_total: int | None = None
+    scaled_min: int | None = None
+    scaled_max: int | None = None
+    sections: list[LearningExamSectionScoreView]
+    modules: list[LearningExamModuleReviewView]
+
+
+class LearningExamSessionView(BaseModel):
+    """My sitting of an exam block; questions only of the module that is open."""
+
+    block_id: str
+    status: ExamStatus
+    server_now: datetime
+    modules_done: int
+    current: LearningExamModuleRunView | None = None
+    next: LearningExamModuleRefView | None = None
+    next_is_new_section: bool = False
+    result: LearningExamResultView | None = None
+
+
+class LearningCodeTestView(BaseModel):
+    """A code block test; a hidden test keeps its name and has empty code."""
+
+    id: str
+    name: str = ""
+    hidden: bool = False
+    code: str = ""
+
+
+class LearningHiddenTestsView(BaseModel):
+    """The hidden tests of a graded code block, fetched when the student submits."""
+
+    tests: list[LearningCodeTestView] = Field(default_factory=list)
+
+
+class LearningCodeBlockView(BaseModel):
+    """A runnable code panel, without the author's solution."""
+
+    id: str
+    type: Literal["code"]
+    language: Literal["python", "javascript", "sql"]
+    instructions: str = ""
+    starter: str = ""
+    tests: list[LearningCodeTestView] = Field(default_factory=list)
+    time_limit_ms: int
+    graded: bool = False
+    passed: bool = False
+    result: LearningBlockResultView | None = None
+
+
+class LearningHtmlBlockView(BaseModel):
+    """An author-uploaded HTML widget."""
+
+    id: str
+    type: Literal["html"]
+    title: str = ""
+    package_id: str = ""
+    entry: str = "index.html"
+    height_px: int
+    allow_fullscreen: bool = False
+    graded: bool = False
+    passed: bool = False
+    result: LearningBlockResultView | None = None
+
+
+class LearningAiReviewCriterionView(BaseModel):
+    """A public criterion of an AI review: its name and top score."""
+
+    name: str
+    max_score: float
+
+
+class LearningAiReviewBlockView(BaseModel):
+    """An AI review of my work; the teacher's prompt and files are not included."""
+
+    id: str
+    type: Literal["ai_review"]
+    title: str = ""
+    instructions_public: str = ""
+    output_template: Literal[
+        "review_table", "rubric_checklist", "strengths_cards", "image_gallery"
+    ]
+    criteria: list[LearningAiReviewCriterionView] = Field(default_factory=list)
+    max_submissions: int
+    accepted_types: list[Literal["pdf", "docx", "pptx", "image", "text"]] = Field(
+        default_factory=list
+    )
+    passed: bool | None = None
+
+
 StepBlockView = Annotated[
     LearningTextBlockView
     | LearningVideoBlockView
     | LearningQuizBlockView
     | LearningFlashcardsBlockView
     | LearningH5PBlockView
-    | LearningInteractiveVideoBlockView,
+    | LearningInteractiveVideoBlockView
+    | LearningExamBlockView
+    | LearningCodeBlockView
+    | LearningHtmlBlockView
+    | LearningAiReviewBlockView,
     Field(discriminator="type"),
 ]
 
@@ -411,6 +636,16 @@ class LearningStudentAttemptView(BaseModel):
     submitted_at: datetime
 
 
+class LearningStudentWidgetResultView(BaseModel):
+    """A graded code or HTML widget result of a student (browser-graded)."""
+
+    step_id: UUID
+    block_id: str
+    score_pct: float
+    passed: bool
+    verified: bool
+
+
 class LearningCourseStudentView(BaseModel):
     """`CourseStudent`: an enrolled student with progress and attempts."""
 
@@ -418,6 +653,7 @@ class LearningCourseStudentView(BaseModel):
     progress_pct: int
     completed_at: datetime | None
     attempts: list[LearningStudentAttemptView]
+    widget_results: list[LearningStudentWidgetResultView] = []
 
 
 # - - - Landing page - - -

@@ -44,10 +44,30 @@ class LearningOverrideScoreBody(BaseModel):
     comment: str = Field(min_length=1, max_length=1000)
 
 
+class LearningExamAnswersBody(BaseModel):
+    """`PUT .../blocks/{block_id}/exam/answers`: answers of the open module."""
+
+    module_id: str = Field(min_length=1, max_length=64)
+    answers: dict[str, LearningAnswerBody] = Field(max_length=200)
+
+
+class LearningExamSubmitBody(BaseModel):
+    """`POST .../blocks/{block_id}/exam/submit`: the module being submitted."""
+
+    module_id: str = Field(min_length=1, max_length=64)
+
+
 class LearningH5PResultBody(BaseModel):
     """`POST .../blocks/{block_id}/h5p-result`: an xAPI statement of the player."""
 
     statement: dict[str, Any]
+
+
+class LearningWidgetResultBody(BaseModel):
+    """`POST .../blocks/{block_id}/result`: a graded code or HTML widget's score."""
+
+    score_pct: float = Field(ge=0, le=100, allow_inf_nan=False)
+    passed: bool
 
 
 class LearningInteractionAnswerBody(BaseModel):

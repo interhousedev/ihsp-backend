@@ -8,7 +8,7 @@ from app.interfaces.mcp.guard import current_actor
 from app.interfaces.mcp.lms.block_args import block_dict
 from app.interfaces.mcp.lms.course_scope import ensure_step
 from app.interfaces.mcp.toolkit import ToolKit
-from app.shared.contracts.lms_blocks import BlockInput
+from app.shared.contracts.lms_blocks import AuthorBlockInput
 from app.shared.lms_scopes import MODULES_WRITE
 
 from pydantic import Field
@@ -23,7 +23,7 @@ def register(kit: ToolKit) -> None:
     async def update_block(
         step_id: Annotated[UUID, Field(description="Step id from get_course.")],
         block_id: Annotated[str, Field(description="Block id from get_step.")],
-        block: Annotated[BlockInput, Field(description="The new block content.")],
+        block: Annotated[AuthorBlockInput, Field(description="The new block content.")],
     ) -> dict[str, Any]:
         """Replace a block of a step draft with new content (same position).
 

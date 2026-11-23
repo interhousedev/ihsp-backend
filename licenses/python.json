@@ -737,6 +737,13 @@
     },
     {
       "ecosystem": "PyPI",
+      "license": "BSD License",
+      "name": "segno",
+      "url": "https://github.com/heuer/segno/",
+      "version": "1.6.6"
+    },
+    {
+      "ecosystem": "PyPI",
       "license": "MIT",
       "name": "sentry-sdk",
       "url": "https://github.com/getsentry/sentry-python",

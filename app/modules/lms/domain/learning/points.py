@@ -9,14 +9,22 @@ from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from typing import Any
 
+from app.modules.lms.domain.learning.exam import exam_max_points
 from app.modules.lms.domain.learning.variant import points_of
 from app.modules.lms.domain.step_content import (
+    CodeBlock,
+    ExamBlock,
     H5PBlock,
+    HtmlBlock,
     InteractiveVideoBlock,
     TestBlock,
 )
 
 H5P_POINTS = Decimal(1)
+# Code and HTML widgets are graded in the learner's browser, so their score is
+# self-reported and unverified: a pass completes the block but earns no points,
+# and so never counts toward a certificate score.
+WIDGET_POINTS = Decimal(0)
 
 
 def block_max_points(block: TestBlock) -> Decimal:
@@ -44,20 +52,29 @@ def sum_points(values: Iterable[Decimal]) -> Decimal:
     return sum(values, Decimal(0))
 
 
-def scored_block_max_points(block: H5PBlock | InteractiveVideoBlock) -> Decimal:
-    """Return the points of an H5P block (one) or an interactive video (questions)."""
+def scored_block_max_points(
+    block: H5PBlock | InteractiveVideoBlock | CodeBlock | HtmlBlock | ExamBlock,
+) -> Decimal:
+    """Return the points of an H5P block, a graded widget (none), a video, an exam.
+
+    An exam is worth the points of its harder path (see ``exam_max_points``).
+    """
+    if isinstance(block, ExamBlock):
+        return exam_max_points(block)
     if isinstance(block, H5PBlock):
         return H5P_POINTS
+    if isinstance(block, CodeBlock | HtmlBlock):
+        return WIDGET_POINTS
     return sum_points(
         Decimal(str(i.points)) for i in block.interactions if i.kind == "question"
     )
 
 
 def scored_earned_points(stored: Mapping[str, Any] | None, total: Decimal) -> Decimal:
-    """Return the points a stored H5P or interactive video result has earned."""
+    """Return the points a stored H5P, widget or interactive video result earned."""
     if not stored:
         return Decimal(0)
-    if stored.get("kind") == "h5p":
+    if stored.get("kind") in ("h5p", "widget", "exam"):
         share = Decimal(str(stored.get("pct", 0))) / 100
         return earned_points(total * share, total)
     return earned_points(Decimal(str(stored.get("score", 0))), total)

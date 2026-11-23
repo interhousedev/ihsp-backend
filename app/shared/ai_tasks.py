@@ -77,6 +77,9 @@ class AiTask(StrEnum):
     STUDIO_EXERCISE = "studio_exercise"
     EXERCISE_FEEDBACK = "exercise_feedback"
     LMS_AUTHORING = "lms_authoring"
+    LMS_AI_REVIEW = "lms_ai_review"
+    LMS_TUTOR = "lms_tutor"
+    LMS_VIDEO_CHECKS = "lms_video_checks"
     WEB_SEARCH = "web_search"
     DISCOVER = "discover"
     SUBJECT_TRANSLATE = "subject_translate"
@@ -401,6 +404,28 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     ),
     AiTask.LMS_AUTHORING: TaskSpec(
         "lms", "The course author assistant (lms_author chats in a course workspace)."
+    ),
+    AiTask.LMS_AI_REVIEW: TaskSpec(
+        "lms",
+        "AI review of a student's work in a course step: clarifying questions, then "
+        "a review against the teacher's criteria (the teacher's prompt and files "
+        "are private).",
+        data_collection=_PRIVATE,
+        reasoning_effort=_NO_REASONING,
+        private_content=True,
+    ),
+    AiTask.LMS_TUTOR: TaskSpec(
+        "lms",
+        "'Ask about this lesson': a Socratic tutor grounded in the step and its "
+        "course; hints and guiding questions, never the answers of tests.",
+        data_collection=_PRIVATE,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.LMS_VIDEO_CHECKS: TaskSpec(
+        "lms",
+        "Pause-and-predict checks every 2-3 minutes of a video transcript, and "
+        "recap flash cards, for the author to edit.",
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.TEACHER_QUESTIONS: TaskSpec(
         "assistant",
@@ -806,6 +831,9 @@ PIPELINE_OF: Final[dict[AiTask, Pipeline]] = {
     AiTask.STUDIO_ITEM_VERIFY: Pipeline.STUDIO,
     AiTask.EXERCISE_FEEDBACK: Pipeline.STUDIO,
     AiTask.LMS_AUTHORING: Pipeline.LMS,
+    AiTask.LMS_AI_REVIEW: Pipeline.LMS,
+    AiTask.LMS_TUTOR: Pipeline.LMS,
+    AiTask.LMS_VIDEO_CHECKS: Pipeline.LMS,
     AiTask.EMBEDDING: Pipeline.EMBEDDINGS,
     AiTask.WEB_SEARCH: Pipeline.WEB_SEARCH,
     AiTask.VOICE_TRANSCRIBE: Pipeline.VOICE,

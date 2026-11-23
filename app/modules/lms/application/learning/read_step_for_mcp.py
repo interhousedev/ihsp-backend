@@ -5,6 +5,7 @@ viewed. Blocks are built field by field from an allow-list, so no question, answ
 file id can pass through, whatever a render holds.
 """
 
+from collections.abc import Callable
 from typing import Any
 from uuid import UUID
 
@@ -42,6 +43,37 @@ def _test_block(block: dict[str, Any], attempts: list[Attempt]) -> dict[str, Any
     }
 
 
+def _exam_fields(block: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "title": block["title"],
+        "kind": block["kind"],
+        "calculator": block["calculator"],
+        "sections": [
+            {
+                "title": section["title"],
+                "modules": [
+                    {
+                        "title": module["title"],
+                        "time_limit_sec": module["time_limit_sec"],
+                        "questions": module["questions_count"],
+                    }
+                    for module in section["modules"]
+                ],
+            }
+            for section in block["sections"]
+        ],
+    }
+
+
+def _code_fields(block: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "language": block["language"],
+        "instructions": block["instructions"],
+        "starter": block["starter"],
+        "tests": [test["name"] for test in block["tests"]],
+    }
+
+
 def _block(block: dict[str, Any], attempts: list[Attempt]) -> dict[str, Any]:
     kind = block["type"]
     base = {"id": block["id"], "type": kind}
@@ -58,9 +90,20 @@ def _block(block: dict[str, Any], attempts: list[Attempt]) -> dict[str, Any]:
         }
     if kind == "test":
         return _test_block(block, attempts)
-    if kind == "flashcards":
-        return {**base, "cards_count": block["cards_count"]}
-    return base
+    fields = _FIELDS.get(kind)
+    return {**base, **fields(block)} if fields else base
+
+
+_FIELDS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
+    "flashcards": lambda block: {"cards_count": block["cards_count"]},
+    "exam": _exam_fields,
+    "code": _code_fields,
+    "html": lambda block: {"title": block["title"]},
+    "ai_review": lambda block: {
+        "title": block["title"],
+        "instructions": block["instructions_public"],
+    },
+}
 
 
 class LearnerCourseReader:

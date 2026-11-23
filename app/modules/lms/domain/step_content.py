@@ -27,6 +27,7 @@ QuestionType = Literal[
 ]
 FormulaMode = Literal["symbolic", "numeric"]
 VideoSource = Literal["link", "upload"]
+CaptionLang = Literal["uz", "ru", "en"]
 InteractionKind = Literal["question", "note", "link"]
 MAX_TABLE_SIDE = 30
 MAX_VARIABLES = 10
@@ -202,8 +203,30 @@ class TestBlock(BaseModel):
     questions: list[Question] = Field(default_factory=list)
 
 
+class CaptionTrack(BaseModel):
+    """A WebVTT caption track of a video (WCAG 1.2.2), one per language."""
+
+    lang: CaptionLang
+    label: str = Field(min_length=1, max_length=60)
+    file_id: str
+    default: bool = False
+
+    @model_validator(mode="after")
+    def _valid_file(self) -> "CaptionTrack":
+        """The track is an uploaded `lms_captions` file."""
+        try:
+            UUID(self.file_id)
+        except ValueError as exc:
+            raise ValueError("a caption track needs a valid file_id") from exc
+        return self
+
+
 class VideoBlock(BaseModel):
-    """A video: a link (YouTube, Vimeo, direct file) or an uploaded file."""
+    """A video: a link (YouTube, Vimeo, direct file) or an uploaded file.
+
+    ``captions`` are WebVTT tracks; players show them on native video only
+    (embedded YouTube/Vimeo players use their own captions).
+    """
 
     id: str = ""
     type: Literal["video"] = "video"
@@ -211,6 +234,17 @@ class VideoBlock(BaseModel):
     url: str = Field(default="", max_length=2000)
     file_id: str | None = None
     caption: str = Field(default="", max_length=500)
+    captions: list[CaptionTrack] = Field(default_factory=list, max_length=3)
+
+    @model_validator(mode="after")
+    def _captions_are_consistent(self) -> "VideoBlock":
+        """One track per language and at most one default track."""
+        langs = [track.lang for track in self.captions]
+        if len(set(langs)) != len(langs):
+            raise ValueError("a video has at most one caption track per language")
+        if sum(track.default for track in self.captions) > 1:
+            raise ValueError("a video has at most one default caption track")
+        return self
 
     @model_validator(mode="after")
     def _source_matches_fields(self) -> "VideoBlock":
@@ -306,13 +340,187 @@ class InteractiveVideoBlock(BaseModel):
         return self
 
 
+ExamKind = Literal["sat", "ap", "custom"]
+Calculator = Literal["none", "scientific", "graphing"]
+EXAM_QUESTION_TYPES = frozenset({"single", "multiple", "number", "text", "free"})
+
+
+class ExamModule(BaseModel):
+    """A timed module of an exam section (Bluebook: section 1, module 2)."""
+
+    id: str = ""
+    title: str = Field(default="", max_length=200)
+    time_limit_sec: int = Field(default=1920, ge=60, le=14_400)
+    questions: list[Question] = Field(default_factory=list, max_length=200)
+
+    @model_validator(mode="after")
+    def _question_types(self) -> "ExamModule":
+        """An exam asks only choice, number, text and free answer questions."""
+        for question in self.questions:
+            if question.type not in EXAM_QUESTION_TYPES:
+                raise ValueError(f"exam question type not allowed: {question.type}")
+        return self
+
+
+class ExamSection(BaseModel):
+    """A section of an exam: modules taken in order, optionally adaptive."""
+
+    id: str = ""
+    title: str = Field(default="", max_length=200)
+    modules: list[ExamModule] = Field(default_factory=list, max_length=4)
+    adaptive: bool = False
+
+
+class ExamScaling(BaseModel):
+    """The scaled score range of every section (SAT: 200 to 800)."""
+
+    min_score: int = Field(default=200, ge=0, le=10_000)
+    max_score: int = Field(default=800, ge=1, le=10_000)
+
+    @model_validator(mode="after")
+    def _range(self) -> "ExamScaling":
+        """The maximum is above the minimum."""
+        if self.max_score <= self.min_score:
+            raise ValueError("max_score must be greater than min_score")
+        return self
+
+
+class ExamBlock(BaseModel):
+    """A Bluebook-style digital test (SAT, AP or custom) with timed modules."""
+
+    id: str = ""
+    type: Literal["exam"] = "exam"
+    title: str = Field(default="", max_length=200)
+    kind: ExamKind = "custom"
+    directions: str = Field(default="", max_length=5000)
+    reference_sheet: str = Field(default="", max_length=20_000)
+    calculator: Calculator = "none"
+    sections: list[ExamSection] = Field(default_factory=list, max_length=6)
+    scaling: ExamScaling | None = None
+
+
+CodeLanguage = Literal["python", "javascript", "sql"]
+
+
+class CodeTest(BaseModel):
+    """A test of a code block; hidden tests show only their name to students."""
+
+    id: str = ""
+    name: str = Field(default="", max_length=200)
+    code: str = Field(default="", max_length=5000)
+    hidden: bool = False
+
+
+class CodeBlock(BaseModel):
+    """A runnable code panel with starter code, an author solution and tests."""
+
+    id: str = ""
+    type: Literal["code"] = "code"
+    language: CodeLanguage = "python"
+    instructions: str = Field(default="", max_length=5000)
+    starter: str = Field(default="", max_length=20_000)
+    solution: str = Field(default="", max_length=20_000)
+    tests: list[CodeTest] = Field(default_factory=list, max_length=30)
+    time_limit_ms: int = Field(default=5000, ge=1000, le=30_000)
+    graded: bool = False
+
+
+class HtmlBlock(BaseModel):
+    """An author-uploaded custom HTML widget, served sandboxed."""
+
+    id: str = ""
+    type: Literal["html"] = "html"
+    title: str = Field(default="", max_length=200)
+    package_id: str = Field(default="", max_length=36)
+    entry: Literal["index.html"] = "index.html"
+    height_px: int = Field(default=600, ge=200, le=2000)
+    allow_fullscreen: bool = False
+    graded: bool = False
+
+    @model_validator(mode="after")
+    def _package_id(self) -> "HtmlBlock":
+        """An empty package id is a block that has no upload yet."""
+        if self.package_id:
+            try:
+                UUID(self.package_id)
+            except ValueError as exc:
+                raise ValueError("html package_id must be a UUID") from exc
+        return self
+
+
+AiReviewTemplate = Literal[
+    "review_table", "rubric_checklist", "strengths_cards", "image_gallery"
+]
+AiReviewFileKind = Literal["pdf", "docx", "pptx", "image", "text"]
+
+
+class AiReviewCriterion(BaseModel):
+    """One row of the review: a criterion, what it means and its top score."""
+
+    name: str = Field(min_length=1, max_length=200)
+    description: str = Field(default="", max_length=1000)
+    max_score: float = Field(default=10, ge=0, le=100)
+
+
+class AiReviewFile(BaseModel):
+    """A reference file the teacher uploaded; its text is never shown to students."""
+
+    file_id: str = Field(max_length=36)
+    name: str = Field(default="", max_length=200)
+
+    @model_validator(mode="after")
+    def _file_id(self) -> "AiReviewFile":
+        """The file id is a UUID of the files module."""
+        try:
+            UUID(self.file_id)
+        except ValueError as exc:
+            raise ValueError("ai_review file_id must be a UUID") from exc
+        return self
+
+
+class AiReviewBlock(BaseModel):
+    """An AI reviewer of a student's work (intermediate project review).
+
+    Only ``title``, ``instructions_public``, ``max_submissions``, ``accepted_types``
+    and the template name reach students; the prompt, files, private topics and
+    criteria descriptions stay on the server.
+    """
+
+    id: str = ""
+    type: Literal["ai_review"] = "ai_review"
+    title: str = Field(default="", max_length=200)
+    instructions_public: str = Field(default="", max_length=10_000)
+    teacher_prompt: str = Field(default="", max_length=10_000)
+    output_template: AiReviewTemplate = "review_table"
+    criteria: list[AiReviewCriterion] = Field(default_factory=list, max_length=20)
+    use_course_materials: bool = True
+    reference_files: list[AiReviewFile] = Field(default_factory=list, max_length=10)
+    web_search: bool = False
+    private_topics: list[Annotated[str, Field(max_length=200)]] = Field(
+        default_factory=list, max_length=30
+    )
+    max_submissions: int = Field(default=3, ge=1, le=20)
+    pass_threshold_pct: int = Field(default=60, ge=0, le=100)
+    """The share of the criteria's top scores a review needs to pass the block."""
+    accepted_types: list[AiReviewFileKind] = Field(
+        default_factory=lambda: list[AiReviewFileKind](
+            ["pdf", "docx", "image", "text"]
+        ),
+        min_length=1,
+    )
+
+
 Block = Annotated[
     TextBlock
     | VideoBlock
     | TestBlock
     | FlashcardsBlock
     | H5PBlock
-    | InteractiveVideoBlock,
+    | InteractiveVideoBlock
+    | ExamBlock
+    | CodeBlock
+    | HtmlBlock
+    | AiReviewBlock,
     Field(discriminator="type"),
 ]
 
@@ -324,6 +532,13 @@ Identified = (
     | FlashcardsBlock
     | H5PBlock
     | InteractiveVideoBlock
+    | ExamBlock
+    | CodeBlock
+    | HtmlBlock
+    | AiReviewBlock
+    | ExamSection
+    | ExamModule
+    | CodeTest
     | Interaction
     | Question
     | Option
@@ -349,16 +564,34 @@ def canonical_hash(content: StepContent) -> str:
     return hashlib.sha256(canonical.encode()).hexdigest()
 
 
+def _question_items(questions: list[Question]) -> Iterator[Identified]:
+    """Yield questions with their options, pairs and blanks."""
+    for question in questions:
+        yield question
+        yield from question.options or []
+        yield from question.pairs or []
+        yield from question.blanks or []
+
+
+def _exam_items(block: ExamBlock) -> Iterator[Identified]:
+    """Yield the sections, modules and questions of an exam."""
+    for section in block.sections:
+        yield section
+        for module in section.modules:
+            yield module
+            yield from _question_items(module.questions)
+
+
 def _items(content: StepContent) -> Iterator[Identified]:
     """Yield every element that carries an id: blocks, questions, options, cards."""
     for block in content.blocks:
         yield block
         if isinstance(block, TestBlock):
-            for question in block.questions:
-                yield question
-                yield from question.options or []
-                yield from question.pairs or []
-                yield from question.blanks or []
+            yield from _question_items(block.questions)
+        elif isinstance(block, ExamBlock):
+            yield from _exam_items(block)
+        elif isinstance(block, CodeBlock):
+            yield from block.tests
         elif isinstance(block, FlashcardsBlock):
             yield from block.cards
         elif isinstance(block, InteractiveVideoBlock):

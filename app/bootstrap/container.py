@@ -28,6 +28,9 @@ if TYPE_CHECKING:
     from app.modules.admin.wiring import AdminServices
     from app.modules.admission.wiring import AdmissionServices
     from app.modules.ai.wiring import AiServices
+    from app.modules.certificates.application.course_certificates import (
+        CourseCertificates,
+    )
     from app.modules.certificates.wiring import CertificatesServices
     from app.modules.dashboard.wiring import DashboardServices
     from app.modules.faces.wiring import FacesServices
@@ -42,6 +45,7 @@ if TYPE_CHECKING:
     from app.modules.library.wiring import LibraryServices
     from app.modules.links.wiring import LinksServices
     from app.modules.lms.wiring import LmsModule
+    from app.modules.lms.wiring_lesson_ai import LessonAiServices
     from app.modules.mail.wiring import MailServices
     from app.modules.notebooks.wiring import NotebooksServices
     from app.modules.notify.wiring import NotifyServices
@@ -92,6 +96,7 @@ class Container:
     library: "LibraryServices" = NOT_BUILT
     admission: "AdmissionServices" = NOT_BUILT
     certificates: "CertificatesServices" = NOT_BUILT
+    course_certificates: "CourseCertificates" = NOT_BUILT
     knowledge: "KnowledgeServices" = NOT_BUILT
     feedback: "FeedbackServices" = NOT_BUILT
     legal: "LegalServices" = NOT_BUILT
@@ -113,6 +118,7 @@ class Container:
     mcp_history_tools: "McpHistoryTools" = NOT_BUILT
     mcp_files_courses_tools: "McpFilesCoursesTools" = NOT_BUILT
     lms_ai_tools: "LmsAiTools | None" = None
+    lms_lesson_ai: "LessonAiServices" = NOT_BUILT
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
 
     async def close(self) -> None:

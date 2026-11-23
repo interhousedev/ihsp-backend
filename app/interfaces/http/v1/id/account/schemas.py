@@ -6,7 +6,7 @@ from uuid import UUID
 
 from app.modules.identity.application.get_me import MeView
 from app.shared.actor import Role
-from app.shared.contracts.identity import UserPreferences
+from app.shared.contracts.identity import LmsNudgeType, UserPreferences
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -80,6 +80,8 @@ class PreferencesPatchBody(BaseModel):
     today_cards: list[str] | None = None
     onboarding_dismissed: list[str] | None = None
     bottom_nav: list[str] | None = None
+    lms_skin: Literal["classic", "playful"] | None = None
+    lms_nudges: list[LmsNudgeType] | None = None
     seen_marks_at: datetime | None = None
 
 

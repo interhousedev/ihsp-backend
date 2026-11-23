@@ -51,6 +51,8 @@ class RequestUploadBody(BaseModel):
         "lms_video",
         "feedback",
         "admission_document",
+        "lms_ai_review",
+        "lms_captions",
     ]
 
 

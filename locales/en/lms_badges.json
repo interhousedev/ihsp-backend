@@ -1,0 +1,6 @@
+{
+  "lms-badge-invalid": "The badge is not valid: check the field \"{field}\" ({reason}).",
+  "lms-badge-not-found": "This badge does not exist in the course.",
+  "lms-badge-award-not-found": "This award was not found.",
+  "lms-badge-limit": "A course can have at most {limit} badges."
+}

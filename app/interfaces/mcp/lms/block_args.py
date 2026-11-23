@@ -3,7 +3,7 @@
 from typing import Any
 
 from app.shared.contracts.lms_blocks import (
-    BlockInput,
+    AuthorBlockInput,
     BlockInputError,
     QuestionInput,
     build_block,
@@ -13,7 +13,7 @@ from app.shared.contracts.lms_blocks import (
 from mcp.server.fastmcp.exceptions import ToolError
 
 
-def block_dict(block: BlockInput) -> dict[str, Any]:
+def block_dict(block: AuthorBlockInput) -> dict[str, Any]:
     """Return the block in the LMS shape.
 
     Raises:

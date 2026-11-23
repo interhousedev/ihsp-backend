@@ -120,6 +120,7 @@ class AdmissionCourseSourcesAdapter:
                 summary=card.summary or card.description,
                 url=f"/courses/?lms={card.id}",
                 enrolled=str(card.id) in mine,
+                cover_url=card.cover_url,
             )
             for card in cards
             if not card.locked

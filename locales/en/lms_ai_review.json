@@ -1,0 +1,7 @@
+{
+  "lms-ai-review-session-not-found": "This review conversation was not found.",
+  "lms-ai-review-no-submissions-left": "You have used all submissions for this task.",
+  "lms-ai-review-closed": "This work has already been reviewed. Start a new conversation.",
+  "lms-ai-review-file-rejected": "This file cannot be sent for review: check its type and size.",
+  "lms-ai-review-unavailable": "The AI review is unavailable right now. Please try later."
+}

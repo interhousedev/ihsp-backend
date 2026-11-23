@@ -35,6 +35,8 @@ class FilePurpose(StrEnum):
     CERTIFICATE = "certificate"
     FEEDBACK = "feedback"
     ADMISSION_DOCUMENT = "admission_document"
+    LMS_AI_REVIEW = "lms_ai_review"
+    LMS_CAPTIONS = "lms_captions"
 
 
 @dataclass(frozen=True, slots=True)

@@ -38,13 +38,15 @@ EPUB = "application/epub+zip"
 MP4 = "video/mp4"
 WEBM = "video/webm"
 MOV = "video/quicktime"
-INLINE_TYPES = frozenset({PDF, "image/png", "image/jpeg", MP4, WEBM, MOV})
+VTT = "text/vtt"
+INLINE_TYPES = frozenset({PDF, "image/png", "image/jpeg", MP4, WEBM, MOV, VTT})
 
 _ZIP_FALLBACKS = frozenset({"application/zip", "application/octet-stream"})
 _TEXT_EXTRA = frozenset({"application/json", "application/xml"})
 _LOOSE_DECLARED = frozenset({"", "application/octet-stream"})
 _ZIP_MAGIC = b"PK\x03\x04"
 MB = 1024 * 1024
+LMS_AI_REVIEW_MAX_BYTES = 20 * MB
 GB = 1024 * MB
 LIBRARY_PURPOSES = frozenset(
     {
@@ -58,6 +60,11 @@ LIBRARIAN_ONLY_PURPOSES = frozenset(
 )
 VIDEO_EXTENSIONS = frozenset({".mp4", ".webm", ".mov"})
 VIDEO_PURPOSES = frozenset({FilePurpose.LMS_VIDEO})
+# WebVTT caption tracks of lesson videos (WCAG 1.2.2): only `.vtt`, at most 1 MiB.
+CAPTION_EXTENSIONS = frozenset({".vtt"})
+CAPTION_PURPOSES = frozenset({FilePurpose.LMS_CAPTIONS})
+LMS_CAPTIONS_MAX_BYTES = 1 * MB
+_WEBVTT_SIGNATURE = re.compile(rb"\A(?:\xef\xbb\xbf)?WEBVTT(?:[ \t\r\n]|\Z)")
 # Purposes that take videos as well as documents and images (anyone may upload).
 MIXED_PURPOSES = frozenset({FilePurpose.FEEDBACK})
 VIDEO_UPLOAD_ROLES = frozenset(
@@ -130,6 +137,13 @@ RULES: dict[str, TypeRule] = {
         frozenset({"audio/wav", "audio/x-wav"}),
         frozenset({"audio/wav", "audio/x-wav", "audio/vnd.wave"}),
     ),
+    # Captions are only accepted for ``CAPTION_PURPOSES`` and must start with WEBVTT.
+    ".vtt": TypeRule(
+        VTT,
+        frozenset({VTT, "text/plain"}),
+        frozenset({"text/plain", VTT}),
+        text=True,
+    ),
     # Videos are only accepted for ``VIDEO_PURPOSES`` (``check_purpose_extension``).
     ".mp4": TypeRule(
         MP4,
@@ -175,6 +189,10 @@ class FilesLimits:
         """Return the size limit of one file of the purpose."""
         if purpose in VIDEO_PURPOSES:
             return self.lms_video_max_bytes
+        if purpose in CAPTION_PURPOSES:
+            return min(LMS_CAPTIONS_MAX_BYTES, self.max_bytes_for(scope))
+        if purpose == FilePurpose.LMS_AI_REVIEW:  # a student's work for an AI review
+            return min(LMS_AI_REVIEW_MAX_BYTES, self.max_bytes_for(scope))
         return self.max_bytes_for(scope)
 
     def quota_for(self, scope: FileScope) -> int | None:
@@ -275,6 +293,8 @@ def checksum_hex(sha256_b64: str) -> str | None:
 
 def detected_matches(rule: TypeRule, detected: str, head: bytes) -> bool:
     """Return True if the sniffed type is consistent with the extension's rule."""
+    if rule.canonical == VTT and not is_webvtt(head):
+        return False
     if detected in rule.detected:
         return True
     if rule.text:
@@ -282,6 +302,11 @@ def detected_matches(rule: TypeRule, detected: str, head: bytes) -> bool:
     if rule.zip_based:
         return detected in _ZIP_FALLBACKS and head.startswith(_ZIP_MAGIC)
     return False
+
+
+def is_webvtt(head: bytes) -> bool:
+    """True if the bytes start with the WebVTT signature (optional BOM, ``WEBVTT``)."""
+    return _WEBVTT_SIGNATURE.match(head) is not None
 
 
 def rule_for_name(name: str) -> TypeRule | None:
@@ -310,22 +335,28 @@ def scope_for_purpose(purpose: FilePurpose, actor: Actor) -> FileScope:
 
 
 def check_upload_role(purpose: FilePurpose, actor: Actor) -> None:
-    """Books and covers: librarians and administrators; lesson videos: course staff."""
+    """Books and covers: librarians and administrators; lesson media: course staff."""
     if purpose in LIBRARIAN_ONLY_PURPOSES and not is_librarian(actor):
         raise ForbiddenError(params={"purpose": purpose.value})
-    if purpose in VIDEO_PURPOSES and not (VIDEO_UPLOAD_ROLES & actor.roles):
+    lesson_media = VIDEO_PURPOSES | CAPTION_PURPOSES
+    if purpose in lesson_media and not (VIDEO_UPLOAD_ROLES & actor.roles):
         raise ForbiddenError(params={"purpose": purpose.value})
 
 
 def check_purpose_extension(purpose: FilePurpose, name: str) -> None:
-    """Videos only for video and mixed purposes; video purposes only take videos."""
-    if purpose in MIXED_PURPOSES:
+    """Videos and captions only for their purposes, which take nothing else.
+
+    Mixed purposes also take videos (but no caption tracks).
+    """
+    ext = extension_of(name)
+    is_caption = ext in CAPTION_EXTENSIONS
+    if is_caption != (purpose in CAPTION_PURPOSES):
+        raise TypeNotAllowedError(params={"extension": ext, "purpose": purpose.value})
+    if purpose in MIXED_PURPOSES or is_caption:
         return
-    is_video = extension_of(name) in VIDEO_EXTENSIONS
+    is_video = ext in VIDEO_EXTENSIONS
     if is_video != (purpose in VIDEO_PURPOSES):
-        raise TypeNotAllowedError(
-            params={"extension": extension_of(name), "purpose": purpose.value}
-        )
+        raise TypeNotAllowedError(params={"extension": ext, "purpose": purpose.value})
 
 
 def check_scope_purpose(scope: FileScope, purpose: FilePurpose) -> None:

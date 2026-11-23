@@ -47,6 +47,7 @@ _ALLOWED = {
     ("affordability_checks", "signed_off_by"),
     ("document_versions", "uploaded_by"),
     ("document_attachments", "attached_by"),
+    ("attached_books", "attached_by"),
     ("essay_versions", "created_by"),
 }
 

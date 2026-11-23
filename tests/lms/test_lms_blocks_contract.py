@@ -1,18 +1,24 @@
 """The MCP/AI block builders know every LMS question type and build valid content."""
 
+import json
 from typing import Any
+from uuid import UUID
 
-from app.modules.lms.domain.step_content import Question
+from app.modules.lms.domain.step_content import Question, VideoBlock
 from app.shared.contracts.lms_blocks import (
+    AuthorBlockInput,
     BlankInput,
     BlockInputError,
     PairInput,
     QuestionInput,
+    StepDraftInput,
     VariableInput,
+    build_block,
     build_question,
 )
 
 import pytest
+from pydantic import TypeAdapter
 
 
 def make(**fields: Any) -> QuestionInput:
@@ -71,3 +77,22 @@ def test_table_grid_marks_the_cells() -> None:
 def test_broken_questions_are_refused(question: QuestionInput) -> None:
     with pytest.raises(BlockInputError):
         build_question(question)
+
+
+def test_an_uploaded_video_becomes_a_valid_upload_block() -> None:
+    """`video_file` builds a video block with source upload that the LMS accepts."""
+    file_id = UUID(int=7)
+    block: AuthorBlockInput = TypeAdapter(AuthorBlockInput).validate_python(
+        {"type": "video_file", "file_id": str(file_id), "caption": "Lesson"}
+    )
+
+    built = build_block(block)
+
+    assert built["source"] == "upload"
+    assert built["file_id"] == str(file_id)
+    assert VideoBlock.model_validate(built).file_id == str(file_id)
+
+
+def test_model_output_schemas_never_offer_an_uploaded_video() -> None:
+    """Models cannot invent file IDs: the lesson draft schema has no `video_file`."""
+    assert "video_file" not in json.dumps(StepDraftInput.model_json_schema())

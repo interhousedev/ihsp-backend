@@ -1,5 +1,6 @@
 """MCP-6: LMS course operations honour the connector's course limits and scopes."""
 
+from typing import Any, cast
 from uuid import UUID
 
 from app.interfaces.mcp.constants import SCOPES_BY_SERVER
@@ -161,3 +162,32 @@ async def test_generate_course_draft_without_ai_explains_itself(world: World) ->
     assert result.isError
     assert "AI drafting is not available on this server" in text_of(result)
     assert world.lms_ops.calls == []
+
+
+async def test_build_course_takes_an_uploaded_video_in_one_call(world: World) -> None:
+    """A `video_file` block reaches the port as an upload video block."""
+    token, actor = world.connector_token("lms", *ALL, f"course:{COURSE_A}")
+    video = UUID(int=0x5)
+    step = {
+        "title": "Lesson",
+        "blocks": [
+            {"type": "text", "markdown": "Read this"},
+            {"type": "video_file", "file_id": str(video), "caption": "Watch"},
+        ],
+    }
+
+    async with world.session("lms", token) as session:
+        result = await call(
+            session,
+            "build_course",
+            course_id=str(COURSE_A),
+            sections=[{"title": "Week 1", "steps": [step]}],
+        )
+
+    assert not result.isError, text_of(result)
+    [(course_id, plan)] = _ops(world, "build_course")
+    assert course_id == COURSE_A
+    [_, built] = cast(list[Any], plan)[0]["steps"][0]["blocks"]
+    assert built["source"] == "upload"
+    assert built["file_id"] == str(video)
+    assert world.lms_ops.calls[0].actor == actor

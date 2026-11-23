@@ -26,6 +26,8 @@
   "lms-link-target-forbidden": "Эту ссылку нельзя проверить.",
   "lms-h5p-block-not-found": "В этом блоке нет пакета H5P.",
   "lms-h5p-invalid": "Этот файл не является корректным пакетом H5P.",
+  "lms-html-widget-invalid": "Этот файл не подходит как HTML-виджет: загрузите один файл .html или архив .zip с index.html в корне.",
+  "lms-html-widget-block-not-found": "В этом блоке нет HTML-виджета.",
   "lms-cartridge-invalid": "Этот файл не является пригодным пакетом IMS Common Cartridge (.imscc).",
   "lms-cartridge-import-not-found": "Импорт не найден или устарел."
 }

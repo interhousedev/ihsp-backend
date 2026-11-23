@@ -14,6 +14,7 @@ from app.interfaces.http.v1.admission import (
     routes_chooser,
     routes_consultations,
     routes_country_facts,
+    routes_course_catalog,
     routes_documents,
     routes_essay_deep_read,
     routes_essay_gallery,
@@ -51,6 +52,7 @@ from app.interfaces.http.v1.admission import (
     routes_tasks,
     routes_test_scores,
     routes_today,
+    routes_trajectories,
     routes_uni_chat,
     routes_voice_fill,
 )
@@ -110,7 +112,9 @@ ROUTERS: list[APIRouter] = [
     routes_uni_chat.router,
     routes_kb.router,
     routes_country_facts.router,
+    routes_course_catalog.router,
     routes_projects.router,
     routes_project_helpers_staff.router,
+    routes_trajectories.router,
     routes_voice_fill.router,
 ]

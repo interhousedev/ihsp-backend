@@ -79,6 +79,7 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.web_search",
     f"{V1}.outbound_mail",
     f"{V1}.flashcards",
+    f"{V1}.course_certificates",
     f"{V1}.certificates",
     f"{V1}.admin_knowledge",
     f"{V1}.admin_feedback",
@@ -95,6 +96,8 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.library",
     f"{V1}.lms_authoring",
     f"{V1}.lms_learning",
+    f"{V1}.lms_engagement",
+    f"{V1}.lms_ai_review",
     f"{V1}.lms_public",
     f"{PUBLIC}.rooms",
     f"{PUBLIC}.short_links",
@@ -115,10 +118,13 @@ FEATURE_PACKAGES: dict[str, Feature] = {
     f"{PUBLIC}.library": Feature.LIBRARY,
     f"{V1}.lms_authoring": Feature.LMS,
     f"{V1}.lms_learning": Feature.LMS,
+    f"{V1}.lms_engagement": Feature.LMS,
+    f"{V1}.lms_ai_review": Feature.LMS,
     f"{V1}.lms_public": Feature.LMS,
     f"{V1}.push": Feature.PUSH,
     f"{V1}.admin_sync": Feature.EMIS_SYNC,
     f"{V1}.admin_student_sync": Feature.EMIS_SYNC,
+    f"{V1}.course_certificates": Feature.LMS,
 }
 
 

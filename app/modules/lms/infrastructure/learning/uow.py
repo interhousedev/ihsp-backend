@@ -3,6 +3,7 @@
 from app.modules.lms.infrastructure.access_rule_repository import (
     SqlAccessRuleRepository,
 )
+from app.modules.lms.infrastructure.badge_repository import SqlBadgeRepository
 from app.modules.lms.infrastructure.learning.repositories.attempt_repository import (
     SqlAttemptRepository,
 )
@@ -46,6 +47,7 @@ class SqlLearningUnitOfWork(SqlUnitOfWork):
     attempts: SqlAttemptRepository
     media_grants: SqlMediaGrantRepository
     access: SqlAccessRuleRepository
+    badges: SqlBadgeRepository
 
     def _init_repos(self) -> None:
         """Create the repositories bound to the session."""
@@ -59,3 +61,4 @@ class SqlLearningUnitOfWork(SqlUnitOfWork):
         self.attempts = SqlAttemptRepository(self.session)
         self.media_grants = SqlMediaGrantRepository(self.session)
         self.access = SqlAccessRuleRepository(self.session)
+        self.badges = SqlBadgeRepository(self.session)

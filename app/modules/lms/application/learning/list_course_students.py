@@ -1,6 +1,7 @@
 """Use case: enrolled students with progress and attempts (UF-LMS-15 step 1)."""
 
 from collections import defaultdict
+from typing import Any
 from uuid import UUID
 
 from app.modules.lms.application.learning.attempt_presenter import number
@@ -15,8 +16,10 @@ from app.modules.lms.application.learning.views import (
     LearningCourseStudentView,
     LearningPersonRefView,
     LearningStudentAttemptView,
+    LearningStudentWidgetResultView,
 )
 from app.modules.lms.domain.learning.access import REVIEW
+from app.modules.lms.domain.learning.block_results import RESULT_PREFIX
 from app.modules.lms.domain.learning.entities import Attempt
 from app.shared.actor import Actor
 from app.shared.clock import Clock
@@ -53,9 +56,14 @@ class ListCourseStudents:
                 else None
             )
             now = self.clock.now()
+            widgets: dict[UUID, list[LearningStudentWidgetResultView]] = {}
             for enrollment in enrollments:
                 if version is not None:
                     await ensure_progress(uow, self.gate, enrollment, version, now)
+                    cards = await uow.states.cards_by_step(
+                        enrollment.user_id, version.manifest.step_ids()
+                    )
+                    widgets[enrollment.user_id] = _widget_items(cards)
             attempts: dict[UUID, list[Attempt]] = defaultdict(list)
             for attempt in await uow.attempts.list_submitted_for_course(course_id):
                 attempts[attempt.user_id].append(attempt)
@@ -69,6 +77,7 @@ class ListCourseStudents:
                 progress_pct=enrollment.progress_pct,
                 completed_at=enrollment.completed_at,
                 attempts=[_attempt_item(a) for a in attempts[enrollment.user_id]],
+                widget_results=widgets.get(enrollment.user_id, []),
             )
             for enrollment in enrollments
             if (user := users.get(enrollment.user_id)) is not None
@@ -90,3 +99,21 @@ def _attempt_item(attempt: Attempt) -> LearningStudentAttemptView:
         passed=bool(attempt.passed),
         submitted_at=attempt.submitted_at or attempt.started_at,
     )
+
+
+def _widget_items(
+    cards: dict[UUID, dict[str, Any]],
+) -> list[LearningStudentWidgetResultView]:
+    """Return the browser-graded code and HTML results, shown as not verified."""
+    return [
+        LearningStudentWidgetResultView(
+            step_id=step_id,
+            block_id=key[len(RESULT_PREFIX) :],
+            score_pct=float(record.get("pct", 0)),
+            passed=bool(record.get("passed")),
+            verified=bool(record.get("verified", False)),
+        )
+        for step_id, step_cards in cards.items()
+        for key, record in step_cards.items()
+        if key.startswith(RESULT_PREFIX) and record.get("kind") == "widget"
+    ]
