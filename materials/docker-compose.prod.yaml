@@ -268,7 +268,7 @@ services:
     networks: [data]
 
   redis:
-    image: redis:7.4.12-alpine
+    image: redis:8.10.3-alpine
     restart: unless-stopped
     logging: *logging
     # AOF on, no eviction (rate limits, FSM, the taskiq stream and budgets live here).
