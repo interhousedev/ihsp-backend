@@ -290,7 +290,7 @@ services:
   # `scripts/prod_init.sh unseal`. The healthcheck passes while sealed (exit code 2) so
   # the rest of the stack keeps running; registration and EMIS sync pause until unsealed.
   vault:
-    image: hashicorp/vault:2.1.2
+    image: hashicorp/vault:2.2.2
     restart: unless-stopped
     logging: *logging
     command: ["server"] # the image adds -config=/vault/config

@@ -148,7 +148,7 @@ services:
   # Dev mode: in memory, unsealed, root token dev-root, KV v2 at secret/. A restart wipes
   # it, which is why vault-init runs on every `up`.
   vault:
-    image: hashicorp/vault:2.1.2
+    image: hashicorp/vault:2.2.2
     restart: unless-stopped
     logging: *logging
     cap_add: [IPC_LOCK]
