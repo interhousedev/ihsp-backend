@@ -9,6 +9,7 @@ from app.modules.academic.wiring_assessments import (
     build_assessments,
 )
 from app.modules.academic.wiring_classwork import ClassworkServices, build_classwork
+from app.modules.academic.wiring_day_blocks import DayBlockServices, build_day_blocks
 from app.modules.academic.wiring_emis_import import (
     EmisImportServices,
     build_emis_import,
@@ -26,6 +27,7 @@ __all__ = [
     "AcademicModule",
     "AssessmentServices",
     "ClassworkServices",
+    "DayBlockServices",
     "EmisImportServices",
     "ExcuseServices",
     "MarksServices",
@@ -33,6 +35,7 @@ __all__ = [
     "TeachingServices",
     "build_assessments",
     "build_classwork",
+    "build_day_blocks",
     "build_emis_import",
     "build_excuses",
     "build_marks",
@@ -60,6 +63,7 @@ class AcademicModule:
     assessments: AssessmentServices = _NOT_BUILT
     teaching: TeachingServices = _NOT_BUILT
     excuses: ExcuseServices = _NOT_BUILT
+    day_blocks: DayBlockServices = _NOT_BUILT
 
     @property
     def excuse_status(self) -> ExcuseStatusQuery:

@@ -37,5 +37,8 @@
   "academic-import-expired": "The import preview has expired. Upload the file again.",
   "academic-term-control-periods-invalid": "A control period is invalid: it must start on or before its end, lie inside the term and come after the previous control (midterm 1, midterm 2, final).",
   "academic-not-teaching-group": "You do not teach this subject to this group.",
-  "academic-student-not-in-group": "This student is not in this group."
+  "academic-student-not-in-group": "This student is not in this group.",
+  "academic-day-block-not-found": "Non-lesson block not found.",
+  "academic-day-block-invalid": "Check the block: the end must be after the start, the days Monday to Friday, and the course or groups set for its scope.",
+  "academic-not-group-member": "The head student must be an active student of this group."
 }

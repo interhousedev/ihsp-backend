@@ -433,6 +433,15 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "xona xonalar кабинет кабинеты аудитории room rooms",
     ),
     _d(
+        "admin-day-blocks",
+        "admin",
+        "/day-blocks/",
+        _AD,
+        ("Darsdan tashqari bloklar", "Неучебные блоки", "Non-lesson blocks"),
+        "tushlik tanaffus yigʻilish обед перерыв линейка неучебные блоки "
+        "lunch break assembly day blocks non-lesson",
+    ),
+    _d(
         "admin-terms",
         "admin",
         "/terms/",

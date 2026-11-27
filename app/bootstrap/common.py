@@ -84,6 +84,7 @@ from app.modules.academic.wiring import (
     AcademicModule,
     build_assessments,
     build_classwork,
+    build_day_blocks,
     build_emis_import,
     build_excuses,
     build_marks,
@@ -383,7 +384,9 @@ class _Assembler:
             identity_commands=identity.commands,
             files=self.files_proxy.view,
         )
-        c.academic = AcademicModule(schedule=schedule)
+        c.academic = AcademicModule(
+            schedule=schedule, day_blocks=build_day_blocks(self.deps)
+        )
         if self.plan.emis:
             emis = identity.attach_emis(
                 self.deps,
@@ -553,6 +556,7 @@ class _Assembler:
                 classwork=classwork.queries,
             ),
             excuses=excuses,
+            day_blocks=c.academic.day_blocks,
         )
 
     def build_mail(self) -> None:
