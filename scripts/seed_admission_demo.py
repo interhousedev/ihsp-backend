@@ -397,9 +397,12 @@ async def _run() -> None:
 def main() -> int:
     """Run the seed and print the demo logins."""
     asyncio.run(_run())
-    out("Admission demo accounts (dev only, password sign-in via iht.id):")
+    out(
+        "Admission demo accounts (dev only, password sign-in via iht.id;"
+        " the password is PASSWORD in scripts/seed_admission_demo.py):"
+    )
     for key, login, *_ in ACCOUNTS:
-        out(f"  {key:<20} {login} / {PASSWORD}")
+        out(f"  {key:<20} {login}")
     return 0
 
 
