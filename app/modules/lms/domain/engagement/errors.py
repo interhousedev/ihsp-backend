@@ -29,3 +29,17 @@ class SectionLockedError(ForbiddenError):
 
     code = "lms/section-locked"
     message_key = "lms-engage-section-locked"
+
+
+class LevelSchemeInvalidError(ValidationFailedError):
+    """The curve, the tiers or the names of a level scheme are unusable."""
+
+    code = "lms/level-scheme-invalid"
+    message_key = "lms-engage-level-scheme-invalid"
+
+
+class LevelSchemeNotFoundError(NotFoundError, LookupError):
+    """The level scheme does not exist."""
+
+    code = "lms/level-scheme-not-found"
+    message_key = "lms-engage-level-scheme-not-found"

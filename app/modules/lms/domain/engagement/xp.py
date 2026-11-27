@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Final, Literal
 
-XpSource = Literal["step", "test", "review", "quest", "exam", "widget"]
+XpSource = Literal["step", "test", "review", "quest", "exam", "widget", "coach"]
 
 STEP_COMPLETED_XP: Final = 20
 TEST_SUBMITTED_XP: Final = 10

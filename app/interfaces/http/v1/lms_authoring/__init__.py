@@ -8,6 +8,9 @@ from app.interfaces.http.v1.lms_authoring.draft.router import router as draft
 from app.interfaces.http.v1.lms_authoring.lesson_ai import router as lesson_ai
 from app.interfaces.http.v1.lms_authoring.preview.router import router as preview
 from app.interfaces.http.v1.lms_authoring.publishing.router import router as publishing
+from app.interfaces.http.v1.lms_authoring.question_blocks import (
+    router as question_blocks,
+)
 from app.interfaces.http.v1.lms_authoring.staff.router import router as staff
 from app.interfaces.http.v1.lms_authoring.steps.router import router as steps
 from app.interfaces.http.v1.lms_authoring.versions.router import router as versions
@@ -26,4 +29,5 @@ ROUTERS: list[APIRouter] = [
     staff,
     preview,
     lesson_ai,
+    question_blocks,
 ]
