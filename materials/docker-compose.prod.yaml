@@ -172,6 +172,14 @@ x-backend-env: &backend-env
   # `min_supported` the oldest one allowed to keep running (older clients update at once).
   IHSP_APP__LATEST: ${IHSP_APP__LATEST:-1.0.0}
   IHSP_APP__MIN_SUPPORTED: ${IHSP_APP__MIN_SUPPORTED:-1.0.0}
+  # Clubs: link-signing secret and IP salt (derived from the service token when unset),
+  # and Cloudflare Turnstile on the public club contact form.
+  IHSP_ACTIVITIES__SECRET: ${IHSP_ACTIVITIES__SECRET:-dev-activities-secret-change-me}
+  IHSP_ACTIVITIES__IP_SALT: ${IHSP_ACTIVITIES__IP_SALT:-dev-activities-ip-salt-change-me}
+  IHSP_ACTIVITIES__TURNSTILE_MODE: ${IHSP_ACTIVITIES__TURNSTILE_MODE:-fake}
+  IHSP_ACTIVITIES__TURNSTILE_SITE_KEY: ${IHSP_ACTIVITIES__TURNSTILE_SITE_KEY:-}
+  IHSP_ACTIVITIES__TURNSTILE_SECRET: ${IHSP_ACTIVITIES__TURNSTILE_SECRET:-}
+  IHSP_ACTIVITIES__TURNSTILE_VERIFY_URL: https://challenges.cloudflare.com/turnstile/v0/siteverify
 
 # Only identity and worker hold EMIS secrets (the worker destroys the Vault secret of a
 # deleted account) and the JWT-bearer signing key; `python -m app <process>` refuses to
