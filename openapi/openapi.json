@@ -18598,6 +18598,221 @@
         "title": "DatedEventOut",
         "type": "object"
       },
+      "DayBlockBody": {
+        "description": "Body of POST /v1/admin/day-blocks and PUT /v1/admin/day-blocks/{id}.\n\n`weekdays` are ISO numbers, Monday 1 … Friday 5. `course` is required for the\nscope `course`; `group_ids` must not be empty for the scope `groups`.",
+        "properties": {
+          "course": {
+            "anyOf": [
+              {
+                "maximum": 9.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course"
+          },
+          "ends_at": {
+            "format": "time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "group_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Group Ids",
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "lunch",
+              "second_lunch",
+              "break",
+              "assembly",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "scope": {
+            "default": "all",
+            "enum": [
+              "all",
+              "course",
+              "groups"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "starts_at": {
+            "format": "time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "weekdays": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Weekdays",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "starts_at",
+          "ends_at",
+          "weekdays"
+        ],
+        "title": "DayBlockBody",
+        "type": "object"
+      },
+      "DayBlockOccurrenceResponse": {
+        "description": "A non-lesson block on one date of the student's timetable.",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "ends_at": {
+            "format": "time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "lunch",
+              "second_lunch",
+              "break",
+              "assembly",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "starts_at": {
+            "format": "time",
+            "title": "Starts At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "name",
+          "kind",
+          "starts_at",
+          "ends_at"
+        ],
+        "title": "DayBlockOccurrenceResponse",
+        "type": "object"
+      },
+      "DayBlockResponse": {
+        "description": "A non-lesson block (lunch, second lunch, break, assembly).",
+        "properties": {
+          "course": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course"
+          },
+          "ends_at": {
+            "format": "time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "group_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Group Ids",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "lunch",
+              "second_lunch",
+              "break",
+              "assembly",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "all",
+              "course",
+              "groups"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "starts_at": {
+            "format": "time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "weekdays": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Weekdays",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "starts_at",
+          "ends_at",
+          "weekdays",
+          "scope",
+          "course",
+          "group_ids"
+        ],
+        "title": "DayBlockResponse",
+        "type": "object"
+      },
       "DayCount": {
         "description": "One calendar day (Tashkent) and a count.",
         "properties": {
@@ -27696,6 +27911,38 @@
         "title": "GradeRowResponse",
         "type": "object"
       },
+      "GroupCard": {
+        "description": "The caller's group.",
+        "properties": {
+          "course": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "course"
+        ],
+        "title": "GroupCard",
+        "type": "object"
+      },
       "GroupCountsResponse": {
         "description": "Counts per value of one group, and the group's average of a starred number.",
         "properties": {
@@ -27802,6 +28049,38 @@
         "title": "GroupCritiqueIn",
         "type": "object"
       },
+      "GroupCuratorRef": {
+        "description": "The curator (homeroom teacher) by full name.",
+        "properties": {
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          }
+        },
+        "required": [
+          "id",
+          "full_name",
+          "photo_url"
+        ],
+        "title": "GroupCuratorRef",
+        "type": "object"
+      },
       "GroupDetailResponse": {
         "description": "GroupDetail.",
         "properties": {
@@ -27903,6 +28182,48 @@
           "students"
         ],
         "title": "GroupDetailResponse",
+        "type": "object"
+      },
+      "GroupHeadRef": {
+        "description": "The head student, with first, last and full name.",
+        "properties": {
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "photo_url",
+          "full_name"
+        ],
+        "title": "GroupHeadRef",
         "type": "object"
       },
       "GroupMemberRow": {
@@ -28024,41 +28345,23 @@
         "title": "GroupPatchBody",
         "type": "object"
       },
-      "GroupPersonRef": {
-        "description": "A person of the group, by name.",
+      "GroupPlace": {
+        "description": "The group's place among `total` ranked groups.",
         "properties": {
-          "first_name": {
-            "title": "First Name",
-            "type": "string"
+          "place": {
+            "title": "Place",
+            "type": "integer"
           },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "last_name": {
-            "title": "Last Name",
-            "type": "string"
-          },
-          "photo_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Photo Url"
+          "total": {
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
-          "id",
-          "first_name",
-          "last_name",
-          "photo_url"
+          "place",
+          "total"
         ],
-        "title": "GroupPersonRef",
+        "title": "GroupPlace",
         "type": "object"
       },
       "GroupProgressCell": {
@@ -28298,6 +28601,99 @@
         "title": "GroupProgressStudent",
         "type": "object"
       },
+      "GroupRankingItem": {
+        "description": "One group in a ranking: aggregates only, never members.",
+        "properties": {
+          "course": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course"
+          },
+          "group_id": {
+            "format": "uuid",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          },
+          "is_mine": {
+            "title": "Is Mine",
+            "type": "boolean"
+          },
+          "members_count": {
+            "title": "Members Count",
+            "type": "integer"
+          },
+          "place": {
+            "title": "Place",
+            "type": "integer"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "place",
+          "group_id",
+          "group_name",
+          "course",
+          "value",
+          "members_count",
+          "is_mine"
+        ],
+        "title": "GroupRankingItem",
+        "type": "object"
+      },
+      "GroupRankingsResponse": {
+        "description": "Groups ranked best first; groups without a value this term are left out.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GroupRankingItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "GroupRankingsResponse",
+        "type": "object"
+      },
+      "GroupRanks": {
+        "description": "The group's place in its course and in the lyceum.",
+        "properties": {
+          "course": {
+            "$ref": "#/components/schemas/GroupScopeRanks"
+          },
+          "lyceum": {
+            "$ref": "#/components/schemas/GroupScopeRanks"
+          }
+        },
+        "required": [
+          "course",
+          "lyceum"
+        ],
+        "title": "GroupRanks",
+        "type": "object"
+      },
       "GroupRatingRow": {
         "description": "One student of the group in the GPA rating (`rank` None when no GPA).",
         "properties": {
@@ -28370,6 +28766,37 @@
           "name"
         ],
         "title": "GroupResponse",
+        "type": "object"
+      },
+      "GroupScopeRanks": {
+        "description": "The group's place by GPA and attendance; null when the group has no value.",
+        "properties": {
+          "attendance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupPlace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gpa": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupPlace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "gpa",
+          "attendance"
+        ],
+        "title": "GroupScopeRanks",
         "type": "object"
       },
       "GroupStatsItemResponse": {
@@ -28505,6 +28932,60 @@
           "contacts"
         ],
         "title": "GroupTeacherRef",
+        "type": "object"
+      },
+      "GroupTopRow": {
+        "description": "A classmate in a top; equal values share a rank.",
+        "properties": {
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "is_me": {
+            "title": "Is Me",
+            "type": "boolean"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "rank",
+          "student_id",
+          "full_name",
+          "photo_url",
+          "value",
+          "is_me"
+        ],
+        "title": "GroupTopRow",
         "type": "object"
       },
       "GuestCommentOut": {
@@ -28800,6 +29281,28 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HeadStudentBody": {
+        "description": "Body of PUT /v1/admin/groups/{id}/head-student; null clears the head student.",
+        "properties": {
+          "student_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Id"
+          }
+        },
+        "required": [
+          "student_id"
+        ],
+        "title": "HeadStudentBody",
         "type": "object"
       },
       "HelperContacts": {
@@ -43849,12 +44352,25 @@
         "type": "object"
       },
       "MyGroupResponse": {
-        "description": "The caller's group: homeroom teacher, head student and members.\n\n`homeroom_teacher` and `head_student` are null when not assigned.\n`is_head_student` tells whether group progress and rating are open to the caller.",
+        "description": "The caller's group: homeroom teacher, head student, members and standings.\n\n`homeroom_teacher`, `curator` and `head_student` are null when not assigned.\n`is_head_student` tells whether group progress and rating are open to the caller.\nThe tops rank classmates by current-term GPA (mean mark) and attendance percent\n(late counts as present); classmates without a value are left out.",
         "properties": {
+          "curator": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupCuratorRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "group": {
+            "$ref": "#/components/schemas/GroupCard"
+          },
           "head_student": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/GroupPersonRef"
+                "$ref": "#/components/schemas/GroupHeadRef"
               },
               {
                 "type": "null"
@@ -43887,13 +44403,34 @@
             "title": "Members",
             "type": "array"
           },
+          "members_count": {
+            "title": "Members Count",
+            "type": "integer"
+          },
           "name": {
             "title": "Name",
             "type": "string"
           },
+          "ranks": {
+            "$ref": "#/components/schemas/GroupRanks"
+          },
           "size": {
             "title": "Size",
             "type": "integer"
+          },
+          "top_by_attendance": {
+            "items": {
+              "$ref": "#/components/schemas/GroupTopRow"
+            },
+            "title": "Top By Attendance",
+            "type": "array"
+          },
+          "top_by_grade": {
+            "items": {
+              "$ref": "#/components/schemas/GroupTopRow"
+            },
+            "title": "Top By Grade",
+            "type": "array"
           }
         },
         "required": [
@@ -43903,7 +44440,13 @@
           "is_head_student",
           "homeroom_teacher",
           "head_student",
-          "members"
+          "members",
+          "group",
+          "curator",
+          "members_count",
+          "top_by_grade",
+          "top_by_attendance",
+          "ranks"
         ],
         "title": "MyGroupResponse",
         "type": "object"
@@ -51552,6 +52095,17 @@
               }
             ],
             "title": "Marks Values"
+          },
+          "notify_absences": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notify Absences"
           },
           "notify_push": {
             "anyOf": [
@@ -77400,6 +77954,11 @@
             "title": "Marks Values",
             "type": "array"
           },
+          "notify_absences": {
+            "default": true,
+            "title": "Notify Absences",
+            "type": "boolean"
+          },
           "notify_push": {
             "default": true,
             "title": "Notify Push",
@@ -89200,6 +89759,161 @@
         ]
       }
     },
+    "/v1/admin/day-blocks": {
+      "get": {
+        "description": "List every non-lesson block, ordered by start time.",
+        "operationId": "list_day_blocks_v1_admin_day_blocks_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DayBlockResponse"
+                  },
+                  "title": "Response List Day Blocks V1 Admin Day Blocks Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Day Blocks",
+        "tags": [
+          "admin-schedule"
+        ]
+      },
+      "post": {
+        "description": "Add a non-lesson block.",
+        "operationId": "create_day_block_v1_admin_day_blocks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayBlockBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayBlockResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Day Block",
+        "tags": [
+          "admin-schedule"
+        ]
+      }
+    },
+    "/v1/admin/day-blocks/{block_id}": {
+      "delete": {
+        "description": "Delete a non-lesson block.",
+        "operationId": "delete_day_block_v1_admin_day_blocks__block_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "block_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Block Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Day Block",
+        "tags": [
+          "admin-schedule"
+        ]
+      },
+      "put": {
+        "description": "Replace every field of a non-lesson block.",
+        "operationId": "update_day_block_v1_admin_day_blocks__block_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "block_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Block Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayBlockBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayBlockResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Day Block",
+        "tags": [
+          "admin-schedule"
+        ]
+      }
+    },
     "/v1/admin/devices": {
       "get": {
         "description": "Every device, newest first.",
@@ -90420,6 +91134,53 @@
           }
         },
         "summary": "Sync Curriculum",
+        "tags": [
+          "admin-schedule"
+        ]
+      }
+    },
+    "/v1/admin/groups/{group_id}/head-student": {
+      "put": {
+        "description": "Assign the head student (an active member of the group); null clears it.",
+        "operationId": "set_head_student_v1_admin_groups__group_id__head_student_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Group Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HeadStudentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Head Student",
         "tags": [
           "admin-schedule"
         ]
@@ -136527,6 +137288,68 @@
         ]
       }
     },
+    "/v1/me/group/rankings": {
+      "get": {
+        "description": "Aggregates of every ranked group; members of other groups are never shown.",
+        "operationId": "get_my_group_rankings_v1_me_group_rankings_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "course",
+              "enum": [
+                "course",
+                "lyceum"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "metric",
+            "required": false,
+            "schema": {
+              "default": "gpa",
+              "enum": [
+                "gpa",
+                "attendance"
+              ],
+              "title": "Metric",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupRankingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get My Group Rankings",
+        "tags": [
+          "marks"
+        ]
+      }
+    },
     "/v1/me/group/rating": {
       "get": {
         "description": "The group's students by GPA; only for its head student (as group progress).",
@@ -139390,6 +140213,78 @@
           }
         },
         "summary": "Get Timetable",
+        "tags": [
+          "schedule"
+        ]
+      }
+    },
+    "/v1/me/timetable/day-blocks": {
+      "get": {
+        "description": "Lunch, breaks and other non-lesson blocks of the student's group per date.",
+        "operationId": "get_day_blocks_v1_me_timetable_day_blocks_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DayBlockOccurrenceResponse"
+                  },
+                  "title": "Response Get Day Blocks V1 Me Timetable Day Blocks Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Day Blocks",
         "tags": [
           "schedule"
         ]
