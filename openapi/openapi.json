@@ -37534,6 +37534,13 @@
             "title": "Passed",
             "type": "boolean"
           },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/LearningAttemptQuestionView"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
           "review": {
             "anyOf": [
               {
@@ -37581,6 +37588,7 @@
           "user",
           "variant",
           "answers",
+          "questions",
           "revision_id",
           "override_score",
           "override_comment"
@@ -40197,6 +40205,18 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "last_attempt_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Attempt Id"
           },
           "open_attempt_id": {
             "anyOf": [
@@ -96844,6 +96864,32 @@
           }
         },
         "summary": "Set Public",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/transfers/incoming": {
+      "get": {
+        "description": "Open ownership offers addressed to the caller.",
+        "operationId": "incoming_transfers_v1_activities_transfers_incoming_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OwnershipTransfer"
+                  },
+                  "title": "Response Incoming Transfers V1 Activities Transfers Incoming Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Incoming Transfers",
         "tags": [
           "activities"
         ]
