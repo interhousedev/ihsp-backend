@@ -9,6 +9,7 @@ from app.modules.lms.infrastructure.learning.engagement_uow import (
     SqlEngagementUnitOfWork,
 )
 from app.modules.lms.ports.learning.engagement import EngagementUnitOfWork
+from app.modules.lms.wiring_levels import build_levels
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.wiring import ModuleDeps
 
@@ -33,6 +34,7 @@ def build_engagement(
             deps.outbox_committed_hook,
         )
 
+    levels = build_levels(deps, uow_factory)
     return EngagementService(
-        uow_factory, deps.clock, AudienceGate(identity, student_group)
+        uow_factory, deps.clock, AudienceGate(identity, student_group), levels.hook
     )

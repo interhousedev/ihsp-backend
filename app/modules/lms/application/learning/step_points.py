@@ -14,6 +14,10 @@ from app.modules.lms.domain.learning.points import (
     scored_earned_points,
     sum_points,
 )
+from app.modules.lms.domain.learning.step_estimate import (
+    estimated_minutes,
+    step_kind,
+)
 from app.modules.lms.ports.learning.unit_of_work import LearningUnitOfWork
 
 
@@ -23,6 +27,8 @@ class StepPoints:
 
     total: Decimal
     earned: Decimal
+    kind: str | None = None
+    minutes: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,7 +80,10 @@ async def load_course_points(
         blocks = render.test_points if render is not None else {}
         scored = render.scored_points if render is not None else {}
         step_cards = cards.get(step.step_id, {})
+        shown = render.blocks if render is not None else ()
         result[step.step_id] = StepPoints(
+            kind=step_kind(shown),
+            minutes=estimated_minutes(shown),
             total=sum_points((*blocks.values(), *scored.values())),
             earned=sum_points(
                 (

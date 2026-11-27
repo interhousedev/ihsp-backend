@@ -37,6 +37,8 @@ SCHEMAS = (
     "posts",
     "feedback",
     "faces",
+    "media",
+    "activities",
 )
 
 ContainerFactory = Callable[..., Coroutine[Any, Any, Container]]

@@ -73,6 +73,17 @@ class NotificationType(StrEnum):
     LMS_REVIEW_DUE = "lms_review_due"
     LMS_STREAK_AT_RISK = "lms_streak_at_risk"
     LMS_DEADLINE_SOON = "lms_deadline_soon"
+    EVENT_REMINDER = "event_reminder"
+    EVENT_CHANGED = "event_changed"
+    EVENT_CANCELLED = "event_cancelled"
+    EVENT_RATING_REQUEST = "event_rating_request"
+    CLUB_ANNOUNCEMENT = "club_announcement"
+    CLUB_JOIN_REQUEST = "club_join_request"
+    CLUB_JOIN_RESULT = "club_join_result"
+    CLUB_TRANSFER_OFFER = "club_transfer_offer"
+    DRAFT_INVITE = "draft_invite"
+    POSITION_APPLICATION_RESULT = "position_application_result"
+    CLUB_OWNER_GRADUATING = "club_owner_graduating"
 
 
 @dataclass(frozen=True, slots=True)

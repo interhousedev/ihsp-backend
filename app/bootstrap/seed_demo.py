@@ -6,7 +6,13 @@ import sys
 
 from app.bootstrap.common import build_container
 from app.bootstrap.container import Container
-from app.bootstrap.seed.content import seed_broadcast, seed_course, seed_flashcards
+from app.bootstrap.seed.all_blocks import enrol_demo_student, seed_all_blocks_course
+from app.bootstrap.seed.content import (
+    seed_broadcast,
+    seed_course,
+    seed_flashcards,
+    seed_volunteers_club,
+)
 from app.bootstrap.seed.groups import finish_groups
 from app.bootstrap.seed.homework import demo_student_ids, seed_homework
 from app.bootstrap.seed.library import seed_library
@@ -64,6 +70,9 @@ async def seed(
         await seed_notebook(container, members[0])
     await seed_course(container, admin_id)
     await seed_broadcast(container, admin_id)
+    await seed_volunteers_club(container, admin_id)
+    await seed_all_blocks_course(container, admin_id)
+    await enrol_demo_student(container)
     await seed_library(container, structure.subject_ids, structure.group_ids)
 
 

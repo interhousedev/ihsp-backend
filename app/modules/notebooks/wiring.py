@@ -62,6 +62,7 @@ from app.modules.notebooks.application.list_passages import ListPassages
 from app.modules.notebooks.application.list_sources import ListSources
 from app.modules.notebooks.application.list_subject_slots import ListSubjectSlots
 from app.modules.notebooks.application.manage_shares import ManageShares
+from app.modules.notebooks.application.material_sink import MaterialSink
 from app.modules.notebooks.application.message_feedback import MessageFeedback
 from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.application.open_auto_notebook import OpenAutoNotebook
@@ -81,6 +82,7 @@ from app.modules.notebooks.application.public_api import NotebooksQueriesImpl
 from app.modules.notebooks.application.public_commands import NotebooksCommandsImpl
 from app.modules.notebooks.application.purge_deleted import PurgeDeleted
 from app.modules.notebooks.application.purge_shared import PurgeShared
+from app.modules.notebooks.application.question_bank import QuestionBankService
 from app.modules.notebooks.application.reconcile_subject_materials import (
     ReconcileSubjectMaterials,
 )
@@ -120,7 +122,10 @@ from app.modules.notebooks.application.sync_course_notebook import (
 )
 from app.modules.notebooks.application.sync_lesson_notebooks import SyncLessonNotebooks
 from app.modules.notebooks.application.sync_source import SyncSource
+from app.modules.notebooks.application.teaching.scope import DirectoryTeachingScope
+from app.modules.notebooks.application.teaching.sinking import SinkingTeacherAi
 from app.modules.notebooks.application.teaching.tools import TeacherAi
+from app.modules.notebooks.application.teaching_directory import TeachingDirectory
 from app.modules.notebooks.application.update_auto_settings import UpdateAutoSettings
 from app.modules.notebooks.application.update_label import UpdateLabel
 from app.modules.notebooks.application.update_notebook import UpdateNotebook
@@ -129,6 +134,12 @@ from app.modules.notebooks.application.update_presentation_plan import (
 )
 from app.modules.notebooks.application.update_source import UpdateSource
 from app.modules.notebooks.domain.prompts import studio
+from app.modules.notebooks.infrastructure.repositories.scoped import (
+    ScopedNotebookDirectory,
+    ScopedQuestionBank,
+    ScopedSourceWriter,
+    ScopedTopicCatalog,
+)
 from app.modules.notebooks.infrastructure.repositories.shared_passage_repository import (  # noqa: E501
     SqlSharedPassageReader,
 )
@@ -158,6 +169,8 @@ from app.shared.contracts.school_knowledge import (
     KnowledgeGapReporter,
     KnowledgeLookup,
 )
+from app.shared.contracts.teacher_ai import TeacherAiTools
+from app.shared.contracts.teaching_scope import TeachingScope
 from app.shared.contracts.web_search import WebSearchApi
 from app.shared.wiring import ModuleDeps
 
@@ -257,7 +270,10 @@ class NotebooksServices:
     save_as_source: SaveAsSource
     attach_artifact: AttachArtifactToLesson | None
     save_to_files: SaveArtifactToFiles | None
-    teacher_ai: TeacherAi
+    teacher_ai: TeacherAiTools
+    material_sink: MaterialSink
+    question_bank: QuestionBankService
+    teaching_scope: TeachingScope
     save_flashcard_set: SaveFlashcardSet
     edit_slides: EditSlides
     revise_slides: ReviseSlides
@@ -334,6 +350,14 @@ def build(
         knowledge=knowledge,
         knowledge_gaps=knowledge_gaps,
         requests=requests,
+    )
+    teaching_scope = DirectoryTeachingScope(
+        TeachingDirectory(schedule=schedule, terms=terms, clock=deps.clock)
+    )
+    material_sink = MaterialSink(
+        ScopedNotebookDirectory(deps.sessionmaker),
+        ScopedSourceWriter(deps.sessionmaker),
+        teaching_scope,
     )
     notebooks = build_notebooks(core, schedule)
     workspaces = build_workspace(core)
@@ -459,7 +483,16 @@ def build(
         save_as_source=studio.save_as_source,
         attach_artifact=studio.attach_artifact,
         save_to_files=studio.save_to_files,
-        teacher_ai=TeacherAi(llm=core.llm, files=files, locale=core.locale),
+        teacher_ai=SinkingTeacherAi(
+            TeacherAi(llm=core.llm, files=files, locale=core.locale), material_sink
+        ),
+        material_sink=material_sink,
+        question_bank=QuestionBankService(
+            ScopedQuestionBank(deps.sessionmaker),
+            deps.clock,
+            ScopedTopicCatalog(deps.sessionmaker),
+        ),
+        teaching_scope=teaching_scope,
         save_flashcard_set=studio.save_flashcard_set,
         edit_slides=studio.edit_slides,
         revise_slides=studio.revise_slides,

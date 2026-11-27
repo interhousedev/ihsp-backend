@@ -67,7 +67,7 @@ def group_of(name: str) -> str:
     """The editor group of a limit."""
     if name.startswith("lms_ai_"):
         return "lms"
-    if name.startswith("nb_"):
+    if name.startswith(("nb_", "media_")):
         return "notebooks"
     if name.startswith("admit_essay_review") or name.startswith(
         ("admit_essay_uni_review", "admit_essay_studio")

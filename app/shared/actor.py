@@ -20,6 +20,8 @@ class Role(StrEnum):
     COUNSELOR = "counselor"
     MENTOR = "mentor"
     TRANSCRIPT_OFFICER = "transcript_officer"
+    SU = "su"
+    ACTIVITIES_ADMIN = "activities_admin"
 
 
 @dataclass(frozen=True, slots=True)

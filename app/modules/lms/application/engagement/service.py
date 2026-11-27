@@ -10,7 +10,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import Any, Protocol
 from uuid import UUID
 
 from app.modules.lms.application.engagement.views import (
@@ -101,6 +101,15 @@ from app.shared.ids import new_id
 
 EngagementUowFactory = Callable[[], EngagementUnitOfWork]
 
+
+class LevelHook(Protocol):
+    """Told after a commit that a learner earned XP in some scopes."""
+
+    async def after_xp(self, user_id: UUID, course_ids: set[UUID | None]) -> None:
+        """Track level-ups of the learner (None is a platform-only award)."""
+        ...
+
+
 REVIEWABLE_TYPES = frozenset({"single", "multiple", "text", "number"})
 SYNC_OVERLAP = timedelta(minutes=10)
 RATINGS = {
@@ -150,12 +159,30 @@ class EngagementService:
     """Every engagement use case; one source of XP and levels for all clients."""
 
     def __init__(
-        self, uow_factory: EngagementUowFactory, clock: Clock, gate: AudienceGate
+        self,
+        uow_factory: EngagementUowFactory,
+        clock: Clock,
+        gate: AudienceGate,
+        levels: LevelHook | None = None,
     ) -> None:
-        """Store collaborators."""
+        """Store collaborators; `levels` announces level-ups after XP commits."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.gate = gate
+        self.levels = levels
+
+    def _after_xp(
+        self, uow: EngagementUnitOfWork, user_id: UUID, courses: set[UUID | None]
+    ) -> None:
+        """Track level-ups once the transaction that recorded the XP commits."""
+        if self.levels is None or not courses:
+            return
+        hook = self.levels
+
+        async def run() -> None:
+            await hook.after_xp(user_id, courses)
+
+        uow.after_commit(run)
 
     # - - - access - - -
 
@@ -221,15 +248,17 @@ class EngagementService:
         courses = await repo.course_of_steps(
             list({s for s, _ in completions} | {a.step_id for a in attempts})
         )
+        earned: set[UUID | None] = set()
         for step_id, at in completions:
-            await repo.add_xp(
+            if await repo.add_xp(
                 user_id,
                 courses.get(step_id),
                 "step",
                 str(step_id),
                 STEP_COMPLETED_XP,
                 to_local(at).date(),
-            )
+            ):
+                earned.add(courses.get(step_id))
         revisions = await uow.revisions.get_many(
             list({a.revision_id for a in attempts})
         )
@@ -244,33 +273,44 @@ class EngagementService:
                 await repo.xp_on(user_id, day, "test"),
                 DAILY_TEST_XP_LIMIT,
             )
-            if gain > 0:
-                await repo.add_xp(
-                    user_id, course_id, "test", str(attempt.id), gain, day
-                )
-            revision = revisions.get(attempt.revision_id)
-            test = _test(revision.content, attempt.block_id) if revision else None
-            if test is None or course_id is None:
-                continue
-            if not await self._reveals(uow, user_id, attempt.step_id, test):
-                continue
-            grade = grade_attempt(
-                test, Variant.from_json(attempt.variant), attempt.answers
+            if gain > 0 and await repo.add_xp(
+                user_id, course_id, "test", str(attempt.id), gain, day
+            ):
+                earned.add(course_id)
+            await self._queue_misses(
+                uow, user_id, attempt, course_id, revisions.get(attempt.revision_id)
             )
-            types = {q.id: q.type for q in test.questions}
-            for qid, ok in grade.correct.items():
-                if ok or types.get(qid) not in REVIEWABLE_TYPES:
-                    continue
-                await repo.add_review_item(
-                    user_id=user_id,
-                    course_id=course_id,
-                    step_id=attempt.step_id,
-                    revision_id=attempt.revision_id,
-                    block_id=attempt.block_id,
-                    question_id=qid,
-                    state=fsrs.new_item(attempt.submitted_at),
-                )
         await repo.mark_synced(user_id, now)
+        self._after_xp(uow, user_id, earned)
+
+    async def _queue_misses(
+        self,
+        uow: EngagementUnitOfWork,
+        user_id: UUID,
+        attempt: Any,
+        course_id: UUID | None,
+        revision: Any,
+    ) -> None:
+        """Queue the wrong answers of one attempt for review when answers show."""
+        test = _test(revision.content, attempt.block_id) if revision else None
+        if test is None or course_id is None:
+            return
+        if not await self._reveals(uow, user_id, attempt.step_id, test):
+            return
+        grade = grade_attempt(test, Variant.from_json(attempt.variant), attempt.answers)
+        types = {q.id: q.type for q in test.questions}
+        for qid, ok in grade.correct.items():
+            if ok or types.get(qid) not in REVIEWABLE_TYPES:
+                continue
+            await uow.engagement.add_review_item(
+                user_id=user_id,
+                course_id=course_id,
+                step_id=attempt.step_id,
+                revision_id=attempt.revision_id,
+                block_id=attempt.block_id,
+                question_id=qid,
+                state=fsrs.new_item(attempt.submitted_at),
+            )
 
     # - - - summary - - -
 
@@ -434,7 +474,8 @@ class EngagementService:
         today = self._today()
         if await uow.engagement.reviews_on(user_id, today) >= DAILY_REVIEW_LIMIT:
             return 0
-        await uow.engagement.add_xp(user_id, course_id, "review", ref, xp, today)
+        if await uow.engagement.add_xp(user_id, course_id, "review", ref, xp, today):
+            self._after_xp(uow, user_id, {course_id})
         return xp
 
     async def answer(

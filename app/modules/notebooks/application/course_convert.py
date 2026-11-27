@@ -11,6 +11,7 @@ reported in a note: true/false questions become single choice questions with two
 options, hints and topics are not copied.
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -35,6 +36,7 @@ from app.shared.contracts.lms_blocks import (
     build_test_block,
     outline_sections,
 )
+from app.shared.contracts.teacher_ai import QuestionItem
 
 from pydantic import ValidationError
 
@@ -77,6 +79,48 @@ def _choice_question(number: int, raw: dict[str, Any]) -> QuestionInput:
         )
     except ValidationError as exc:
         raise BlockInputError(f"question {number}: {exc.errors()[0]['msg']}") from exc
+
+
+def questions_to_test_block(questions: Sequence[QuestionItem]) -> dict[str, Any]:
+    """A test block from generated questions; an ambiguous answer is refused."""
+    if not questions:
+        raise BlockInputError("no questions")
+    built: list[QuestionInput] = []
+    for number, item in enumerate(questions, 1):
+        prompt = _line(item.question)
+        explanation = _line(item.explanation) or None
+        try:
+            if item.options:
+                texts = [_line(o) for o in item.options]
+                keys = [t.casefold() for t in texts]
+                answer = _line(item.answer).casefold()
+                if len(set(keys)) != len(keys) or keys.count(answer) != 1:
+                    raise BlockInputError(f"question {number}: ambiguous answer")
+                built.append(
+                    QuestionInput(
+                        type="single",
+                        prompt=prompt,
+                        explanation=explanation,
+                        options=[
+                            OptionInput(text=t, correct=k == answer)
+                            for t, k in zip(texts, keys, strict=True)
+                        ],
+                    )
+                )
+            else:
+                built.append(
+                    QuestionInput(
+                        type="text",
+                        prompt=prompt,
+                        explanation=explanation,
+                        accepted_answers=[_line(item.answer)],
+                    )
+                )
+        except ValidationError as exc:
+            raise BlockInputError(
+                f"question {number}: {exc.errors()[0]['msg']}"
+            ) from exc
+    return build_test_block(None, built)
 
 
 def quiz_to_questions(content: dict[str, Any]) -> tuple[list[QuestionInput], list[str]]:

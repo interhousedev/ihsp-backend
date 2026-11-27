@@ -1,5 +1,6 @@
 """Port: the unit of work of the learning side."""
 
+from collections.abc import Awaitable, Callable
 from types import TracebackType
 from typing import Protocol, Self
 
@@ -92,6 +93,10 @@ class LearningUnitOfWork(Protocol):
 
     def audit(self, *drafts: AuditDraft) -> None:
         """Queue audit events to insert at commit."""
+        ...
+
+    def after_commit(self, hook: Callable[[], Awaitable[None]]) -> None:
+        """Run a coroutine after a successful commit."""
         ...
 
     async def commit(self) -> None:

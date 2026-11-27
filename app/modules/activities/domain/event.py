@@ -149,6 +149,7 @@ class Rsvp:
     created_at: datetime
     checked_in_at: datetime | None = None
     check_in_method: str | None = None
+    event_role: str | None = None
     id: UUID = field(default_factory=uuid4)
 
     @classmethod

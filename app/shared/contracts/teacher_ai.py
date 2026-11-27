@@ -26,6 +26,8 @@ class GenerateQuestionsArgs:
     level: str | None = None
     language: str | None = None
     source_text: str | None = None
+    subject_id: UUID | None = None
+    group_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,6 +56,8 @@ class GenerateHandoutArgs:
     language: str | None = None
     length: HandoutLength = "medium"
     source_text: str | None = None
+    subject_id: UUID | None = None
+    group_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,6 +77,9 @@ class CheckWorkArgs:
     rubric: str | None = None
     max_score: float | None = None
     language: str | None = None
+    subject_id: UUID | None = None
+    group_id: UUID | None = None
+    submission_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +101,26 @@ class CheckAuthorshipArgs:
     text: str
     context: str | None = None
     language: str | None = None
+    submission_id: UUID | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class SubmissionWork:
+    """A student's handed-in work with where its checks belong."""
+
+    assignment: str
+    student_work: str
+    subject_id: UUID
+    group_id: UUID | None
+    lesson_id: UUID
+
+
+class SubmissionReader(Protocol):
+    """Reads a submission the actor is allowed to see."""
+
+    async def read(self, actor: Actor, submission_id: UUID) -> SubmissionWork:
+        """The work; NotFoundError for an unknown or foreign submission."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,6 +163,8 @@ class GenerateLessonPlanArgs:
     duration_minutes: int = 45
     language: str | None = None
     notes: str | None = None
+    subject_id: UUID | None = None
+    group_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)

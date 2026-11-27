@@ -5,6 +5,7 @@ from app.modules.academic.infrastructure.orm.curriculum import (
     GroupCurriculum,
     GroupCurriculumSubject,
 )
+from app.modules.academic.infrastructure.orm.curriculum_topic import CurriculumTopic
 from app.modules.academic.infrastructure.orm.day_block import DayBlock
 from app.modules.academic.infrastructure.orm.emis_attendance import EmisAttendance
 from app.modules.academic.infrastructure.orm.excuse import (
@@ -32,6 +33,7 @@ from app.modules.academic.infrastructure.orm.work_off import WorkOff, WorkOffTem
 
 __all__ = [
     "Assessment",
+    "CurriculumTopic",
     "DayBlock",
     "EmisAttendance",
     "Excuse",

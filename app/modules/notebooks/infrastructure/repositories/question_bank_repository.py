@@ -68,6 +68,13 @@ class SqlQuestionBankStore:
                 setattr(row, name, value)
             await self.session.flush()
 
+    async def delete(self, question_id: UUID) -> None:
+        """Remove a question."""
+        row = await self.session.get(QuestionBankRow, question_id)
+        if row is not None:
+            await self.session.delete(row)
+            await self.session.flush()
+
     async def list(self, emis_subject_id: int, topic: str | None) -> list[BankQuestion]:
         """Every question of the subject (and topic)."""
         stmt = select(QuestionBankRow).where(

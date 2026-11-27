@@ -28,6 +28,8 @@ SCHEMAS = (
     "feedback",
     "legal",
     "faces",
+    "media",
+    "activities",
     "onboarding",
     "privacy",
     "admission",

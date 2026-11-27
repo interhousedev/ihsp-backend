@@ -1,5 +1,6 @@
 """Building course cards and course pages (LMS-4, UF-LMS-01, UF-LMS-05)."""
 
+from collections.abc import Collection
 from datetime import datetime
 from uuid import UUID
 
@@ -23,6 +24,7 @@ from app.modules.lms.application.learning.views import (
     LearningPersonRefView,
 )
 from app.modules.lms.domain.access_rules import AccessState, Audience
+from app.modules.lms.domain.engagement.errors import SectionLockedError
 from app.modules.lms.domain.learning.access import EDIT, ordered_permissions
 from app.modules.lms.domain.learning.entities import (
     Enrollment,
@@ -111,18 +113,25 @@ class CoursePageBuilder:
             progress_pct=enrollment.progress_pct if enrollment else None,
             access=audience,
         )
+        locked_sections = await self._mastery_locked(
+            actor, course, version, audience, enrolled=enrollment is not None
+        )
+        outline = _outline(
+            version,
+            completed,
+            changes,
+            points,
+            audience,
+            enrolled=enrollment is not None,
+            mastery_locked=locked_sections,
+        )
         return LearningCoursePageView(
             **card.model_dump(),
             staff=await self._staff(uow, course.id),
-            outline=_outline(
-                version,
-                completed,
-                changes,
-                points,
-                audience,
-                enrolled=enrollment is not None,
-            ),
+            outline=outline,
             enrolled=enrollment is not None,
+            enrolled_via=enrollment.via if enrollment else None,
+            continue_step_id=_continue_step(outline) if enrollment else None,
             can_edit=access.can(EDIT),
             changed_since_last_visit=list(changes),
             steps_completed=len(completed) if enrollment else None,
@@ -158,6 +167,36 @@ class CoursePageBuilder:
             points_earned=None,
             contact=await self._contact(uow, course.id, audience, signed_in=False),
         )
+
+    async def _mastery_locked(
+        self,
+        actor: Actor,
+        course: LearningCourse,
+        version: LiveVersion | None,
+        audience: CourseAccess,
+        *,
+        enrolled: bool,
+    ) -> set[str]:
+        """Return the sections the mastery threshold still locks (one check each)."""
+        locked: set[str] = set()
+        if not enrolled or version is None or self.gate.step_lock is None:
+            return locked
+        for section in version.manifest.sections:
+            first = next(
+                (
+                    s.step_id
+                    for s in section.steps
+                    if audience.step(s.step_id) is not AccessState.HIDDEN
+                ),
+                None,
+            )
+            if first is None:
+                continue
+            try:
+                await self.gate.step_lock(actor, course.id, first)
+            except SectionLockedError:
+                locked.add(section.id)
+        return locked
 
     async def _contact(
         self,
@@ -276,6 +315,7 @@ def _outline(
     audience: CourseAccess,
     *,
     enrolled: bool,
+    mastery_locked: Collection[str] = frozenset(),
 ) -> list[LearningOutlineSectionView]:
     """Return the outline with completion and change marks; hidden steps drop out."""
     if version is None:
@@ -287,6 +327,8 @@ def _outline(
             state = audience.step(step.step_id)
             if state is AccessState.HIDDEN:
                 continue
+            access_locked = state is AccessState.LOCKED
+            mastery = section.id in mastery_locked and not access_locked
             steps.append(
                 LearningOutlineStepView(
                     step_id=step.step_id,
@@ -297,10 +339,15 @@ def _outline(
                     points_earned=(
                         number(points.steps[step.step_id].earned) if enrolled else None
                     ),
-                    locked=state is AccessState.LOCKED,
+                    locked=access_locked or mastery,
+                    lock_reason=(
+                        "access" if access_locked else "mastery" if mastery else None
+                    ),
                     access=audience.step_audiences.get(
                         step.step_id, Audience.PUBLIC
                     ).value,
+                    kind=points.steps[step.step_id].kind,
+                    estimated_minutes=points.steps[step.step_id].minutes,
                 )
             )
         if steps:
@@ -310,3 +357,12 @@ def _outline(
                 )
             )
     return sections
+
+
+def _continue_step(outline: list[LearningOutlineSectionView]) -> UUID | None:
+    """Return the first open step to resume at, else the first step."""
+    steps = [s for section in outline for s in section.steps if not s.locked]
+    for step in steps:
+        if not step.completed:
+            return step.step_id
+    return steps[0].step_id if steps else None

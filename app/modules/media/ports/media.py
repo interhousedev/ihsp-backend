@@ -27,6 +27,12 @@ class MediaJobStore(Protocol):
         """Save with the optimistic `version`; raises StaleMediaJobError on a clash."""
         ...
 
+    async def list_by_owner(
+        self, owner_id: UUID, *, limit: int, offset: int
+    ) -> tuple[list[MediaJob], int]:
+        """The owner's jobs, newest first, and the total count."""
+        ...
+
     async def find_done(self, owner_id: UUID, script_hash: str) -> list[MediaJob]:
         """DONE jobs of the owner with this content hash (any destination)."""
         ...

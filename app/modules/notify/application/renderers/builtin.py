@@ -31,6 +31,19 @@ from app.modules.notify.application.renderers.broadcast import BroadcastRenderer
 from app.modules.notify.application.renderers.chat_answer_ready import (
     ChatAnswerReadyRenderer,
 )
+from app.modules.notify.application.renderers.clubs import (
+    ClubAnnouncementRenderer,
+    ClubJoinRequestRenderer,
+    ClubJoinResultRenderer,
+    ClubOwnerGraduatingRenderer,
+    ClubTransferOfferRenderer,
+    DraftInviteRenderer,
+    EventCancelledRenderer,
+    EventChangedRenderer,
+    EventRatingRequestRenderer,
+    EventReminderRenderer,
+    PositionApplicationResultRenderer,
+)
 from app.modules.notify.application.renderers.curator_absences import (
     CuratorAbsencesRenderer,
 )
@@ -325,4 +338,34 @@ def register_builtin_renderers(
     )
     registry.register(
         NotificationType.LMS_DEADLINE_SOON, LmsDeadlineSoonRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.EVENT_REMINDER, EventReminderRenderer(i18n, urls)
+    )
+    registry.register(NotificationType.EVENT_CHANGED, EventChangedRenderer(i18n, urls))
+    registry.register(
+        NotificationType.EVENT_CANCELLED, EventCancelledRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.EVENT_RATING_REQUEST, EventRatingRequestRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.CLUB_ANNOUNCEMENT, ClubAnnouncementRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.CLUB_JOIN_REQUEST, ClubJoinRequestRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.CLUB_JOIN_RESULT, ClubJoinResultRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.CLUB_TRANSFER_OFFER, ClubTransferOfferRenderer(i18n, urls)
+    )
+    registry.register(NotificationType.DRAFT_INVITE, DraftInviteRenderer(i18n, urls))
+    registry.register(
+        NotificationType.POSITION_APPLICATION_RESULT,
+        PositionApplicationResultRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.CLUB_OWNER_GRADUATING, ClubOwnerGraduatingRenderer(i18n, urls)
     )

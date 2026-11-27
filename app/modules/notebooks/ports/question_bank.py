@@ -21,6 +21,10 @@ class QuestionBankStore(Protocol):
         """Overwrite a stored question."""
         ...
 
+    async def delete(self, question_id: UUID) -> None:
+        """Remove a question."""
+        ...
+
     async def list(self, emis_subject_id: int, topic: str | None) -> list[BankQuestion]:
         """Every question of the subject (and topic), whoever owns it."""
         ...

@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Added
 
 - Admission: a catalog push token. Curators create an `admission:catalog-write` token on the staff Catalog page and push country facts and institutions with `POST /v1/admission/staff/catalog/push/{countries,institutions}` or `scripts/push_catalog.py`; each item reports created, updated, unchanged, skipped or invalid.
+- LMS Duo: one path through all stages and lessons for every course type, with a coach, levels and badges (v2).
+- Question bank per EMIS subject and topic: generate tests from the bank (random shuffle) or into it.
+- Unified media module: video and voice-over in one place; the finished material goes to the subject notebook with its text and timecodes, so the assistant can link to the video.
+- Teacher AI routes and a homework work check; AI text verification is embedded in the homework checker.
+- Clubs and activities module: IHT Volunteers as a club (forms, drafting by performance, points), club to LMS course links in both directions, one shared opportunities database for admission and my.iht.
+- Admin: pages for activities, clubs, activities analytics, LMS levels and LMS badges.
 
 ## [1.14.0] - 2026-11-23
 

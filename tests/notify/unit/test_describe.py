@@ -317,6 +317,42 @@ PAYLOADS: dict[NotificationType, dict[str, Any]] = {
         "text": "Fixed, thank you!",
         "attachments": [],
     },
+    NotificationType.EVENT_REMINDER: {
+        "event_id": "e",
+        "offset": "1h",
+        "role": "attendee",
+    },
+    NotificationType.EVENT_CHANGED: {
+        "event_id": "e",
+        "club_id": "c",
+        "starts_at": "2026-11-10T09:30:00+00:00",
+    },
+    NotificationType.EVENT_CANCELLED: {"event_id": "e", "club_id": "c"},
+    NotificationType.EVENT_RATING_REQUEST: {"event_id": "e", "club_id": "c"},
+    NotificationType.CLUB_ANNOUNCEMENT: {
+        "club_id": "c",
+        "announcement_id": "a",
+        "text": "Meeting moved",
+    },
+    NotificationType.CLUB_JOIN_REQUEST: {
+        "club_id": "c",
+        "user_id": "u",
+        "message": "Let me in",
+    },
+    NotificationType.CLUB_JOIN_RESULT: {"club_id": "c", "approved": True},
+    NotificationType.CLUB_TRANSFER_OFFER: {"club_id": "c", "transfer_id": "t"},
+    NotificationType.DRAFT_INVITE: {
+        "pick_id": "p",
+        "round_id": "r",
+        "event_id": "e",
+        "club_id": "c",
+        "role": "volunteer",
+    },
+    NotificationType.POSITION_APPLICATION_RESULT: {
+        "application_id": "a",
+        "result": "approved",
+    },
+    NotificationType.CLUB_OWNER_GRADUATING: {"club_id": "c"},
 }
 
 

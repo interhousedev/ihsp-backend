@@ -78,6 +78,14 @@ class SolutionKeyRepository(Protocol):
         ...
 
 
+class SolutionKeyStore(SolutionKeyRepository, Protocol):
+    """Solution keys that staff may also replace."""
+
+    async def replace(self, revision_id: UUID, keys: list[SolutionKey]) -> None:
+        """Store the keys of a revision."""
+        ...
+
+
 class AttemptReader(Protocol):
     """Reads the learner's last attempt at a block."""
 

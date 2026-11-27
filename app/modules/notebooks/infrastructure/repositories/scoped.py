@@ -69,6 +69,11 @@ class ScopedQuestionBank:
         async with self.sessionmaker.begin() as session:
             await SqlQuestionBankStore(session).replace(question)
 
+    async def delete(self, question_id: UUID) -> None:
+        """Remove a question."""
+        async with self.sessionmaker.begin() as session:
+            await SqlQuestionBankStore(session).delete(question_id)
+
     async def list(self, emis_subject_id: int, topic: str | None) -> list[BankQuestion]:
         """Every question of the subject (and topic)."""
         async with self.sessionmaker() as session:

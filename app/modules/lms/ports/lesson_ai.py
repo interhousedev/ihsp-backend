@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any, Literal, Protocol
 from uuid import UUID
 
-LessonTask = Literal["lms_tutor", "lms_video_checks"]
+LessonTask = Literal["lms_tutor", "lms_video_checks", "lms_badge_draft"]
 
 
 class LessonModel(Protocol):

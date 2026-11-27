@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from app.modules.lms.application.engagement.level_access import AwardCoachXp
 from app.modules.lms.application.h5p_links import H5PLinks
 from app.modules.lms.application.html_widget_links import HtmlWidgetLinks
 from app.modules.lms.application.learning.ai_review import AiReviews
@@ -13,6 +14,20 @@ from app.modules.lms.application.learning.audience import (
     AudienceGate,
     StepLock,
     StudentGroupLookup,
+)
+from app.modules.lms.application.learning.coach import (
+    CloseCoach,
+    CoachReply,
+    LatestCoach,
+    OpenCoach,
+)
+from app.modules.lms.application.learning.coach_access import (
+    AttemptsOfLearner,
+    AuditCoachEvents,
+    CoachInsightsReport,
+    DailyCoachLimiter,
+    LearningCoachGate,
+    SolutionKeys,
 )
 from app.modules.lms.application.learning.course_page import CoursePageBuilder
 from app.modules.lms.application.learning.enroll_in_course import EnrollInCourse
@@ -61,11 +76,24 @@ from app.modules.lms.application.learning.start_attempt import StartAttempt
 from app.modules.lms.application.learning.step_completion import StepCompletion
 from app.modules.lms.application.learning.submit_attempt import SubmitAttempt
 from app.modules.lms.domain.learning.live import RenderCache
+from app.modules.lms.infrastructure.coach_repository import (
+    SqlCoachInsights,
+    SqlSolutionKeyRepository,
+    SqlTutorSessionRepository,
+)
 from app.modules.lms.infrastructure.learning.ai_review_store import SqlAiReviewStore
 from app.modules.lms.infrastructure.learning.daily_counters import RedisDailyCounters
+from app.modules.lms.infrastructure.learning.engagement_uow import (
+    SqlEngagementUnitOfWork,
+)
 from app.modules.lms.infrastructure.learning.uow import SqlLearningUnitOfWork
 from app.modules.lms.ports.learning.unit_of_work import LearningUnitOfWork
 from app.modules.lms.ports.preview_revisions import PreviewRevisions
+from app.modules.lms.wiring_badges import (
+    BadgeAuthoringServices,
+    build_badge_authoring,
+)
+from app.modules.lms.wiring_levels import LevelServices, build_levels
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.wiring import ModuleDeps
@@ -113,6 +141,14 @@ class LearningServices:
     learner_course_reader: LearnerCourseReader
     public_courses: PublicCourses
     ai_review: AiReviews | None
+    open_coach: OpenCoach
+    coach_reply: CoachReply
+    close_coach: CloseCoach
+    latest_coach: LatestCoach
+    solution_keys: SolutionKeys
+    coach_insights: CoachInsightsReport
+    levels: LevelServices
+    badge_authoring: BadgeAuthoringServices
 
 
 def build_learning(
@@ -152,6 +188,23 @@ def build_learning(
     links = h5p_links or H5PLinks(b"lms-h5p-test-key", clock, None)
     widgets = widget_links or HtmlWidgetLinks(b"lms-widget-test-key", clock, None)
     video_stream = GetVideoStream(uow_factory, cache, files, gate)
+    coach_sessions = SqlTutorSessionRepository(deps.sessionmaker)
+    coach_keys = SqlSolutionKeyRepository(deps.sessionmaker)
+    coach_gate = LearningCoachGate(uow_factory, gate)
+    coach_attempts = AttemptsOfLearner(uow_factory)
+    levels = build_levels(deps, uow_factory)
+
+    def engagement_uow() -> SqlEngagementUnitOfWork:
+        return SqlEngagementUnitOfWork(
+            deps.sessionmaker,
+            deps.outbox_writer,
+            deps.audit_writer,
+            deps.outbox_committed_hook,
+        )
+
+    coach_events = AwardCoachXp(
+        AuditCoachEvents(uow_factory), engagement_uow, clock, levels.hook
+    )
     return LearningServices(
         list_catalog=ListCatalog(uow_factory, gate),
         list_my_courses=ListMyCourses(uow_factory, clock, gate),
@@ -211,4 +264,22 @@ def build_learning(
             if files is not None
             else None
         ),
+        badge_authoring=build_badge_authoring(deps, uow_factory),
+        open_coach=OpenCoach(coach_sessions, coach_attempts, coach_gate, clock),
+        coach_reply=CoachReply(
+            coach_sessions,
+            coach_keys,
+            coach_attempts,
+            None,
+            coach_gate,
+            DailyCoachLimiter(deps.effective_limits, deps.rate_limiter, clock),
+            clock,
+        ),
+        close_coach=CloseCoach(coach_sessions, coach_events, clock),
+        latest_coach=LatestCoach(coach_sessions, coach_gate),
+        solution_keys=SolutionKeys(uow_factory, coach_keys),
+        coach_insights=CoachInsightsReport(
+            uow_factory, SqlCoachInsights(deps.sessionmaker)
+        ),
+        levels=levels,
     )

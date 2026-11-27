@@ -24,5 +24,8 @@
   "lms-learn-exam-not-found": "Bu qadamda bunday imtihon yoʻq.",
   "lms-learn-exam-module-closed": "Imtihonning bu moduli yopilgan: u topshirilgan yoki vaqti tugagan.",
   "lms-tutor-disabled": "Ushbu kurs uchun dars yordamchisi oʼchirilgan.",
-  "lms-tutor-daily-limit": "Bugun yordamchiga ruxsat etilgan barcha savollarni berdingiz. Ertaga qayta urinib koʼring."
+  "lms-tutor-daily-limit": "Bugun yordamchiga ruxsat etilgan barcha savollarni berdingiz. Ertaga qayta urinib koʼring.",
+  "lms-coach-hint-regression": "Maslahat darajasini pasaytirib boʼlmaydi. Qayta urinib koʼring.",
+  "lms-coach-hint-locked": "Avval topshiriqni oʼzingiz bajarib koʼring, keyin qadam tahlilini soʼrang.",
+  "lms-coach-session-closed": "Bu suhbat allaqachon yopilgan."
 }

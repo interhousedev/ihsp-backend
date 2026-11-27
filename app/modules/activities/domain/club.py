@@ -95,11 +95,31 @@ class Club:
     description: str = ""
     owner_id: UUID | None = None
     has_minor_members: bool = False
+    category: str = ""
+    goals: str = ""
+    rules: str = ""
+    schedule: str = ""
+    partners: list[str] = field(default_factory=list)
+    form_fields: list[dict[str, Any]] = field(default_factory=list)
+    points_rules: dict[str, int] = field(default_factory=dict)
 
     def validate(self) -> None:
         """Raise `ClubInvalidError` for a bad slug."""
         if not SLUG_RE.fullmatch(self.slug):
             raise ClubInvalidError(params={"field": "slug"})
+
+    def validate_profile(self) -> None:
+        """Raise `ClubInvalidError` for an oversized category, text or partner list."""
+        if len(self.category) > 40:
+            raise ClubInvalidError(params={"field": "category"})
+        for name in ("goals", "rules", "schedule"):
+            if len(getattr(self, name)) > 4000:
+                raise ClubInvalidError(params={"field": name})
+        if len(self.partners) > 20 or any(
+            not isinstance(x, str) or not x.strip() or len(x) > 120
+            for x in self.partners
+        ):
+            raise ClubInvalidError(params={"field": "partners"})
 
     def submit(self) -> None:
         """Send a draft to review."""
@@ -125,6 +145,12 @@ class Club:
         if self.status != ClubStatus.ACTIVE:
             raise ClubStateError(params={"status": str(self.status)})
         self.status = ClubStatus.SUSPENDED
+
+    def resume(self) -> None:
+        """Bring a suspended club back."""
+        if self.status != ClubStatus.SUSPENDED:
+            raise ClubStateError(params={"status": str(self.status)})
+        self.status = ClubStatus.ACTIVE
 
     def archive(self) -> None:
         """Close an active club."""

@@ -218,7 +218,7 @@ def _earned_view(
         award_id=award.id,
         badge=_public(badge),
         course_id=award.course_id,
-        course_title=titles.get(award.course_id, ""),
+        course_title=titles.get(award.course_id, "") if award.course_id else "",
         awarded_at=award.awarded_at,
     )
 
@@ -442,7 +442,7 @@ class BadgeService:
         """
         async with self.uow_factory() as uow:
             awards = await uow.badges.awards_of(user_id)
-            course_ids = list({a.course_id for a in awards})
+            course_ids = list({a.course_id for a in awards if a.course_id})
             if actor.user_id != user_id and not actor.has(Role.LMS_ADMIN):
                 shared = {
                     e.course_id

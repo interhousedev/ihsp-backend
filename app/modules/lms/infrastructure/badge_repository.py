@@ -29,6 +29,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def _stored(row: Badge) -> StoredBadge:
+    """Map a course badge row (platform badges have no learning-side view)."""
+    assert row.course_id is not None
     return StoredBadge(
         id=row.id,
         course_id=row.course_id,
@@ -102,7 +104,7 @@ class SqlBadgeRepository:
     async def get(self, badge_id: UUID) -> StoredBadge | None:
         """Return one badge."""
         row = await self.session.get(Badge, badge_id)
-        return _stored(row) if row else None
+        return _stored(row) if row and row.course_id is not None else None
 
     async def count(self, course_id: UUID) -> int:
         """Return how many badges a course has."""
@@ -195,7 +197,7 @@ class SqlBadgeRepository:
         return _award(row) if row else None
 
     async def award(
-        self, badge_id: UUID, user_id: UUID, course_id: UUID, at: datetime
+        self, badge_id: UUID, user_id: UUID, course_id: UUID | None, at: datetime
     ) -> bool:
         """Store an award once; return False when it already existed."""
         result = await self.session.execute(

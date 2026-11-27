@@ -32,7 +32,14 @@ log = structlog.get_logger(__name__)
 OVERRIDE_TTL_SECONDS = 30.0
 """How long a process keeps the snapshot it read (other processes see a change then)."""
 
-LIMIT_PREFIXES: tuple[str, ...] = ("ai_", "nb_", "lms_ai_", "web_search_", "admit_")
+LIMIT_PREFIXES: tuple[str, ...] = (
+    "ai_",
+    "nb_",
+    "lms_ai_",
+    "web_search_",
+    "admit_",
+    "media_",
+)
 """Name prefixes of the limits Administration may change."""
 
 NOT_EDITABLE: frozenset[str] = frozenset({"ai_smart_weight"})
@@ -47,6 +54,7 @@ UNLIMITED = -1
 UNLIMITABLE: frozenset[str] = frozenset(
     {
         "ai_session_tokens_student",
+        "media_jobs_per_week",
         "ai_daily_tokens_student",
         "ai_smart_requests_per_week_student",
         "ai_lms_tutor_per_day_student",

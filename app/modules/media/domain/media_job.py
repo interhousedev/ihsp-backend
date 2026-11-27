@@ -183,6 +183,13 @@ class MediaJob:
         self.error = "cancelled"
         self.status = MediaStatus.FAILED
 
+    def retry(self) -> None:
+        """FAILED -> QUEUED with a fresh set of attempts."""
+        self._require(MediaStatus.FAILED)
+        self.attempts = 0
+        self.error = None
+        self.status = MediaStatus.QUEUED
+
     def mark_delivered(self) -> None:
         """The notebook accepted the material."""
         self._require(MediaStatus.DONE)

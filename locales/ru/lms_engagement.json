@@ -2,5 +2,7 @@
   "lms-engage-review-item-not-found": "Задание для повторения не найдено.",
   "lms-engage-quest-not-found": "Такого задания класса в курсе нет.",
   "lms-engage-quest-dates-invalid": "Задание класса должно заканчиваться не раньше начала и длиться не больше {max_days} дней.",
-  "lms-engage-section-locked": "Раздел откроется, когда освоение предыдущего достигнет {threshold}%."
+  "lms-engage-section-locked": "Раздел откроется, когда освоение предыдущего достигнет {threshold}%.",
+  "lms-engage-level-scheme-invalid": "Схема уровней требует корректной кривой, уровней-званий от 1 по возрастанию и названий на всех языках ({field}).",
+  "lms-engage-level-scheme-not-found": "Такой схемы уровней нет."
 }

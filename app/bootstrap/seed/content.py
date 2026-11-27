@@ -11,6 +11,7 @@ from app.interfaces.mcp.lms.blocks import (
     build_text_block,
 )
 from app.interfaces.mcp.lms.inputs import OptionInput, QuestionInput
+from app.modules.activities.domain.club import ClubCapability
 from app.modules.admin.domain.audience import Audience
 from app.modules.admin.domain.broadcast import BroadcastStatus, CreatedVia
 from app.modules.lms.domain.authoring.enums import Visibility
@@ -128,3 +129,22 @@ async def seed_broadcast(container: Container, admin_id: UUID) -> None:
         audience=Audience(everyone=True),
         created_via=CreatedVia.UI,
     )
+
+
+async def seed_volunteers_club(container: Container, owner_id: UUID) -> None:
+    """The demo club of the IHT volunteers: forms, drafting, points and roster."""
+    svc = container.activities
+    actor = Actor(user_id=owner_id, roles=frozenset({Role.SU, Role.ADMIN}))
+    slug = "iht-volunteers"
+    if any(c.slug == slug for c in await svc.clubs.list_mine(actor)):
+        return
+    club = await svc.clubs.create(
+        actor,
+        "Волонтёры IHT",
+        slug,
+        "Помогаем на мероприятиях лицея: записывайтесь и копите баллы.",
+    )
+    await svc.clubs.submit(actor, club.id)
+    await svc.clubs.review(actor, club.id, True, None)
+    await svc.clubs.set_capabilities(actor, club.id, set(ClubCapability))
+    log.info("seed_volunteers_club", club_id=str(club.id))

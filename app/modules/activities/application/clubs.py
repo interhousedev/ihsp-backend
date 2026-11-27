@@ -1,5 +1,6 @@
 """Clubs: create, review, update, capabilities."""
 
+from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
@@ -27,9 +28,22 @@ from app.modules.activities.domain.errors import ActivitiesNotFoundError
 from app.modules.activities.domain.membership import (
     MemberRole,
     Membership,
+    MemberStatus,
 )
 from app.modules.activities.ports.bundle import Ports
 from app.shared.actor import Actor, Role
+
+from uuid_utils.compat import uuid7
+
+
+@dataclass(frozen=True, slots=True)
+class AdminClubRow:
+    """A club with figures for the admin list."""
+
+    club: Club
+    owner_name: str | None
+    member_count: int
+
 
 _EDITABLE = frozenset(
     {
@@ -39,8 +53,38 @@ _EDITABLE = frozenset(
         "visibility_public",
         "contact_enabled",
         "logo_file_id",
+        "category",
+        "goals",
+        "rules",
+        "schedule",
+        "partners",
     }
 )
+
+
+@dataclass(frozen=True, slots=True)
+class DirectoryRow:
+    """A club in the directory with its size and the caller's place in it."""
+
+    club: Club
+    member_count: int
+    my_role: str | None
+    my_status: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class MyClubState:
+    """What the caller is and may do in one club."""
+
+    club_id: UUID
+    role: str | None
+    status: str | None
+    is_member: bool
+    is_organizer: bool
+    can_edit: bool
+    can_manage_events: bool
+    can_view_members: bool
+    can_approve: bool
 
 
 class ClubService:
@@ -66,6 +110,7 @@ class ClubService:
         club.description = description
         _apply(club, kw)
         club.validate()
+        club.validate_profile()
         await p.clubs.add(club)
         await p.members.save(
             Membership(
@@ -121,6 +166,41 @@ class ClubService:
         await self._p.audit.record(actor.user_id, "activities.club.suspend", club.id)
         return club
 
+    async def resume(self, actor: Actor, club_id: UUID) -> Club:
+        """Platform staff bring a suspended club back."""
+        if not is_platform_staff(actor.roles):
+            raise PermissionDeniedError()
+        club = await load_club(self._p, club_id)
+        club.resume()
+        await self._p.clubs.save(club)
+        await self._p.audit.record(actor.user_id, "activities.club.resume", club.id)
+        return club
+
+    async def list_admin(
+        self, actor: Actor, status: ClubStatus | None, limit: int, offset: int
+    ) -> tuple[list[AdminClubRow], int]:
+        """Every club of any status with owner name and member count."""
+        if not is_platform_staff(actor.roles):
+            raise PermissionDeniedError()
+        p = self._p
+        clubs = [
+            c for c in await p.clubs.list_all() if status is None or c.status == status
+        ]
+        clubs.sort(key=lambda c: c.slug)
+        rows: list[AdminClubRow] = []
+        for c in clubs[offset : offset + limit]:
+            members = await p.members.list(c.id)
+            count = sum(1 for m in members if m.status == MemberStatus.ACTIVE)
+            owner = c.owner_id
+            rows.append(
+                AdminClubRow(
+                    club=c,
+                    owner_name=(await p.users.display_name(owner) if owner else None),
+                    member_count=count,
+                )
+            )
+        return rows, len(clubs)
+
     async def update(self, actor: Actor, club_id: UUID, **fields: Any) -> Club:
         """Edit the public settings."""
         await require(self._p, actor, club_id, Permission.EDIT_CLUB)
@@ -129,6 +209,7 @@ class ClubService:
             raise ClubInvalidError(params={"field": sorted(extra)[0]})
         club = await load_club(self._p, club_id)
         _apply(club, fields)
+        club.validate_profile()
         await self._p.clubs.save(club)
         return club
 
@@ -162,6 +243,46 @@ class ClubService:
             if m.is_active:
                 out.append(await load_club(self._p, m.club_id))
         return out
+
+    async def directory(self, actor: Actor) -> list[DirectoryRow]:
+        """Active public clubs plus every club the caller belongs to."""
+        p = self._p
+        mine = {m.club_id: m for m in await p.members.list_for_user(actor.user_id)}
+        rows: list[DirectoryRow] = []
+        for c in sorted(await p.clubs.list_all(), key=lambda c: c.slug):
+            m = mine.get(c.id)
+            public = c.status == ClubStatus.ACTIVE and c.visibility_public
+            if not public and m is None:
+                continue
+            members = await p.members.list(c.id)
+            rows.append(
+                DirectoryRow(
+                    club=await load_club(p, c.id),
+                    member_count=sum(1 for x in members if x.is_active),
+                    my_role=str(m.role) if m else None,
+                    my_status=str(m.status) if m else None,
+                )
+            )
+        return rows
+
+    async def my_state(self, actor: Actor, club_id: UUID) -> MyClubState:
+        """The caller's membership, role and staff flags in a club."""
+        p = self._p
+        club = await self.get(actor, club_id)
+        m = await p.members.get(club.id, actor.user_id)
+        perms = await permissions(p, actor, club.id)
+        active = m is not None and m.is_active
+        return MyClubState(
+            club_id=club.id,
+            role=str(m.role) if m else None,
+            status=str(m.status) if m else None,
+            is_member=active,
+            is_organizer=m is not None and active and m.role != MemberRole.MEMBER,
+            can_edit=Permission.EDIT_CLUB in perms,
+            can_manage_events=Permission.EDIT_EVENTS in perms,
+            can_view_members=Permission.VIEW_MEMBERS in perms,
+            can_approve=Permission.APPROVE in perms,
+        )
 
     async def set_capabilities(
         self, actor: Actor, club_id: UUID, caps: set[ClubCapability]

@@ -2,5 +2,7 @@
   "lms-engage-review-item-not-found": "This review item was not found.",
   "lms-engage-quest-not-found": "This quest does not exist in the course.",
   "lms-engage-quest-dates-invalid": "A quest must end on or after its start date and last at most {max_days} days.",
-  "lms-engage-section-locked": "This section opens once the previous one reaches {threshold}% mastery."
+  "lms-engage-section-locked": "This section opens once the previous one reaches {threshold}% mastery.",
+  "lms-engage-level-scheme-invalid": "A level scheme needs a positive curve, tiers that start at level 1 and rise, and names in every language ({field}).",
+  "lms-engage-level-scheme-not-found": "This level scheme does not exist."
 }
