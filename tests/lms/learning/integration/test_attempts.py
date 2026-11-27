@@ -391,6 +391,29 @@ async def test_correct_answers_are_shown_only_as_show_answers_allows(
         assert result.review[0].explanation == "Because."
 
 
+@pytest.mark.parametrize(
+    ("policy", "shown"), [("never", False), ("after_submit", True)]
+)
+async def test_the_owner_sees_missed_questions_and_answers_only_as_allowed(
+    maker: async_sessionmaker[AsyncSession],
+    learning: LearningServices,
+    student: Actor,
+    policy: str,
+    shown: bool,
+) -> None:
+    """The owner always sees missed questions; correct answers follow the setting."""
+    _, step = await quiz_course(maker, learning, student, show_answers=policy)
+    result = await take(learning, student, step, WRONG)
+
+    view = await learning.get_attempt.execute(student, result.id)
+
+    assert view.answers
+    assert view.review is not None
+    assert [item.correct for item in view.review] == [False, False, False]
+    assert (view.review[0].correct_answer is not None) is shown
+    assert (view.review[0].explanation is not None) is shown
+
+
 async def test_passing_completes_the_step_and_updates_the_course_progress(
     maker: async_sessionmaker[AsyncSession],
     learning: LearningServices,

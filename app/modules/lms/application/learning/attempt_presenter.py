@@ -68,16 +68,30 @@ async def review_allowed(
 
 
 def attempt_result(
-    attempt: Attempt, test: TestBlock, *, with_review: bool
+    attempt: Attempt,
+    test: TestBlock,
+    *,
+    with_review: bool,
+    mistakes: bool = False,
 ) -> LearningAttemptResultView:
-    """Return the graded attempt; the review (correct answers) only if allowed."""
+    """Return the graded attempt; the review (correct answers) only if allowed.
+
+    With ``mistakes`` a hidden review still lists which questions were missed,
+    without the correct answers or explanations.
+    """
     if attempt.submitted_at is None:
         raise AttemptNotSubmittedError(params={"attempt_id": str(attempt.id)})
     review = None
-    if with_review:
+    if with_review or mistakes:
         grade = grade_attempt(test, attempt.variant, attempt.answers)
         review = [
-            LearningReviewItemView(**item)
+            (
+                LearningReviewItemView(**item)
+                if with_review
+                else LearningReviewItemView(
+                    question_id=item["question_id"], correct=item["correct"]
+                )
+            )
             for item in build_review(test, attempt.variant, grade.correct)
         ]
     return LearningAttemptResultView(

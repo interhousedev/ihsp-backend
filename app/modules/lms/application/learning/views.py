@@ -157,6 +157,7 @@ class LearningAttemptReviewView(LearningAttemptResultView):
     user: LearningPersonRefView
     variant: dict[str, Any]
     answers: dict[str, dict[str, Any]]
+    questions: list["LearningAttemptQuestionView"]
     revision_id: UUID
     override_score: float | None
     override_comment: str | None
@@ -264,6 +265,7 @@ class LearningQuizBlockView(BaseModel):
     rules: LearningQuizRulesView
     best: LearningAttemptResultView | None
     open_attempt_id: UUID | None
+    last_attempt_id: UUID | None = None
     passed: bool = False
     points_total: float = 0.0
     points_earned: float = 0.0

@@ -225,6 +225,7 @@ async def test_a_step_is_read_and_marked_viewed(
         },
         "best": None,
         "open_attempt_id": None,
+        "last_attempt_id": None,
         "passed": False,
         "points_earned": 0.0,
         "points_total": 3.0,
