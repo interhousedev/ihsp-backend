@@ -7,6 +7,7 @@ from typing import Protocol
 from uuid import UUID
 
 from app.modules.academic.domain.marks.attendance_merge import EmisAttendanceReport
+from app.modules.academic.domain.marks.group_standing import StudentStanding
 from app.modules.academic.domain.marks.read_models import (
     AttendanceCount,
     GroupRoles,
@@ -163,6 +164,12 @@ class SyncRunsRepository(Protocol):
 class EmisAttendanceRepository(Protocol):
     """Attendance the sync read from EMIS."""
 
+    async def absent_dates(
+        self, student_id: UUID, subject_id: UUID, semester: int
+    ) -> list[dt.date] | None:
+        """Absent dates stored by the previous sync, or None if none were stored."""
+        ...
+
     async def save(
         self,
         student_id: UUID,
@@ -291,4 +298,10 @@ class MarksReader(Protocol):
 
     async def group_roles(self, group_id: UUID) -> GroupRoles | None:
         """Return the group's curator, head student and active students."""
+        ...
+
+    async def term_standings(
+        self, start: dt.date, end: dt.date
+    ) -> list[StudentStanding]:
+        """Marks and attendance of every active student of an active group."""
         ...

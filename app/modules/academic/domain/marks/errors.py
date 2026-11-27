@@ -55,3 +55,10 @@ class NotHeadStudentError(ForbiddenError):
 
     code = "academic/not-head-student"
     message_key = "academic-not-head-student"
+
+
+class NoGroupError(NotFoundError):
+    """The student is not in a group."""
+
+    code = "academic/no-group"
+    message_key = "academic-no-group"

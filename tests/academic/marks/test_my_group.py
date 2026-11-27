@@ -11,7 +11,7 @@ from uuid import UUID
 
 from app.interfaces.http.dependencies import get_actor
 from app.interfaces.http.v1.me_marks import ROUTERS as MARKS_ROUTERS
-from app.modules.academic.domain.marks.errors import StudentNotFoundError
+from app.modules.academic.domain.marks.errors import NoGroupError
 from app.modules.academic.wiring_marks import MarksServices
 from app.shared.actor import Actor, Role
 from app.shared.contracts.identity import TeacherContacts, UserPreferences, UserStatus
@@ -68,6 +68,7 @@ async def test_member_sees_homeroom_teacher_head_student_and_members(
         "id": CURATOR,
         "first_name": "Dilnoza",
         "last_name": "Rakhimova",
+        "full_name": "Dilnoza Rakhimova",
         "photo_url": "https://files.test/dilnoza.jpg",
         "contacts": {
             "telegram": "dilnoza_r",
@@ -82,6 +83,7 @@ async def test_member_sees_homeroom_teacher_head_student_and_members(
         "id": w.user_id,
         "first_name": "Aliya",
         "last_name": "Karimova",
+        "full_name": "Aliya Karimova",
         "photo_url": "https://files.test/aliya.jpg",
     }
     assert [m["photo_url"] for m in data["members"]] == [
@@ -221,5 +223,5 @@ async def test_group_endpoint_is_open_to_any_member(
 
 async def test_student_without_a_group_is_not_found(services: MarksServices) -> None:
     """A user with no student record has no group to show."""
-    with pytest.raises(StudentNotFoundError):
+    with pytest.raises(NoGroupError):
         await services.get_my_group.execute(_student(NEWCOMER_ID))

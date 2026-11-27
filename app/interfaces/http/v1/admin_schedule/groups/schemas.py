@@ -19,6 +19,12 @@ class GroupCreateBody(BaseModel):
     current_semester: int | None = Field(default=None, ge=1, le=12)
 
 
+class HeadStudentBody(BaseModel):
+    """Body of PUT /v1/admin/groups/{id}/head-student; null clears the head student."""
+
+    student_id: UUID | None
+
+
 class GroupPatchBody(BaseModel):
     """Body of PATCH /v1/admin/groups/{id}; send null to clear curator or head."""
 

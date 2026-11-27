@@ -5,5 +5,6 @@
   "academic-sync-running": "Синхронизация с EMIS уже выполняется",
   "academic-sync-run-not-found": "Такой запуск синхронизации не найден",
   "academic-sync-not-running": "Эта синхронизация уже не выполняется",
-  "academic-invalid-what-if": "Пробная оценка записывается как lesson:5, midterm:4 или final:3 (оценки от 2 до 5)"
+  "academic-invalid-what-if": "Пробная оценка записывается как lesson:5, midterm:4 или final:3 (оценки от 2 до 5)",
+  "academic-no-group": "Вы пока не состоите в группе"
 }

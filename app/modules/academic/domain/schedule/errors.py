@@ -290,3 +290,10 @@ class StudentNotInGroupError(NotFoundError):
 
     code = "academic/student-not-in-group"
     message_key = "academic-student-not-in-group"
+
+
+class NotGroupMemberError(ValidationFailedError):
+    """The head student must be an active member of the group."""
+
+    code = "academic/not-group-member"
+    message_key = "academic-not-group-member"

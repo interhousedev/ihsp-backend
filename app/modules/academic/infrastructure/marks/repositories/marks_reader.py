@@ -12,6 +12,7 @@ from app.modules.academic.domain.marks.attendance_merge import (
     RosterEntry,
     merge_attendance,
 )
+from app.modules.academic.domain.marks.group_standing import StudentStanding
 from app.modules.academic.domain.marks.read_models import (
     AttendanceCount,
     GroupRoles,
@@ -476,6 +477,7 @@ class SqlMarksReader:
                     Group.current_semester,
                     Group.curator_id,
                     Group.head_student_id,
+                    Group.course,
                 ).where(Group.id == group_id)
             )
         ).first()
@@ -495,4 +497,73 @@ class SqlMarksReader:
             curator_id=group.curator_id,
             head_student_id=group.head_student_id,
             student_ids=tuple(ids),
+            course=group.course,
         )
+
+    async def term_standings(
+        self, start: dt.date, end: dt.date
+    ) -> list[StudentStanding]:
+        """Marks and attendance of every active student of an active group.
+
+        Three aggregates in one statement: marks per student, attendance per student
+        from the lesson rosters (late is present), joined to the students.
+        """
+        marks = (
+            sa.select(
+                Mark.student_id.label("uid"),
+                sa.func.sum(Mark.value).label("grade_sum"),
+                sa.func.count().label("grade_count"),
+            )
+            .where(Mark.removed_at.is_(None), Mark.date.between(start, end))
+            .group_by(Mark.student_id)
+            .subquery()
+        )
+        roster = (
+            sa.select(
+                sa.func.unnest(Lesson.attendance_roster).label("uid"),
+                Lesson.attendance_absent.label("absent_ids"),
+            )
+            .where(
+                Lesson.attendance_roster.is_not(None), Lesson.date.between(start, end)
+            )
+            .subquery()
+        )
+        is_absent = roster.c.uid == sa.any_(roster.c.absent_ids)
+        attendance = (
+            sa.select(
+                roster.c.uid,
+                sa.func.count().filter(sa.not_(is_absent)).label("present"),
+                sa.func.count().filter(is_absent).label("absent"),
+            )
+            .group_by(roster.c.uid)
+            .subquery()
+        )
+        stmt = (
+            sa.select(
+                Student.user_id,
+                Group.id,
+                Group.name,
+                Group.course,
+                marks.c.grade_sum,
+                marks.c.grade_count,
+                attendance.c.present,
+                attendance.c.absent,
+            )
+            .join(Group, Group.id == Student.group_id)
+            .outerjoin(marks, marks.c.uid == Student.user_id)
+            .outerjoin(attendance, attendance.c.uid == Student.user_id)
+            .where(Student.status == "active", Group.status == "active")
+        )
+        return [
+            StudentStanding(
+                student_id=r[0],
+                group_id=r[1],
+                group_name=r[2],
+                course=r[3],
+                grade_sum=int(r[4] or 0),
+                grade_count=int(r[5] or 0),
+                present=int(r[6] or 0),
+                absent=int(r[7] or 0),
+            )
+            for r in (await self.session.execute(stmt)).all()
+        ]

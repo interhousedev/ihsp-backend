@@ -107,3 +107,4 @@ class GroupRoles:
     curator_id: UUID | None
     head_student_id: UUID | None
     student_ids: tuple[UUID, ...]
+    course: int | None = None

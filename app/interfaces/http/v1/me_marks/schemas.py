@@ -291,11 +291,67 @@ class GroupMemberRow(GroupPersonRef):
     is_me: bool
 
 
-class MyGroupResponse(BaseModel):
-    """The caller's group: homeroom teacher, head student and members.
+class GroupHeadRef(GroupPersonRef):
+    """The head student, with first, last and full name."""
 
-    `homeroom_teacher` and `head_student` are null when not assigned.
+    full_name: str
+
+
+class GroupCard(BaseModel):
+    """The caller's group."""
+
+    id: UUID
+    name: str
+    course: int | None
+
+
+class GroupCuratorRef(BaseModel):
+    """The curator (homeroom teacher) by full name."""
+
+    id: UUID
+    full_name: str
+    photo_url: str | None
+
+
+class GroupTopRow(BaseModel):
+    """A classmate in a top; equal values share a rank."""
+
+    rank: int
+    student_id: UUID
+    full_name: str
+    photo_url: str | None
+    value: float | None
+    is_me: bool
+
+
+class GroupPlace(BaseModel):
+    """The group's place among `total` ranked groups."""
+
+    place: int
+    total: int
+
+
+class GroupScopeRanks(BaseModel):
+    """The group's place by GPA and attendance; null when the group has no value."""
+
+    gpa: GroupPlace | None
+    attendance: GroupPlace | None
+
+
+class GroupRanks(BaseModel):
+    """The group's place in its course and in the lyceum."""
+
+    course: GroupScopeRanks
+    lyceum: GroupScopeRanks
+
+
+class MyGroupResponse(BaseModel):
+    """The caller's group: homeroom teacher, head student, members and standings.
+
+    `homeroom_teacher`, `curator` and `head_student` are null when not assigned.
     `is_head_student` tells whether group progress and rating are open to the caller.
+    The tops rank classmates by current-term GPA (mean mark) and attendance percent
+    (late counts as present); classmates without a value are left out.
     """
 
     id: UUID
@@ -303,8 +359,32 @@ class MyGroupResponse(BaseModel):
     size: int
     is_head_student: bool
     homeroom_teacher: GroupTeacherRef | None
-    head_student: GroupPersonRef | None
+    head_student: GroupHeadRef | None
     members: list[GroupMemberRow]
+    group: GroupCard
+    curator: GroupCuratorRef | None
+    members_count: int
+    top_by_grade: list[GroupTopRow]
+    top_by_attendance: list[GroupTopRow]
+    ranks: GroupRanks
+
+
+class GroupRankingItem(BaseModel):
+    """One group in a ranking: aggregates only, never members."""
+
+    place: int
+    group_id: UUID
+    group_name: str
+    course: int | None
+    value: float | None
+    members_count: int
+    is_mine: bool
+
+
+class GroupRankingsResponse(BaseModel):
+    """Groups ranked best first; groups without a value this term are left out."""
+
+    items: list[GroupRankingItem]
 
 
 class GroupRatingRow(BaseModel):

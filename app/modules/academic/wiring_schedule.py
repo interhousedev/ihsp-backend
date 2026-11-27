@@ -73,6 +73,9 @@ from app.modules.academic.application.schedule.regenerate_room_pin import (
     RegenerateRoomPin,
 )
 from app.modules.academic.application.schedule.rename_room import RenameRoom
+from app.modules.academic.application.schedule.set_head_student import (
+    SetHeadStudent,
+)
 from app.modules.academic.application.schedule.set_student_group import (
     SetStudentGroup,
 )
@@ -117,6 +120,7 @@ class ScheduleServices:
     current_term: CurrentTerm
     create_group: CreateGroup
     update_group: UpdateGroup
+    set_head_student: SetHeadStudent
     delete_group: DeleteGroup
     assign_subgroups: AssignSubgroups
     export_group_photos: ExportGroupPhotos
@@ -186,6 +190,9 @@ def assemble_schedule(
         current_term=CurrentTerm(uow_factory, clock),
         create_group=CreateGroup(uow_factory, identity),
         update_group=UpdateGroup(uow_factory, identity),
+        set_head_student=SetHeadStudent(
+            uow_factory, UpdateGroup(uow_factory, identity)
+        ),
         delete_group=DeleteGroup(uow_factory),
         assign_subgroups=AssignSubgroups(uow_factory, identity, clock),
         get_group_detail=GetGroupDetail(uow_factory, identity),
