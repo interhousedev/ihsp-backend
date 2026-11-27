@@ -1,6 +1,16 @@
 """Club and event notices of the activities module."""
 
-from app.modules.notify.application.renderers.described import DescribedRenderer
+from typing import Any
+from uuid import UUID
+
+from app.modules.notify.application.describe import Description
+from app.modules.notify.application.renderers.described import (
+    Buttons,
+    DescribedRenderer,
+)
+from app.shared.contracts.callbacks import ClubTransferCb
+from app.shared.contracts.notify import RenderContext
+from app.shared.ids import uuid_to_b64
 from app.shared.notifications import NotificationType
 
 
@@ -54,10 +64,34 @@ class ClubJoinResultRenderer(DescribedRenderer):
 
 
 class ClubTransferOfferRenderer(DescribedRenderer):
-    """Club or event notice; the button opens the clubs page."""
+    """An ownership offer with Accept and Decline buttons; answers get a link."""
 
     notification_type = NotificationType.CLUB_TRANSFER_OFFER
     link_button_key = "notify-btn-open-clubs"
+
+    def buttons(
+        self, payload: dict[str, Any], ctx: RenderContext, description: Description
+    ) -> Buttons | None:
+        """Accept and decline for an offer; only the link for an answer."""
+        rows: Buttons = super().buttons(payload, ctx, description) or []
+        transfer = str(payload.get("transfer_id", ""))
+        if payload.get("result") or not transfer:
+            return rows
+        t = self.i18n.get_context(ctx.locale)
+        packed = uuid_to_b64(UUID(transfer))
+        return [
+            [
+                {
+                    "text": t("notify-btn-transfer-accept"),
+                    "callback_data": ClubTransferCb(t=packed, d="a").pack(),
+                },
+                {
+                    "text": t("notify-btn-transfer-decline"),
+                    "callback_data": ClubTransferCb(t=packed, d="d").pack(),
+                },
+            ],
+            *rows,
+        ]
 
 
 class DraftInviteRenderer(DescribedRenderer):

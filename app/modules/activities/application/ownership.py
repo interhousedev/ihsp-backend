@@ -53,7 +53,11 @@ class OwnershipService:
                 note(
                     to_user_id,
                     NotificationType.CLUB_TRANSFER_OFFER,
-                    {"club_id": str(club_id), "transfer_id": str(t.id)},
+                    {
+                        "club_id": str(club_id),
+                        "transfer_id": str(t.id),
+                        "club_name": club.name,
+                    },
                     f"activities:transfer:{t.id}",
                 )
             ]
@@ -72,7 +76,37 @@ class OwnershipService:
             await p.members.save(m)
         await p.transfers.save(t)
         await p.audit.record(actor.user_id, "activities.club.transfer", t.club_id)
+        await self._tell_offerer(t, "accepted")
         return t
+
+    async def incoming(self, actor: Actor) -> list[OwnershipTransfer]:
+        """Open, unexpired offers addressed to the actor."""
+        now = self._p.clock.now()
+        return [
+            t
+            for t in await self._p.transfers.list_offered()
+            if t.to_user == actor.user_id and t.expires_at > now
+        ]
+
+    async def _tell_offerer(self, t: OwnershipTransfer, result: str) -> None:
+        """Tell the offerer how the recipient answered."""
+        club = await self._p.clubs.get(t.club_id)
+        payload: dict[str, object] = {
+            "club_id": str(t.club_id),
+            "transfer_id": str(t.id),
+            "club_name": club.name if club else "",
+            "result": result,
+        }
+        await self._p.notifier.send(
+            [
+                note(
+                    t.from_user,
+                    NotificationType.CLUB_TRANSFER_OFFER,
+                    payload,
+                    f"activities:transfer:{t.id}:{result}",
+                )
+            ]
+        )
 
     async def _pair(self, club_id: UUID, a: UUID, b: UUID) -> dict[UUID, Membership]:
         out: dict[UUID, Membership] = {}
@@ -89,6 +123,7 @@ class OwnershipService:
             raise PermissionDeniedError()
         t.decline()
         await self._p.transfers.save(t)
+        await self._tell_offerer(t, "declined")
         return t
 
     async def cancel(self, actor: Actor, transfer_id: UUID) -> OwnershipTransfer:

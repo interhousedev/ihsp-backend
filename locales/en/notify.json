@@ -294,7 +294,13 @@
   "notify-club-join-result-title": "Join request answered",
   "notify-club-join-result-body": "Your request to join a club has an answer.",
   "notify-club-transfer-offer-title": "Club ownership offer",
-  "notify-club-transfer-offer-body": "You were offered to lead a club.",
+  "notify-club-transfer-offer-body": "You were offered to lead the club “{club}”. Accept or decline.",
+  "notify-club-transfer-accepted-title": "Club ownership accepted",
+  "notify-club-transfer-accepted-body": "The new leader accepted the club “{club}”.",
+  "notify-club-transfer-declined-title": "Club ownership declined",
+  "notify-club-transfer-declined-body": "The offer to lead the club “{club}” was declined.",
+  "notify-btn-transfer-accept": "✅ Accept",
+  "notify-btn-transfer-decline": "❌ Decline",
   "notify-draft-invite-title": "Draft invitation",
   "notify-draft-invite-body": "You were picked in a draft. Confirm your place.",
   "notify-position-application-result-title": "Application answered",
@@ -302,5 +308,9 @@
   "notify-club-owner-graduating-title": "Club leader graduating",
   "notify-club-owner-graduating-body": "The leader of your club is graduating. Choose a successor.",
   "notify-btn-open-events": "Open events",
-  "notify-btn-open-clubs": "Open clubs"
+  "notify-btn-open-clubs": "Open clubs",
+  "club-transfer-bot-accepted": "Club handed over to you. You now lead it.",
+  "club-transfer-bot-declined": "You declined the offer.",
+  "club-transfer-bot-not-available": "This offer is no longer available.",
+  "club-transfer-bot-already-answered": "This offer has already been answered."
 }

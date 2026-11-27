@@ -201,3 +201,30 @@ async def test_suspended_club_is_hidden_from_public(
     assert club.slug not in {c.slug for c in await world.services.public.list_clubs()}
     with pytest.raises(NotFoundError):
         await world.services.public.get_club(club.slug)
+
+
+async def test_transfer_offer_is_listed_and_answers_reach_the_offerer(
+    world: ActivitiesWorld, club: Club, owner: Actor, student: Actor
+) -> None:
+    await _member(world, club, owner, student)
+    t = await world.services.ownership.offer(owner, club.id, student.user_id)
+    offer = next(
+        n
+        for n in world.sent
+        if n.type == NotificationType.CLUB_TRANSFER_OFFER
+        and n.user_id == student.user_id
+    )
+    assert offer.payload["transfer_id"] == str(t.id)
+    assert "club_name" in offer.payload and "result" not in offer.payload
+
+    assert [x.id for x in await world.services.ownership.incoming(student)] == [t.id]
+    assert await world.services.ownership.incoming(owner) == []
+
+    await world.services.ownership.decline(student, t.id)
+    assert await world.services.ownership.incoming(student) == []
+    answer = [
+        n
+        for n in world.sent
+        if n.user_id == owner.user_id and n.payload.get("result") == "declined"
+    ]
+    assert len(answer) == 1

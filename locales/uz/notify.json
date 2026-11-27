@@ -294,7 +294,13 @@
   "notify-club-join-result-title": "Ariza boʻyicha javob",
   "notify-club-join-result-body": "Klubga arizangizga javob bor.",
   "notify-club-transfer-offer-title": "Klubni boshqarish taklifi",
-  "notify-club-transfer-offer-body": "Sizga klubni boshqarish taklif qilindi.",
+  "notify-club-transfer-offer-body": "Sizga «{club}» klubini boshqarish taklif qilindi. Qabul qiling yoki rad eting.",
+  "notify-club-transfer-accepted-title": "Klubni topshirish qabul qilindi",
+  "notify-club-transfer-accepted-body": "Yangi rahbar «{club}» klubini qabul qildi.",
+  "notify-club-transfer-declined-title": "Klubni topshirish rad etildi",
+  "notify-club-transfer-declined-body": "«{club}» klubini boshqarish taklifi rad etildi.",
+  "notify-btn-transfer-accept": "✅ Qabul qilish",
+  "notify-btn-transfer-decline": "❌ Rad etish",
   "notify-draft-invite-title": "Draft taklifi",
   "notify-draft-invite-body": "Siz draftda tanlandingiz. Ishtirokni tasdiqlang.",
   "notify-position-application-result-title": "Ariza boʻyicha javob",
@@ -302,5 +308,9 @@
   "notify-club-owner-graduating-title": "Klub rahbari bitirmoqda",
   "notify-club-owner-graduating-body": "Klubingiz rahbari litseyni tugatmoqda. Vorisni tanlang.",
   "notify-btn-open-events": "Tadbirlarni ochish",
-  "notify-btn-open-clubs": "Klublarni ochish"
+  "notify-btn-open-clubs": "Klublarni ochish",
+  "club-transfer-bot-accepted": "Klub sizga topshirildi. Endi uni siz boshqarasiz.",
+  "club-transfer-bot-declined": "Siz taklifni rad etdingiz.",
+  "club-transfer-bot-not-available": "Bu taklif endi mavjud emas.",
+  "club-transfer-bot-already-answered": "Bu taklifga allaqachon javob berilgan."
 }

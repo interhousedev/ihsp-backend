@@ -294,7 +294,13 @@
   "notify-club-join-result-title": "Ответ на заявку",
   "notify-club-join-result-body": "Есть ответ на вашу заявку в клуб.",
   "notify-club-transfer-offer-title": "Предложение возглавить клуб",
-  "notify-club-transfer-offer-body": "Вам предложили возглавить клуб.",
+  "notify-club-transfer-offer-body": "Вам предложили возглавить клуб «{club}». Примите или отклоните.",
+  "notify-club-transfer-accepted-title": "Передача клуба принята",
+  "notify-club-transfer-accepted-body": "Новый руководитель принял клуб «{club}».",
+  "notify-club-transfer-declined-title": "Передача клуба отклонена",
+  "notify-club-transfer-declined-body": "Предложение возглавить клуб «{club}» отклонено.",
+  "notify-btn-transfer-accept": "✅ Принять",
+  "notify-btn-transfer-decline": "❌ Отклонить",
   "notify-draft-invite-title": "Приглашение по драфту",
   "notify-draft-invite-body": "Вас выбрали в драфте. Подтвердите участие.",
   "notify-position-application-result-title": "Ответ на заявку",
@@ -302,5 +308,9 @@
   "notify-club-owner-graduating-title": "Руководитель клуба выпускается",
   "notify-club-owner-graduating-body": "Руководитель вашего клуба оканчивает лицей. Выберите преемника.",
   "notify-btn-open-events": "Открыть события",
-  "notify-btn-open-clubs": "Открыть клубы"
+  "notify-btn-open-clubs": "Открыть клубы",
+  "club-transfer-bot-accepted": "Клуб передан вам. Теперь вы им руководите.",
+  "club-transfer-bot-declined": "Вы отклонили предложение.",
+  "club-transfer-bot-not-available": "Это предложение больше недоступно.",
+  "club-transfer-bot-already-answered": "На это предложение уже ответили."
 }

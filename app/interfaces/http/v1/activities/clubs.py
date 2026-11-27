@@ -319,6 +319,14 @@ async def offer_transfer(
     return await container.activities.ownership.offer(actor, club_id, body.to_user_id)
 
 
+@router.get("/transfers/incoming")
+async def incoming_transfers(
+    container: ContainerDep, actor: ActorDep
+) -> list[OwnershipTransfer]:
+    """Open ownership offers addressed to the caller."""
+    return await container.activities.ownership.incoming(actor)
+
+
 @router.post("/transfers/{transfer_id}:accept")
 async def accept_transfer(
     transfer_id: UUID, container: ContainerDep, actor: ActorDep

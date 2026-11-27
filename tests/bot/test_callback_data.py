@@ -39,6 +39,7 @@ LARGEST: list[CallbackData] = [
     callbacks.CancelCb(),
     callbacks.McpScopeCb(t="A" * 22, d="g"),
     callbacks.ExcuseCb(t="A" * 22, d="a"),
+    callbacks.ClubTransferCb(t="A" * 22, d="a"),
     MailComposeCb(action="send"),
     OnboardingCb(step="settings"),
     WorkOffPromptCb(lesson=LESSON, action="cancel_text"),

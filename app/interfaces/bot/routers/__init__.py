@@ -25,6 +25,9 @@ def build_routers() -> list[Router]:
     from app.interfaces.bot.routers.common.chat_member.router import (
         build_router as chat_member,
     )
+    from app.interfaces.bot.routers.common.club_transfers.router import (
+        build_router as club_transfers,
+    )
     from app.interfaces.bot.routers.common.excuses.router import build_router as excuses
     from app.interfaces.bot.routers.common.feedback.router import (
         build_router as feedback,
@@ -76,6 +79,7 @@ def build_routers() -> list[Router]:
         cancel,
         chat_member,
         security,
+        club_transfers,  # before guest: a stranger gets the generic answer here
         excuses,  # before guest: a stranger gets the generic answer here
         mcp_scopes,  # before guest: a stranger gets the generic answer here
         guest,  # before Log in and before any linked catch-all

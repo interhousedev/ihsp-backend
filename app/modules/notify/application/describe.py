@@ -34,6 +34,7 @@ class _View:
     t: I18nContext
     urls: UrlsSettings
     staff: bool
+    locale: str = "en"
 
     def lesson_link(self, lesson_id: Any) -> str:
         """Link to the lesson page of the reader's app."""
@@ -997,11 +998,28 @@ def _club_join_result(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+def _club_label(p: dict[str, Any], locale: str) -> str:
+    """The club's name in the reader's language (names are stored per locale)."""
+    name = p.get("club_name")
+    if isinstance(name, dict):
+        return str(name.get(locale) or name.get("ru") or next(iter(name.values()), ""))
+    return str(name or "")
+
+
 def _club_transfer_offer(p: dict[str, Any], v: _View) -> Description:
+    club = _club_label(p, v.locale)
+    result = p.get("result")
+    if result in ("accepted", "declined"):
+        return Description(
+            v.t(f"notify-club-transfer-{result}-title"),
+            v.t(f"notify-club-transfer-{result}-body", club=club),
+            _club_url(p, v),
+        )
+    link = f"{_club_url(p, v)}&transfer={p.get('transfer_id', '')}"
     return Description(
         v.t("notify-club-transfer-offer-title"),
-        v.t("notify-club-transfer-offer-body"),
-        _club_url(p, v),
+        v.t("notify-club-transfer-offer-body", club=club),
+        link,
     )
 
 
@@ -1118,5 +1136,5 @@ def describe(
 
     `staff` picks the staff portal instead of the student app for lesson links.
     """
-    view = _View(t=i18n.get_context(locale), urls=urls, staff=staff)
+    view = _View(t=i18n.get_context(locale), urls=urls, staff=staff, locale=locale)
     return _BUILDERS[notification_type](payload, view)
