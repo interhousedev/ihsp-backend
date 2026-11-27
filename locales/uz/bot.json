@@ -246,6 +246,7 @@
   "bot-resource-role": "{lesson} ga quyidagicha qoʻshish:",
   "bot-resource-too-large": "Fayl 20 MB dan katta, bot uni qabul qila olmaydi. Uni oʻqituvchilar portaliga yuklang.",
   "bot-set-drops": "GPA yoki semestr bahosi pasayganda xabar berish",
+  "bot-set-absences": "EMIS da dars qoldirilgani belgilanganda xabar berish",
   "bot-set-lms-nudge-review": "Kurslar: takrorlashni eslatish",
   "bot-set-lms-nudge-streak": "Kurslar: seriya xavf ostida boʻlsa ogohlantirish",
   "bot-set-lms-nudge-deadline": "Kurslar: sinf topshirigʻi tugashi yaqinlashganda ogohlantirish",

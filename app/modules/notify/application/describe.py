@@ -97,6 +97,15 @@ def _curator_exam_mark(p: dict[str, Any], v: _View) -> Description:
 
 
 def _lesson_absence(p: dict[str, Any], v: _View) -> Description:
+    if p.get("source") == "emis":  # absence EMIS reported: no period or teacher
+        body = v.t(
+            "notify-lesson-absence-emis-body",
+            date=fmt_date(p.get("date")),
+            subject=p.get("subject_name", ""),
+        )
+        return Description(
+            v.t("notify-lesson-absence-title"), body, f"{v.urls.sp}/attendance/"
+        )
     title = (
         "notify-lesson-absence-title-update"
         if p.get("update")

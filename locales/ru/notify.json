@@ -156,6 +156,7 @@
   "notify-lesson-absence-title": "Вам отмечено отсутствие",
   "notify-lesson-absence-title-update": "Отработка обновлена",
   "notify-lesson-absence-body": "{subject} ({teacher}), {date}, урок {period}.",
+  "notify-lesson-absence-emis-body": "{subject}, {date} (по данным EMIS).",
   "notify-lesson-absence-work-off": "Отработка: {text}",
   "notify-lesson-absence-due": "Срок: до {due}",
   "notify-curator-absences-title": "Пропуски в группе {group}, {date}",

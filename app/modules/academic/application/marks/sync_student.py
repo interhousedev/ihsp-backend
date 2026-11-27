@@ -13,6 +13,10 @@ from app.modules.academic.domain.marks.alerts import (
     curator_exam_alerts,
     low_exam_marks,
 )
+from app.modules.academic.domain.marks.emis_absences import (
+    emis_absence_drafts,
+    new_absent_dates,
+)
 from app.modules.academic.domain.marks.sync import (
     FetchedRatings,
     StudentSyncState,
@@ -27,6 +31,7 @@ from app.shared.contracts.emis import EmisAuthFailed, EmisSource
 from app.shared.contracts.identity import (
     IdentityCommands,
     IdentityDirectory,
+    UserPreferences,
     UserStatus,
 )
 from app.shared.ids import new_id
@@ -208,8 +213,9 @@ class SyncStudent:
         async with self._uow_factory() as uow:
             await uow.students.lock(state.user_id)
             result = await self._apply.execute(uow, state, fetched, locale=prefs.locale)
-            await self._save_attendance(uow, state.user_id, fetched)
+            absences = await self._save_attendance(uow, state, fetched, prefs)
             if mode != "backfill":
+                uow.notify(*absences)
                 uow.notify(
                     *build_alerts(
                         user_id=state.user_id,
@@ -230,22 +236,45 @@ class SyncStudent:
         counters.marks_new += len(result.added)
 
     async def _save_attendance(
-        self, uow: MarksUnitOfWork, user_id: UUID, fetched: list[FetchedRatings]
-    ) -> None:
-        """Store the attendance EMIS sent; subjects without any keep the rosters."""
+        self,
+        uow: MarksUnitOfWork,
+        state: StudentSyncState,
+        fetched: list[FetchedRatings],
+        prefs: UserPreferences,
+    ) -> list[NotificationDraft]:
+        """Store the attendance EMIS sent; return notices of its new absences.
+
+        Subjects without any attendance keep the rosters. A date is news only if
+        the stored row lacked it and it is at most two days old; the caller drops
+        the notices during a backfill.
+        """
         now = self._clock.now()
+        today = local_today(self._clock)
+        drafts: list[NotificationDraft] = []
         for item in fetched:
             ratings = item.ratings
             if ratings.absent_dates is None and ratings.absence_total is None:
                 continue
+            subject = item.subject
+            previous = await uow.emis_attendance.absent_dates(
+                state.user_id, subject.subject_id, ratings.semester
+            )
+            drafts += emis_absence_drafts(
+                user_id=state.user_id,
+                prefs=prefs,
+                subject_id=subject.subject_id,
+                subject_name=subject.name,
+                dates=new_absent_dates(previous, ratings.absent_dates, today=today),
+            )
             await uow.emis_attendance.save(
-                user_id,
-                item.subject.subject_id,
+                state.user_id,
+                subject.subject_id,
                 ratings.semester,
                 absent_dates=ratings.absent_dates,
                 absence_total=ratings.absence_total,
                 at=now,
             )
+        return drafts
 
     async def _curator_alerts(
         self, uow: MarksUnitOfWork, user_id: UUID, added: list[AddedMark]

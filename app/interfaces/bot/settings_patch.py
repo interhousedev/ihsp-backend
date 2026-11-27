@@ -68,6 +68,10 @@ def _drops(prefs: UserPreferences, value: str) -> Patch:
     return {"alerts_drops": value == "1"}
 
 
+def _absences(prefs: UserPreferences, value: str) -> Patch:
+    return {"notify_absences": value == "1"}
+
+
 def _rating(field: str) -> Callable[[UserPreferences, str], Patch | None]:
     def build(prefs: UserPreferences, value: str) -> Patch | None:
         if value == OFF:
@@ -107,6 +111,7 @@ _RULES: dict[str, Callable[[UserPreferences, str], Patch | None]] = {
     "type": _type,
     "value": _value,
     "drops": _drops,
+    "absences": _absences,
     "gpa_below": _rating("alerts_gpa_below"),
     "sem_below": _rating("alerts_semester_mark_below"),
     "mark_below": _mark_below,

@@ -68,6 +68,7 @@ class PreferencesPatchBody(BaseModel):
     marks_values: list[int] | None = None
     marks_subject_ids: list[UUID] | None = None
     alerts_drops: bool | None = None
+    notify_absences: bool | None = None
     alerts_gpa_below: float | None = None
     alerts_semester_mark_below: float | None = None
     alerts_mark_below: int | None = None

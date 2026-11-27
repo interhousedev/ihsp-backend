@@ -156,6 +156,7 @@
   "notify-lesson-absence-title": "Sizga dars qoldirgan deb belgilandi",
   "notify-lesson-absence-title-update": "Qayta topshirish topshirig'i yangilandi",
   "notify-lesson-absence-body": "{subject} ({teacher}), {date}, {period}-dars.",
+  "notify-lesson-absence-emis-body": "{subject}, {date} (EMIS maʼlumotlari boʻyicha).",
   "notify-lesson-absence-work-off": "Qayta topshirish topshirig'i: {text}",
   "notify-lesson-absence-due": "Muddat: {due} gacha",
   "notify-curator-absences-title": "{group} guruhida qoldirilgan darslar, {date}",

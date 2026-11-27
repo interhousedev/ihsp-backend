@@ -156,6 +156,7 @@
   "notify-lesson-absence-title": "You were marked absent",
   "notify-lesson-absence-title-update": "Work-off task updated",
   "notify-lesson-absence-body": "{subject} ({teacher}), {date}, period {period}.",
+  "notify-lesson-absence-emis-body": "{subject}, {date} (from EMIS).",
   "notify-lesson-absence-work-off": "Work-off task: {text}",
   "notify-lesson-absence-due": "Due by {due}",
   "notify-curator-absences-title": "Absences in {group}, {date}",
