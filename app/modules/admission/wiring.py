@@ -379,10 +379,16 @@ def build(
         async with uow_factory() as uow:
             return await uow.orgs.get(org_id) is not None
 
-    opportunities = OpportunityService(
-        uow_factory, access, deps.clock, lms_courses, deps.rate_limiter, org_exists
-    )
     mirror = media_mirror or build_media_mirror(deps.settings)
+    opportunities = OpportunityService(
+        uow_factory,
+        access,
+        deps.clock,
+        lms_courses,
+        deps.rate_limiter,
+        org_exists,
+        mirror=mirror,
+    )
     curators = CatalogProposalService(uow_factory, deps.clock)
     intake = OpportunityIntake(
         model, texts, web_search=web_search, profile_of=profile_of
@@ -633,7 +639,7 @@ def build(
             curators.can_review,
             deps.clock,
         ),
-        orgs=OrgService(uow_factory, opportunities, deps.clock),
+        orgs=OrgService(uow_factory, opportunities, deps.clock, mirror=mirror),
         opportunity_comments=OppCommentService(
             uow_factory, opportunities, deps.clock, identity
         ),

@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from uuid import UUID
 
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.application.media_mirroring import https_probe
 from app.modules.admission.application.opportunities import OpportunityService
 from app.modules.admission.domain.errors import (
     AdmissionConflictError,
@@ -12,6 +13,7 @@ from app.modules.admission.domain.errors import (
     AdmissionNotFoundError,
 )
 from app.modules.admission.domain.orgs import Organization, OrgKind
+from app.modules.admission.ports.media_mirror import MediaMirror
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.base_error import ValidationFailedError
 from app.shared.clock import Clock
@@ -26,11 +28,13 @@ class OrgService:
         uow_factory: UowFactory,
         opportunities: OpportunityService,
         clock: Clock,
+        mirror: MediaMirror | None = None,
     ) -> None:
-        """Keep the collaborators."""
+        """Keep the collaborators; `mirror` copies logos into our storage."""
         self._uow = uow_factory
         self._opps = opportunities
         self._clock = clock
+        self._mirror = mirror
 
     def _require(self, ctx: AdmissionContext) -> None:
         if not self._opps.can_moderate(ctx):
@@ -87,6 +91,7 @@ class OrgService:
             country=country,
         )
         self._validate(org)
+        org = dataclasses.replace(org, logo_url=await self._stored(org.logo_url))
         async with self._uow() as uow:
             saved = await uow.orgs.save(org)
             await uow.commit()
@@ -103,6 +108,10 @@ class OrgService:
                 raise AdmissionNotFoundError()
             org = dataclasses.replace(current, **changes)  # type: ignore[arg-type]
             self._validate(org)
+            if "logo_url" in changes:
+                org = dataclasses.replace(
+                    org, logo_url=await self._stored(org.logo_url)
+                )
             saved = await uow.orgs.save(org)
             await uow.commit()
         return saved
@@ -119,8 +128,16 @@ class OrgService:
             await uow.orgs.delete(org_id)
             await uow.commit()
 
-    @staticmethod
-    def _validate(org: Organization) -> None:
-        bad = org.problems()
+    async def _stored(self, url: str | None) -> str | None:
+        """The storage copy of a logo; external images are blocked by the apps' CSP."""
+        if not url or self._mirror is None:
+            return url
+        return await self._mirror.mirror(url)
+
+    def _validate(self, org: Organization) -> None:
+        probe = dataclasses.replace(
+            org, logo_url=https_probe(org.logo_url, self._mirror)
+        )
+        bad = probe.problems()
         if bad:
             raise ValidationFailedError(params={"field": bad[0]})

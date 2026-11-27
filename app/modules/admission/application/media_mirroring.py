@@ -21,3 +21,13 @@ async def mirror_media(
         if isinstance(url, str) and url:
             out[key] = await mirror.mirror(url)
     return out
+
+
+def https_probe(url: str | None, mirror: MediaMirror | None) -> str | None:
+    """`url` as https for validation when it is in our storage, else unchanged.
+
+    Our storage is plain http in development; its URLs pass the https checks.
+    """
+    if url is None or mirror is None or not url.startswith(mirror.own_prefix):
+        return url
+    return "https://" + url.split("://", 1)[1]
