@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.modules.academic.application.excuses.excuse_status import ExcuseStatusQuery
+from app.modules.academic.infrastructure.curriculum_topics.refresher import (
+    RefreshCurriculumTopics,
+)
 from app.modules.academic.wiring_assessments import (
     AssessmentServices,
     build_assessments,
@@ -64,6 +67,7 @@ class AcademicModule:
     teaching: TeachingServices = _NOT_BUILT
     excuses: ExcuseServices = _NOT_BUILT
     day_blocks: DayBlockServices = _NOT_BUILT
+    curriculum_topics: RefreshCurriculumTopics = _NOT_BUILT
 
     @property
     def excuse_status(self) -> ExcuseStatusQuery:

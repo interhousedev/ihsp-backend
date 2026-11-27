@@ -1,5 +1,6 @@
 """Store a group's EMIS curriculum, fill subject names and create missing terms."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Literal
 from uuid import UUID
@@ -77,6 +78,7 @@ class SyncGroupCurriculum:
         uow_factory: UowFactory,
         emis: EmisSource,
         identity: IdentityDirectory,
+        after_sync: Callable[[], Awaitable[object]] | None = None,
         clock: Clock,
     ) -> None:
         """Store the dependencies."""
@@ -84,6 +86,7 @@ class SyncGroupCurriculum:
         self.emis = emis
         self.identity = identity
         self.clock = clock
+        self.after_sync = after_sync
 
     async def ensure(
         self, group_id: UUID, *, force: bool = False
@@ -132,6 +135,8 @@ class SyncGroupCurriculum:
             names_filled=filled,
             terms_created=created,
         )
+        if self.after_sync is not None:
+            await self.after_sync()
         return CurriculumSyncResult("synced", group_id, subjects, filled, created)
 
     # - - - EMIS - - -
