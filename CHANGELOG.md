@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.15.1] - 2026-11-28
+
+### Security
+
+- The image picks up the Debian `libzstd1` fix for CVE-2026-124851 (the 1.15.0 image build stopped at the Trivy gate and was not published).
+
 ## [1.15.0] - 2026-11-28
 
 Migrations `academic_0016` to `academic_0018`, `activities_0001` to `activities_0004`, `admission_0069` to `admission_0070`, `lms_0010` to `lms_0014`, `media_0001`, `notebooks_0017` to `notebooks_0018` and `notify_0023` to `notify_0024` run forward only.
