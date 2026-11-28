@@ -14,6 +14,7 @@ from app.modules.files.ports.storage import ObjectInfo, ObjectStorage
 from app.modules.files.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor
 from app.shared.clock import Clock
+from app.shared.contracts.files import FileScope
 from app.shared.tasks import TaskKicker
 
 import structlog
@@ -46,6 +47,19 @@ class CompleteUpload:
         """Accept the upload (processing) or reject it; repeated calls are safe."""
         async with self._uow_factory() as uow:
             file = require_owned(await uow.files.get(file_id), actor)
+        return await self._complete(file)
+
+    async def execute_club(self, file_id: UUID) -> FileView:
+        """Complete a club file; the activities module has authorised the caller."""
+        async with self._uow_factory() as uow:
+            file = await uow.files.get(file_id)
+        if file is None or file.scope != FileScope.CLUB:
+            raise StoredFileNotFoundError()
+        return await self._complete(file)
+
+    async def _complete(self, file: StoredFile) -> FileView:
+        """Verify a pending file and save the verdict."""
+        file_id = file.id
         if file.status != FileStatus.PENDING:
             return await self._views.build_one(file)
         reason = await self._verify(file)

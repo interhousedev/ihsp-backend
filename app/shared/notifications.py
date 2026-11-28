@@ -84,6 +84,8 @@ class NotificationType(StrEnum):
     DRAFT_INVITE = "draft_invite"
     POSITION_APPLICATION_RESULT = "position_application_result"
     CLUB_OWNER_GRADUATING = "club_owner_graduating"
+    HOMEWORK_SUBMITTED = "homework_submitted"
+    HOMEWORK_REVIEWED = "homework_reviewed"
 
 
 @dataclass(frozen=True, slots=True)

@@ -19,6 +19,7 @@ class FileScope(StrEnum):
     MAIL = "mail"
     SYSTEM = "system"
     LIBRARY = "library"
+    CLUB = "club"
 
 
 class FilePurpose(StrEnum):
@@ -37,6 +38,7 @@ class FilePurpose(StrEnum):
     ADMISSION_DOCUMENT = "admission_document"
     LMS_AI_REVIEW = "lms_ai_review"
     LMS_CAPTIONS = "lms_captions"
+    CLUB_MEDIA = "club_media"
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,6 +129,15 @@ class OutlineEntry:
     page: int | None
     href: str | None
     level: int
+
+
+@dataclass(frozen=True, slots=True)
+class PresignedPut:
+    """A presigned PUT the client sends the bytes to."""
+
+    url: str
+    headers: dict[str, str]
+    method: str = "PUT"
 
 
 class FilesApi(Protocol):
@@ -241,6 +252,47 @@ class FilesApi(Protocol):
         confidential: bool = False,
     ) -> FileRef:
         """Store bytes as a new file."""
+        ...
+
+    async def request_upload(
+        self,
+        *,
+        owner_id: UUID,
+        scope: FileScope,
+        purpose: FilePurpose,
+        name: str,
+        size: int,
+        content_type: str,
+        sha256_b64: str,
+        max_bytes: int,
+    ) -> tuple[UUID, PresignedPut]:
+        """Reserve a pending file for ``owner_id`` and return its presigned PUT.
+
+        Only for ``FilePurpose.CLUB_MEDIA``: the caller (activities) has authorised
+        the upload and counts its own quota; no per-actor quota applies. ``max_bytes``
+        is the per-file ceiling chosen by the caller.
+        """
+        ...
+
+    async def complete_upload(self, file_id: UUID) -> FileRef:
+        """Verify the uploaded object of a file reserved with ``request_upload``.
+
+        Checks size, checksum and sniffed type; the file becomes ``processing`` (then
+        ``ready``) or ``rejected``. Repeated calls are safe.
+        """
+        ...
+
+    async def store_path(
+        self,
+        *,
+        owner_id: UUID,
+        scope: FileScope,
+        purpose: FilePurpose,
+        name: str,
+        path: str,
+        content_type: str,
+    ) -> FileRef:
+        """Store a file from disk (streamed, never held whole in memory)."""
         ...
 
     async def combine_images_to_pdf(

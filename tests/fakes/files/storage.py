@@ -106,6 +106,11 @@ class InMemoryStorage:
         """Write an object."""
         self.objects[key] = StoredObject(data, content_type)
 
+    async def put_path(self, key: str, path: str, content_type: str) -> None:
+        """Write an object from a file on disk."""
+        with open(path, "rb") as stream:
+            self.objects[key] = StoredObject(stream.read(), content_type)
+
     async def delete_many(self, keys: Sequence[str]) -> None:
         """Delete objects; missing keys are fine."""
         batch = list(dict.fromkeys(keys))

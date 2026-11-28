@@ -1047,6 +1047,40 @@ def _club_owner_graduating(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+def _homework_submitted(p: dict[str, Any], v: _View) -> Description:
+    late = v.t("notify-homework-submitted-late") if p.get("late") else ""
+    body = v.t(
+        "notify-homework-submitted-body",
+        student=p.get("student_name", ""),
+        group=p.get("group_name", ""),
+        subject=join_names(p.get("subject_names")),
+        date=fmt_date(p.get("lesson_date")),
+        late=late,
+        files=p.get("file_count", 0),
+    )
+    link = f"{v.urls.staff}/lessons/view/?id={p.get('lesson_id', '')}"
+    return Description(
+        v.t("notify-homework-submitted-title"),
+        body,
+        f"{link}#homework-submissions",
+    )
+
+
+def _homework_reviewed(p: dict[str, Any], v: _View) -> Description:
+    returned = p.get("review_status") == "returned"
+    lines = [f"{join_names(p.get('subject_names'))} · {fmt_date(p.get('lesson_date'))}"]
+    if not returned and p.get("grade") is not None:
+        lines.append(v.t("notify-homework-reviewed-grade", grade=p["grade"]))
+    if p.get("comment_preview"):
+        lines.append(str(p["comment_preview"]))
+    key = "returned" if returned else "graded"
+    return Description(
+        v.t(f"notify-homework-reviewed-{key}-title"),
+        "\n".join(lines),
+        f"{v.urls.sp}/homework/?lesson={p.get('lesson_id', '')}",
+    )
+
+
 _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.MARKS: _marks,
     NotificationType.RESULT_DROP: _result_drop,
@@ -1120,6 +1154,8 @@ _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.DRAFT_INVITE: _draft_invite,
     NotificationType.POSITION_APPLICATION_RESULT: _position_application_result,
     NotificationType.CLUB_OWNER_GRADUATING: _club_owner_graduating,
+    NotificationType.HOMEWORK_SUBMITTED: _homework_submitted,
+    NotificationType.HOMEWORK_REVIEWED: _homework_reviewed,
 }
 
 

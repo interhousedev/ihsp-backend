@@ -1,5 +1,6 @@
 """TelegramSender over one shared aiogram Bot (HTML parse mode)."""
 
+from collections.abc import Sequence
 from typing import Any
 
 from app.modules.notify.domain.telegram_errors import (
@@ -8,6 +9,7 @@ from app.modules.notify.domain.telegram_errors import (
     TelegramSendError,
     TelegramSendFailed,
 )
+from app.shared.contracts.notify import PhotoRef, SentPhoto
 
 import structlog
 from aiogram import Bot
@@ -23,7 +25,9 @@ from aiogram.types import (
     BufferedInputFile,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    InputMediaPhoto,
     LinkPreviewOptions,
+    MediaUnion,
     WebAppInfo,
 )
 
@@ -31,6 +35,7 @@ log = structlog.get_logger(__name__)
 
 _GONE_MARKERS = ("chat not found", "user not found", "peer_id_invalid")
 _NO_PREVIEW = LinkPreviewOptions(is_disabled=True)
+FILE_ID_CACHE_SIZE = 2000
 
 
 def create_bot(token: str) -> Bot:
@@ -77,6 +82,17 @@ class AiogramTelegramSender:
     def __init__(self, bot: Bot) -> None:
         """Use the process-wide bot."""
         self.bot = bot
+        self._file_ids: dict[str, str] = {}
+
+    def _source(self, photo: PhotoRef) -> str | BufferedInputFile:
+        """The cached Telegram file_id of this content, else the bytes to upload."""
+        cached = self._file_ids.get(photo.cache_key)
+        return cached or BufferedInputFile(photo.data, filename=photo.name)
+
+    def _remember(self, photo: PhotoRef, file_id: str) -> None:
+        if len(self._file_ids) >= FILE_ID_CACHE_SIZE:
+            self._file_ids.pop(next(iter(self._file_ids)))
+        self._file_ids[photo.cache_key] = file_id
 
     async def send_message(
         self,
@@ -115,6 +131,48 @@ class AiogramTelegramSender:
         except TelegramAPIError as exc:
             raise map_error(exc) from exc
         return message.message_id
+
+    async def send_photo(
+        self,
+        chat_id: int,
+        photo: PhotoRef,
+        caption_html: str | None = None,
+        buttons: list[list[dict[str, Any]]] | None = None,
+    ) -> SentPhoto:
+        """Send one photo, reusing the file_id Telegram gave for the same content."""
+        try:
+            message = await self.bot.send_photo(
+                chat_id,
+                self._source(photo),
+                caption=caption_html,
+                parse_mode=ParseMode.HTML,
+                reply_markup=keyboard(buttons),
+            )
+        except TelegramAPIError as exc:
+            raise map_error(exc) from exc
+        file_id = message.photo[-1].file_id if message.photo else ""
+        if file_id:
+            self._remember(photo, file_id)
+        return SentPhoto(message_id=message.message_id, file_id=file_id)
+
+    async def send_media_group(
+        self, chat_id: int, photos: Sequence[PhotoRef]
+    ) -> list[SentPhoto]:
+        """Send 2 to 10 photos as one album."""
+        media: list[MediaUnion] = [
+            InputMediaPhoto(media=self._source(photo)) for photo in photos
+        ]
+        try:
+            messages = await self.bot.send_media_group(chat_id, media)
+        except TelegramAPIError as exc:
+            raise map_error(exc) from exc
+        sent: list[SentPhoto] = []
+        for photo, message in zip(photos, messages, strict=False):
+            file_id = message.photo[-1].file_id if message.photo else ""
+            if file_id:
+                self._remember(photo, file_id)
+            sent.append(SentPhoto(message_id=message.message_id, file_id=file_id))
+        return sent
 
     async def delete_message(self, chat_id: int, message_id: int) -> None:
         """Delete a message; one that is already gone or too old is only logged."""

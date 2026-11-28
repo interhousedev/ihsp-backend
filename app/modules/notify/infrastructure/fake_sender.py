@@ -1,7 +1,10 @@
 """TelegramSender for TELEGRAM__MODE=fake: logs and keeps the last messages in Redis."""
 
 import json
+from collections.abc import Sequence
 from typing import Any
+
+from app.shared.contracts.notify import PhotoRef, SentPhoto
 
 import structlog
 from redis.asyncio import Redis
@@ -65,6 +68,42 @@ class FakeTelegramSender:
                 "caption_html": caption_html,
             }
         )
+
+    async def send_photo(
+        self,
+        chat_id: int,
+        photo: PhotoRef,
+        caption_html: str | None = None,
+        buttons: list[list[dict[str, Any]]] | None = None,
+    ) -> SentPhoto:
+        """Record a photo (name and size only)."""
+        message_id = await self._record(
+            {
+                "kind": "photo",
+                "chat_id": chat_id,
+                "filename": photo.name,
+                "size": len(photo.data),
+                "caption_html": caption_html,
+                "buttons": buttons,
+            }
+        )
+        return SentPhoto(message_id=message_id, file_id=f"fake:{photo.cache_key}")
+
+    async def send_media_group(
+        self, chat_id: int, photos: Sequence[PhotoRef]
+    ) -> list[SentPhoto]:
+        """Record an album (names and sizes only)."""
+        message_id = await self._record(
+            {
+                "kind": "media_group",
+                "chat_id": chat_id,
+                "photos": [{"filename": p.name, "size": len(p.data)} for p in photos],
+            }
+        )
+        return [
+            SentPhoto(message_id=message_id, file_id=f"fake:{p.cache_key}")
+            for p in photos
+        ]
 
     async def delete_message(self, chat_id: int, message_id: int) -> None:
         """Record a deletion."""

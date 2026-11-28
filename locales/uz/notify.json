@@ -312,5 +312,14 @@
   "club-transfer-bot-accepted": "Klub sizga topshirildi. Endi uni siz boshqarasiz.",
   "club-transfer-bot-declined": "Siz taklifni rad etdingiz.",
   "club-transfer-bot-not-available": "Bu taklif endi mavjud emas.",
-  "club-transfer-bot-already-answered": "Bu taklifga allaqachon javob berilgan."
+  "club-transfer-bot-already-answered": "Bu taklifga allaqachon javob berilgan.",
+  "notify-homework-submitted-title": "Yangi uy vazifasi topshirildi",
+  "notify-homework-submitted-body": "{student}, {group}\n{subject} · {date}{late}\nFayllar: {files}",
+  "notify-homework-submitted-late": " · kechikib",
+  "notify-homework-submitted-button": "Topshirilganlarni ochish",
+  "notify-homework-reviewed-graded-title": "Uy vazifasi tekshirildi",
+  "notify-homework-reviewed-returned-title": "Uy vazifasi qayta ishlash uchun qaytarildi",
+  "notify-homework-reviewed-grade": "Baho: {grade}",
+  "notify-homework-reviewed-button": "Uy vazifasini ochish",
+  "notify-homework-emis-file": "EMIS tizimidagi uy vazifasi fayli"
 }

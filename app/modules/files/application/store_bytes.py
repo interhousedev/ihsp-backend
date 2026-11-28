@@ -1,15 +1,19 @@
 """Store bytes uploaded through the server (Telegram bot, inbound mail, LMS)."""
 
+import asyncio
 import base64
 import hashlib
+import os
 from datetime import datetime, timedelta
 from uuid import UUID
 
 from app.modules.files.application.process_hook import process_hook
 from app.modules.files.domain.errors import QuotaExceededError, TypeNotAllowedError
 from app.modules.files.domain.policy import (
+    CLUB_PURPOSES,
     SNIFF_BYTES,
     FilesLimits,
+    check_purpose_extension,
     check_scope_purpose,
     check_size,
     detected_matches,
@@ -32,10 +36,22 @@ from app.shared.tasks import TaskKicker
 
 
 def _expires_at(scope: FileScope, now: datetime, days: int | None) -> datetime | None:
-    """Library files are kept for good (FILE-6 does not apply to them)."""
-    if days is None or scope == FileScope.LIBRARY:
+    """Library and club files are kept for good (FILE-6 does not apply)."""
+    if days is None or scope in (FileScope.LIBRARY, FileScope.CLUB):
         return None
     return now + timedelta(days=days)
+
+
+def _head_and_digest(path: str) -> tuple[bytes, bytes]:
+    """Return the first bytes (for sniffing) and the SHA-256 of the whole file."""
+    sha = hashlib.sha256()
+    head = b""
+    with open(path, "rb") as stream:
+        while chunk := stream.read(1024 * 1024):
+            if not head:
+                head = chunk[:SNIFF_BYTES]
+            sha.update(chunk)
+    return head, sha.digest()
 
 
 class StoreBytes:
@@ -107,6 +123,47 @@ class StoreBytes:
         await self._write(file, data)
         return file
 
+    async def execute_path(
+        self,
+        *,
+        owner_id: UUID,
+        scope: FileScope,
+        purpose: FilePurpose,
+        name: str,
+        path: str,
+    ) -> StoredFile:
+        """Store a club file from disk: hashed and written in chunks, not loaded."""
+        if purpose not in CLUB_PURPOSES:
+            raise TypeNotAllowedError(params={"purpose": purpose.value})
+        check_scope_purpose(scope, purpose)
+        clean = normalize_name(name)
+        check_purpose_extension(purpose, clean)
+        size = os.path.getsize(path)
+        check_size(size, self._limits.club_media_max_bytes)
+        head, digest = await asyncio.to_thread(_head_and_digest, path)
+        detected = await self._sniffer.sniff(head)
+        rule = rule_for_name(clean)
+        if rule is None or not detected_matches(rule, detected, head):
+            raise TypeNotAllowedError(params={"content_type": detected})
+        now = self._clock.now()
+        file_id = new_id()
+        file = StoredFile(
+            id=file_id,
+            owner_id=owner_id,
+            scope=scope,
+            purpose=purpose,
+            key=key_for(scope, month_label(now), file_id, key_extension(clean)),
+            name=clean,
+            content_type=rule.canonical,
+            byte_size=size,
+            checksum=base64.b64encode(digest).decode(),
+            status=self._first_status(purpose),
+            created_at=now,
+            updated_at=now,
+        )
+        await self._write(file, None, path)
+        return file
+
     @staticmethod
     def _first_status(purpose: FilePurpose) -> FileStatus:
         """Mail files are ready at once; others wait for text extraction."""
@@ -122,7 +179,11 @@ class StoreBytes:
         detected = await self._sniffer.sniff(head) if head else "application/x-empty"
         if purpose == FilePurpose.MAIL:
             return detected
-        check_size(len(data), self._limits.max_bytes_for(scope))
+        if purpose in CLUB_PURPOSES:
+            check_purpose_extension(purpose, name)
+            check_size(len(data), self._limits.club_media_max_bytes)
+        else:
+            check_size(len(data), self._limits.max_bytes_for(scope))
         rule = rule_for_name(name)
         if rule is None or not detected_matches(rule, detected, head):
             raise TypeNotAllowedError(params={"content_type": detected})
@@ -134,7 +195,9 @@ class StoreBytes:
             return None
         return await self._terms.current_term_id(local_today(self._clock))
 
-    async def _write(self, file: StoredFile, data: bytes) -> None:
+    async def _write(
+        self, file: StoredFile, data: bytes | None, path: str | None = None
+    ) -> None:
         """Check the quota under the advisory lock, write the object, insert the row."""
         quota = self._limits.quota_for(file.scope)
         async with self._uow_factory() as uow:
@@ -151,7 +214,11 @@ class StoreBytes:
                             "size": file.byte_size,
                         }
                     )
-            await self._storage.put(file.key, data, file.content_type)
+            if path is not None:
+                await self._storage.put_path(file.key, path, file.content_type)
+            else:
+                assert data is not None
+                await self._storage.put(file.key, data, file.content_type)
             await uow.files.add(file)
             if file.status == FileStatus.PROCESSING:
                 uow.after_commit(process_hook(self._kicker, file.id))

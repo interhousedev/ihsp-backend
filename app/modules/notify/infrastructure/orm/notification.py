@@ -118,6 +118,8 @@ class Notification(IdMixin, TimestampMixin, Base):
             "draft_invite",
             "position_application_result",
             "club_owner_graduating",
+            "homework_submitted",
+            "homework_reviewed",
             name="type",
             native_enum=False,
             create_constraint=True,

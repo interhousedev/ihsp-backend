@@ -66,6 +66,10 @@ class ObjectStorage(Protocol):
         """Write an object."""
         ...
 
+    async def put_path(self, key: str, path: str, content_type: str) -> None:
+        """Write an object from a file on disk without reading it all into memory."""
+        ...
+
     async def delete_many(self, keys: Sequence[str]) -> None:
         """Delete objects (missing keys are fine), 1000 per request."""
         ...
