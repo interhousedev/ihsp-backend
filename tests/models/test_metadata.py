@@ -72,6 +72,7 @@ EXPECTED_TABLES = {
     "admission.exam_dates",
     "admission.opportunities",
     "admission.opportunity_ai_plans",
+    "admission.opportunity_personal_entries",
     "admission.opportunity_plan_entries",
     "admission.opportunity_submissions",
     "admission.opportunity_taxonomy",
@@ -115,6 +116,7 @@ EXPECTED_TABLES = {
     "academic.lessons",
     "academic.homework_todos",
     "academic.homework_submissions",
+    "academic.teacher_homework_settings",
     "academic.marks",
     "academic.results",
     "academic.sync_runs",
@@ -155,6 +157,7 @@ EXPECTED_TABLES = {
     "academic.curriculum_topics",
     # day blocks, activities (clubs), lms levels and coach
     "academic.day_blocks",
+    "activities.activities_albums",
     "activities.activities_announcements",
     "activities.activities_club_courses",
     "activities.activities_club_profiles",
@@ -166,6 +169,9 @@ EXPECTED_TABLES = {
     "activities.activities_draft_signups",
     "activities.activities_event_reports",
     "activities.activities_events",
+    "activities.activities_media",
+    "activities.activities_media_blocks",
+    "activities.activities_media_reports",
     "activities.activities_memberships",
     "activities.activities_planner_items",
     "activities.activities_points_ledger",
@@ -329,10 +335,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """spec -> Models plus the later modules (300 tables)."""
+    """spec -> Models plus the later modules (306 tables)."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 300
+    assert len(EXPECTED_TABLES) == 306
     assert actual == EXPECTED_TABLES
 
 

@@ -757,6 +757,15 @@ class ActivitiesSettings(BaseModel):
     )
     """Turnstile siteverify endpoint."""
 
+    media_max_photo_bytes: int = Field(default=15 * 1024 * 1024, gt=0)
+    """Largest club photo upload (15 MiB); an admin may override it per club."""
+
+    media_max_video_bytes: int = Field(default=300 * 1024 * 1024, gt=0)
+    """Largest club video upload (300 MiB); an admin may override it per club."""
+
+    media_club_quota_bytes: int = Field(default=5 * 1024 * 1024 * 1024, gt=0)
+    """Storage one club's media may use in total (5 GiB); overridable per club."""
+
 
 class IdentitySettings(BaseModel):
     """Identity module: account lifecycle."""
