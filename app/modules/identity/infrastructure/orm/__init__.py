@@ -1,6 +1,7 @@
 """ORM models of the identity module (schema ``id``)."""
 
 from app.modules.identity.infrastructure.orm.audit_event import AuditEvent
+from app.modules.identity.infrastructure.orm.card_qr_token import StudentCardQrTokenRow
 from app.modules.identity.infrastructure.orm.factors import PasskeyRow, UserFactorsRow
 from app.modules.identity.infrastructure.orm.login_cue import LoginCueRow
 from app.modules.identity.infrastructure.orm.mcp_call_log import McpCallLogRow
@@ -19,6 +20,7 @@ __all__ = [
     "McpScopeOffer",
     "PasskeyRow",
     "PersonalTokenRow",
+    "StudentCardQrTokenRow",
     "Session",
     "TelegramLink",
     "User",

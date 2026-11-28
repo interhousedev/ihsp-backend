@@ -1,18 +1,25 @@
-"""The student card token: resolves before the TTL, 404 after, no owner id."""
+"""The student card: a permanent QR token, revoked by regeneration, no owner id."""
 
-import hashlib
 from dataclasses import asdict
+from datetime import date
 from types import SimpleNamespace
 from uuid import UUID, uuid4
 
 from app.modules.identity.application.student_card import StudentCardService
-from app.modules.identity.domain.errors import StudentCardNotFoundError
-from app.modules.identity.domain.student_card import course_of
-from app.modules.identity.infrastructure.redis.ticket_store import RedisTicketStore
+from app.modules.identity.domain.errors import (
+    StudentCardNotFoundError,
+    StudentCardWalletUnavailableError,
+)
+from app.modules.identity.domain.student_card import (
+    WalletPass,
+    academic_year_of,
+    course_of,
+)
 from app.shared.base_error import RateLimitedError
 from app.shared.contracts.emis import EmisName, EmisProfile
 from app.shared.rate_limit import RateLimiter
 from tests.fakes.clock import FixedClock
+from tests.fakes.student_card_tokens import FakeStudentCardTokens
 
 import pytest
 from fakeredis import FakeAsyncRedis
@@ -23,10 +30,10 @@ PHOTO_ID = uuid4()
 
 def _profile() -> EmisProfile:
     return EmisProfile(
-        emis_student_id=1,
+        emis_student_id=4711,
         first_name="Ali",
         last_name="Valiyev",
-        middle_name=None,
+        middle_name="Akmalovich",
         institution_id=1,
         group_emis_id=2,
         group_name="2TN2",
@@ -39,14 +46,16 @@ def _profile() -> EmisProfile:
 
 
 class _Directory:
-    def __init__(self, photo: bool) -> None:
+    def __init__(self, photo: bool, hidden: bool) -> None:
         self.photo = photo
+        self.hidden = hidden
 
     async def get_user(self, user_id: UUID) -> SimpleNamespace:
         return SimpleNamespace(
             first_name="Ali",
             last_name="Valiyev",
             photo_file_id=PHOTO_ID if self.photo else None,
+            hide_photo_from_public=self.hidden,
         )
 
 
@@ -73,52 +82,80 @@ class _Facts:
         self.calls.append((user_id, profile))
 
 
+class _Wallet:
+    def __init__(self, enabled: bool) -> None:
+        self.apple_enabled = enabled
+        self.google_enabled = enabled
+        self.passes: list[WalletPass] = []
+
+    def apple_pass(self, data: WalletPass) -> bytes:
+        self.passes.append(data)
+        return b"pkpass"
+
+    def google_save_url(self, data: WalletPass) -> str:
+        self.passes.append(data)
+        return "https://pay.google.com/gp/v/save/jwt"
+
+
+async def _no_logo() -> None:
+    return None
+
+
 def _service(
     redis: FakeAsyncRedis,
     clock: FixedClock,
+    *,
     photo: bool = True,
+    hidden: bool = False,
     facts: _Facts | None = None,
+    wallet: _Wallet | None = None,
+    tokens: FakeStudentCardTokens | None = None,
 ) -> StudentCardService:
     return StudentCardService(
-        directory=_Directory(photo),  # type: ignore[arg-type]
+        directory=_Directory(photo, hidden),  # type: ignore[arg-type]
         emis=_Emis(),  # type: ignore[arg-type]
         files=_Files(),  # type: ignore[arg-type]
         facts=facts or _Facts(),  # type: ignore[arg-type]
-        store=RedisTicketStore(redis),
+        tokens=tokens or FakeStudentCardTokens(),
+        wallet=wallet or _Wallet(False),
+        logo=_no_logo,
         limiter=RateLimiter(redis),
         clock=clock,
+        org_name="Academic Lyceum",
+        share_origin="https://share.example/",
     )
 
 
-async def test_issue_persists_emis_facts_of_the_student(
+async def test_card_shows_full_name_id_year_and_persists_facts(
     redis: FakeAsyncRedis, clock: FixedClock
 ) -> None:
     facts = _Facts()
-    service = _service(redis, clock, facts=facts)
-    await service.issue(USER_ID)
-    assert len(facts.calls) == 1
-    user_id, profile = facts.calls[0]
-    assert user_id == USER_ID
-    assert profile == _profile()
+    own = await _service(redis, clock, facts=facts).card(USER_ID)
+    assert own.card.full_name == "Valiyev Ali Akmalovich"
+    assert own.card.student_id == "4711"
+    assert own.card.academic_year == "2026–2027"
+    assert own.card.org_name == "Academic Lyceum"
+    assert own.card.speciality == "Texnik-dasturchi"
+    assert own.card.course == 2
+    assert own.wallet.apple is False and own.wallet.google is False
+    assert facts.calls == [(USER_ID, _profile())]
 
 
-async def test_token_resolves_before_ttl_and_not_after(
+async def test_token_is_permanent_until_regenerated(
     redis: FakeAsyncRedis, clock: FixedClock
 ) -> None:
     service = _service(redis, clock)
-    issued = await service.issue(USER_ID)
-    assert issued.refresh_in == 60
+    first = (await service.card(USER_ID)).qr_token
+    clock.advance(days=400)
+    assert (await service.card(USER_ID)).qr_token == first
+    assert (await service.lookup(first, "1.2.3.4")).group == "2TN2"
 
-    clock.advance(seconds=119)
-    shared = await service.lookup(issued.token, "1.2.3.4")
-    assert shared.card.group == "2TN2"
-    assert shared.card.course == 2
-    assert shared.card.lyceum_name is not None
-    assert shared.card.lyceum_name.ru == "Лицей"
-
-    clock.advance(seconds=2)
+    second = await service.regenerate(USER_ID)
+    assert second != first
+    assert (await service.card(USER_ID)).qr_token == second
     with pytest.raises(StudentCardNotFoundError):
-        await service.lookup(issued.token, "1.2.3.4")
+        await service.lookup(first, "1.2.3.4")
+    assert (await service.lookup(second, None)).student_id == "4711"
 
 
 async def test_unknown_token_is_not_found(
@@ -128,44 +165,70 @@ async def test_unknown_token_is_not_found(
         await _service(redis, clock).lookup("nope", None)
 
 
-async def test_only_hash_is_stored_and_public_card_has_no_owner(
+async def test_public_card_has_no_owner(
     redis: FakeAsyncRedis, clock: FixedClock
 ) -> None:
     service = _service(redis, clock)
-    issued = await service.issue(USER_ID)
-    keys = [k async for k in redis.scan_iter("student-card:*")]
-    assert keys == ["student-card:" + hashlib.sha256(issued.token.encode()).hexdigest()]
-    assert issued.token not in keys[0]
-
-    shared = await service.lookup(issued.token, None)
-    assert str(USER_ID) not in repr(asdict(shared))
-    assert "user_id" not in asdict(shared.card)
+    token = (await service.card(USER_ID)).qr_token
+    card = await service.lookup(token, None)
+    assert str(USER_ID) not in repr(asdict(card))
 
 
-async def test_photo_and_missing_photo(
+async def test_photo_missing_and_hidden_from_public(
     redis: FakeAsyncRedis, clock: FixedClock
 ) -> None:
     with_photo = _service(redis, clock)
-    issued = await with_photo.issue(USER_ID)
-    photo = await with_photo.photo(issued.token, None)
+    token = (await with_photo.card(USER_ID)).qr_token
+    photo = await with_photo.photo(token, None)
     assert (photo.data, photo.content_type) == (b"png", "image/png")
 
-    without = _service(redis, clock, photo=False)
-    issued = await without.issue(USER_ID)
-    assert (await without.lookup(issued.token, None)).card.has_photo is False
-    with pytest.raises(StudentCardNotFoundError):
-        await without.photo(issued.token, None)
+    for service in (
+        _service(redis, clock, photo=False),
+        _service(redis, clock, hidden=True),
+    ):
+        token = (await service.card(USER_ID)).qr_token
+        assert (await service.lookup(token, None)).has_photo is False
+        with pytest.raises(StudentCardNotFoundError):
+            await service.photo(token, None)
+
+    hidden = _service(redis, clock, hidden=True)
+    assert (await hidden.card(USER_ID)).card.has_photo is True
 
 
-async def test_eleventh_issue_in_a_minute_is_limited(
+async def test_eleventh_regeneration_in_an_hour_is_limited(
     redis: FakeAsyncRedis, clock: FixedClock
 ) -> None:
     service = _service(redis, clock)
     for _ in range(10):
-        await service.issue(USER_ID)
+        await service.regenerate(USER_ID)
     with pytest.raises(RateLimitedError):
-        await service.issue(USER_ID)
+        await service.regenerate(USER_ID)
+
+
+async def test_wallets_off_without_settings_and_on_with_them(
+    redis: FakeAsyncRedis, clock: FixedClock
+) -> None:
+    off = _service(redis, clock)
+    with pytest.raises(StudentCardWalletUnavailableError):
+        await off.apple_pass(USER_ID)
+    with pytest.raises(StudentCardWalletUnavailableError):
+        await off.google_save_url(USER_ID)
+
+    wallet = _Wallet(True)
+    on = _service(redis, clock, wallet=wallet)
+    token = (await on.card(USER_ID)).qr_token
+    assert await on.apple_pass(USER_ID) == b"pkpass"
+    assert (await on.google_save_url(USER_ID)).startswith("https://pay.google.com/")
+    data = wallet.passes[0]
+    assert data.verify_url == f"https://share.example/card/?t={token}"
+    assert data.photo == b"png"
+    assert data.serial == f"card-{USER_ID.hex}"
 
 
 def test_course_of_semester() -> None:
     assert [course_of(s) for s in (1, 2, 3, 4, None)] == [1, 1, 2, 2, None]
+
+
+def test_academic_year_turns_on_first_of_september() -> None:
+    assert academic_year_of(date(2026, 8, 31)) == "2025–2026"
+    assert academic_year_of(date(2026, 9, 1)) == "2026–2027"

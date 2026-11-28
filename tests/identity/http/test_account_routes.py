@@ -91,7 +91,7 @@ async def test_patch_preferences_merges_and_returns_the_document(api: Api) -> No
     assert cleared.json()["theme"] == "dark"
 
 
-async def test_hide_photo_from_classmates_is_off_by_default_and_toggles(
+async def test_hide_photo_from_public_is_off_by_default_and_toggles(
     api: Api,
 ) -> None:
     """The my-group photo opt-out is stored in the preferences."""
@@ -100,17 +100,17 @@ async def test_hide_photo_from_classmates_is_off_by_default_and_toggles(
 
     fresh = await api.client.get(ME)
     on = await api.client.patch(
-        f"{ME}/preferences", json={"hide_photo_from_classmates": True}
+        f"{ME}/preferences", json={"hide_photo_from_public": True}
     )
     after = await api.client.get(ME)
     off = await api.client.patch(
-        f"{ME}/preferences", json={"hide_photo_from_classmates": False}
+        f"{ME}/preferences", json={"hide_photo_from_public": False}
     )
 
-    assert fresh.json()["preferences"]["hide_photo_from_classmates"] is False
-    assert on.json()["hide_photo_from_classmates"] is True
-    assert after.json()["preferences"]["hide_photo_from_classmates"] is True
-    assert off.json()["hide_photo_from_classmates"] is False
+    assert fresh.json()["preferences"]["hide_photo_from_public"] is False
+    assert on.json()["hide_photo_from_public"] is True
+    assert after.json()["preferences"]["hide_photo_from_public"] is True
+    assert off.json()["hide_photo_from_public"] is False
 
 
 async def test_push_notifications_are_on_by_default_and_can_be_switched_off(

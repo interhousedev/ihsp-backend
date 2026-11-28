@@ -1,17 +1,17 @@
-"""The digital student card: what it shows and how its share token is stored."""
+"""The digital student card: what it shows and its permanent QR token."""
 
-import hashlib
+import secrets
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date
 from uuid import UUID
 
-CARD_TTL_SECONDS = 120
-CARD_REFRESH_SECONDS = 60
+TOKEN_BYTES = 24
+"""Random bytes of a QR token (32 URL-safe characters)."""
 
 
 @dataclass(frozen=True, slots=True)
 class LyceumName:
-    """The institution name in the three languages."""
+    """The institution name in the three languages, as EMIS gives it."""
 
     uz: str
     ru: str
@@ -24,39 +24,51 @@ class StudentCard:
 
     first_name: str
     last_name: str
+    middle_name: str | None
+    student_id: str | None
     group: str | None
     course: int | None
+    academic_year: str
+    org_name: str
     lyceum_name: LyceumName | None
     direction: str | None
     speciality: str | None
     has_photo: bool
 
-
-@dataclass(frozen=True, slots=True)
-class IssuedToken:
-    """A fresh share token and when it stops working."""
-
-    token: str
-    expires_at: datetime
-    refresh_in: int
+    @property
+    def full_name(self) -> str:
+        """Surname, name and patronymic, as on a paper card."""
+        parts = (self.last_name, self.first_name, self.middle_name or "")
+        return " ".join(part for part in parts if part)
 
 
 @dataclass(frozen=True, slots=True)
-class SharedCard:
-    """A card seen through a token: the owner is never part of it."""
+class WalletAvailability:
+    """Which wallets the server can issue a pass for."""
+
+    apple: bool
+    google: bool
+
+
+@dataclass(frozen=True, slots=True)
+class OwnCard:
+    """The student's own card with its QR token."""
 
     card: StudentCard
-    expires_at: datetime
+    qr_token: str
+    wallet: WalletAvailability
 
 
 @dataclass(frozen=True, slots=True)
-class CardSnapshot:
-    """The stored snapshot behind a token (the user id never leaves the server)."""
+class WalletPass:
+    """Everything a wallet pass is made of."""
 
-    user_id: UUID
-    photo_file_id: UUID | None
+    serial: str
     card: StudentCard
-    expires_at: datetime
+    verify_url: str
+    photo: bytes | None
+    logo: bytes | None
+    logo_url: str | None
 
 
 def course_of(semester: int | None) -> int | None:
@@ -66,6 +78,22 @@ def course_of(semester: int | None) -> int | None:
     return (semester + 1) // 2
 
 
-def token_key(token: str) -> str:
-    """Return the store key of a token: only the SHA-256 of it is ever stored."""
-    return "student-card:" + hashlib.sha256(token.encode()).hexdigest()
+def academic_year_of(today: date) -> str:
+    """Return the academic year of a day; a year starts on 1 September."""
+    start = today.year if today.month >= 9 else today.year - 1
+    return f"{start}–{start + 1}"
+
+
+def new_card_token() -> str:
+    """Return a fresh opaque QR token."""
+    return secrets.token_urlsafe(TOKEN_BYTES)
+
+
+def card_url(share_origin: str, token: str) -> str:
+    """Return the public verification address behind a QR token."""
+    return f"{share_origin.rstrip('/')}/card/?t={token}"
+
+
+def owner_key(user_id: UUID) -> str:
+    """Return the wallet serial of a student (stable across token changes)."""
+    return f"card-{user_id.hex}"

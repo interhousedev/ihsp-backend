@@ -2,14 +2,17 @@
 
 from app.interfaces.http.v1.me_student_card.handlers import (
     get_student_card,
-    issue_student_card_token,
+    get_student_card_apple_pass,
+    get_student_card_google_link,
+    regenerate_student_card_token,
 )
 from app.interfaces.http.v1.me_student_card.schemas import (
+    GoogleWalletLinkResponse,
     StudentCardResponse,
     StudentCardTokenResponse,
 )
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 
 router = APIRouter(prefix="/v1/me/student-card", tags=["student-card"])
 router.add_api_route(
@@ -17,7 +20,20 @@ router.add_api_route(
 )
 router.add_api_route(
     "/tokens",
-    issue_student_card_token,
+    regenerate_student_card_token,
     methods=["POST"],
     response_model=StudentCardTokenResponse,
+)
+router.add_api_route(
+    "/wallet/apple",
+    get_student_card_apple_pass,
+    methods=["GET"],
+    response_class=Response,
+    responses={200: {"content": {"application/vnd.apple.pkpass": {}}}},
+)
+router.add_api_route(
+    "/wallet/google",
+    get_student_card_google_link,
+    methods=["POST"],
+    response_model=GoogleWalletLinkResponse,
 )

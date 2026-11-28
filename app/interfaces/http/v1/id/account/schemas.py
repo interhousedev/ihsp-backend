@@ -75,7 +75,7 @@ class PreferencesPatchBody(BaseModel):
     lessons_links_lead_min: int | None = None
     lessons_prompt_enabled: bool | None = None
     mail_forward_to_telegram: bool | None = None
-    hide_photo_from_classmates: bool | None = None
+    hide_photo_from_public: bool | None = None
     notify_push: bool | None = None
     limit_ai_tracing: bool | None = None
     today_cards: list[str] | None = None

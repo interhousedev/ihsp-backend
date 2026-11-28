@@ -1,7 +1,7 @@
 """Identity contracts (provider: identity module)."""
 
 import re
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -129,7 +129,7 @@ class UserPreferences(BaseModel):
     lessons_links_lead_min: int = 5
     lessons_prompt_enabled: bool = True
     mail_forward_to_telegram: bool = True
-    hide_photo_from_classmates: bool = False  # my-group hides the photo from peers
+    hide_photo_from_public: bool = False  # only the owner and staff see the photo
     notify_push: bool = True  # Web Push is a second channel next to Telegram
     # Langfuse keeps the text of the general chat only (web and Telegram)
     limit_ai_tracing: bool = False
@@ -177,21 +177,27 @@ class UserRef:
     locale: str
     emis_status: Literal["active", "needs_reauth"] | None
     photo_file_id: UUID | None = None
-    hide_photo_from_classmates: bool = False
+    hide_photo_from_public: bool = False
 
 
-def peer_photo_ids(viewer_id: UUID, users: dict[UUID, UserRef]) -> list[UUID]:
+def peer_photo_ids(
+    viewer_id: UUID,
+    users: dict[UUID, UserRef],
+    viewer_roles: Collection[Role] = (),
+) -> list[UUID]:
     """Return whose photo links the viewer may get, sorted by id.
 
     Blocked or inactive accounts never show a photo; a user who chose to hide their
-    photo from classmates shows it only to themselves. Every student-facing list of
-    other people must pick photo ids through this helper.
+    photo from the public shows it only to themselves and to staff (a viewer with
+    any role besides student). Every list of other people that carries photos must
+    pick photo ids through this helper.
     """
+    staff = any(role is not Role.STUDENT for role in viewer_roles)
     return [
         uid
         for uid in sorted(users, key=str)
         if users[uid].status is UserStatus.ACTIVE
-        and (uid == viewer_id or not users[uid].hide_photo_from_classmates)
+        and (staff or uid == viewer_id or not users[uid].hide_photo_from_public)
     ]
 
 
