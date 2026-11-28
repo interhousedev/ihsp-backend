@@ -75,7 +75,7 @@ _SOURCE_ROLES: Final[Mapping[SourceServerName, frozenset[Role]]] = {
     "lms": frozenset(
         {Role.TEACHER, Role.STUDENT, Role.LMS_ADMIN, Role.LMS_CREATOR, Role.ADMIN}
     ),
-    "teacher": frozenset({Role.TEACHER, Role.ADMIN}),
+    "teacher": frozenset({Role.TEACHER}),
 }
 # "app": the union of its sources; each tool is re-checked against its own source.
 ALLOWED_ROLES_BY_SERVER: Final[Mapping[ServerName, frozenset[Role]]] = {

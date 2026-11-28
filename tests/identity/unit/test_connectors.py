@@ -221,7 +221,7 @@ def test_scope_catalog_lists_every_server_with_presets(auth_world: World) -> Non
     }
     assert catalog["admin"].roles == [Role.ADMIN]
     assert len(catalog["admin"].scopes) == 6
-    assert catalog["teacher"].roles == [Role.ADMIN, Role.TEACHER]
+    assert catalog["teacher"].roles == [Role.TEACHER]
     assert {p.key for p in catalog["teacher"].presets} == {
         "daily-planner",
         "gradebook",

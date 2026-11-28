@@ -27,7 +27,8 @@ ALLOWED_SERVER_ROLES: dict[str, frozenset[Role]] = {
         {Role.TEACHER, Role.STUDENT, Role.LMS_ADMIN, Role.LMS_CREATOR, Role.ADMIN}
     ),
     "admin": frozenset({Role.ADMIN}),
-    "teacher": frozenset({Role.TEACHER, Role.ADMIN}),
+    # Teacher tools only for teachers: an administrator reads through "admin".
+    "teacher": frozenset({Role.TEACHER}),
 }
 # "app" serves the tools of its sources: any of their roles may connect.
 ALLOWED_SERVER_ROLES["app"] = frozenset().union(
