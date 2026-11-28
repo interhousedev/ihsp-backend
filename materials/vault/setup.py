@@ -120,6 +120,11 @@ def credentials(client: hvac.Client, role: str = ROLE) -> tuple[str, str]:
     return role_id, secret_id
 
 
+def emit_env(values: dict[str, str]) -> None:
+    """Write `KEY=value` lines to the stdout pipe consumed by prod_init.sh."""
+    sys.stdout.write("".join(f"{key}={value}\n" for key, value in values.items()))
+
+
 def main() -> int:
     """Run the bootstrap from the command line."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -137,15 +142,19 @@ def main() -> int:
         bot_role_id, bot_secret_id = credentials(client, BOT_ROLE)
         essay_role_id, essay_secret_id = credentials(client, ESSAY_ROLE)
         ai_role_id, ai_secret_id = credentials(client, AI_CONNECTOR_ROLE)
-        sys.stdout.write(
-            f"IHSP_VAULT__ROLE_ID={role_id}\n"
-            f"IHSP_VAULT__SECRET_ID={secret_id}\n"
-            f"IHSP_BOT_VAULT__ROLE_ID={bot_role_id}\n"
-            f"IHSP_BOT_VAULT__SECRET_ID={bot_secret_id}\n"
-            f"IHSP_ESSAY_VAULT__ROLE_ID={essay_role_id}\n"
-            f"IHSP_ESSAY_VAULT__SECRET_ID={essay_secret_id}\n"
-            f"IHSP_AI_CONNECTOR_VAULT__ROLE_ID={ai_role_id}\n"
-            f"IHSP_AI_CONNECTOR_VAULT__SECRET_ID={ai_secret_id}\n"
+        # Intentional: prod_init.sh reads these lines from our stdout pipe; this is the
+        # script's only output channel and nothing is sent to a logger.
+        emit_env(
+            {
+                "IHSP_VAULT__ROLE_ID": role_id,
+                "IHSP_VAULT__SECRET_ID": secret_id,
+                "IHSP_BOT_VAULT__ROLE_ID": bot_role_id,
+                "IHSP_BOT_VAULT__SECRET_ID": bot_secret_id,
+                "IHSP_ESSAY_VAULT__ROLE_ID": essay_role_id,
+                "IHSP_ESSAY_VAULT__SECRET_ID": essay_secret_id,
+                "IHSP_AI_CONNECTOR_VAULT__ROLE_ID": ai_role_id,
+                "IHSP_AI_CONNECTOR_VAULT__SECRET_ID": ai_secret_id,
+            }
         )
     return 0
 
