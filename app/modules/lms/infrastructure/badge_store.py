@@ -1,7 +1,7 @@
 """SQL adapters of the badge authoring and backfill ports."""
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 from uuid import UUID
 
@@ -161,7 +161,7 @@ class SqlEnrolmentFacts:
                         .limit(limit + 1)
                     )
                 ).all()
-            today: date = to_local(datetime.now().astimezone()).date()
+            today: date = to_local(datetime.now(UTC)).date()
             for user_id, completed_at in rows[:limit]:
                 facts = await uow.badges.facts(
                     user_id, course_id, sections, completed_at, today

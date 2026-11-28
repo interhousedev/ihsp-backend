@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 from app.modules.library.ports.stats_repository import StatsCounters
 from app.modules.library.ports.unit_of_work import UowFactory
-from app.shared.clock import Clock
+from app.shared.clock import Clock, local_today
 
 KEEP_DAYS = 2  # counters of today and yesterday stay, older ones are removed
 
@@ -22,7 +22,7 @@ class RollupStats:
 
     async def execute(self) -> int:
         """Roll up today and the two days before; returns the rows written."""
-        today = self.clock.now().date()  # the day the counters were written under
+        today = local_today(self.clock)  # the day the counters were written under
         written = 0
         for back in range(KEEP_DAYS, -1, -1):
             day = today - timedelta(days=back)

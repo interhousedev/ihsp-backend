@@ -1,6 +1,6 @@
 """Redis counter of the tokens the embedding calls spent today."""
 
-from app.shared.clock import Clock
+from app.shared.clock import Clock, local_today
 
 from redis.asyncio import Redis
 
@@ -18,7 +18,7 @@ class RedisTokenBudget:
         self.daily_limit = daily_limit
 
     def _key(self) -> str:
-        return f"vectors:tokens:{self.clock.now().date().isoformat()}"
+        return f"vectors:tokens:{local_today(self.clock).isoformat()}"
 
     async def remaining(self) -> int | None:
         """Tokens left for today; None when there is no limit."""

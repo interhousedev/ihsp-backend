@@ -56,6 +56,25 @@ class SqlStepStateRepository:
         )
         return {step_id: dict(cards or {}) for step_id, cards in rows}
 
+    async def cards_for_users(
+        self, user_ids: Sequence[UUID], step_ids: Sequence[UUID]
+    ) -> dict[UUID, dict[UUID, dict[str, Any]]]:
+        """Return the stored cards per user and step, one query for all users."""
+        if not user_ids or not step_ids:
+            return {}
+        rows = await self.session.execute(
+            select(
+                StepStateRow.user_id, StepStateRow.step_id, StepStateRow.cards
+            ).where(
+                StepStateRow.user_id.in_(user_ids),
+                StepStateRow.step_id.in_(step_ids),
+            )
+        )
+        result: dict[UUID, dict[UUID, dict[str, Any]]] = {}
+        for user_id, step_id, cards in rows:
+            result.setdefault(user_id, {})[step_id] = dict(cards or {})
+        return result
+
     async def completed_step_ids(
         self, user_id: UUID, step_ids: Sequence[UUID]
     ) -> set[UUID]:

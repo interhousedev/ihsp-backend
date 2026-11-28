@@ -14,6 +14,26 @@ from app.modules.lms.domain.learning.progress import percent
 from app.modules.lms.ports.learning.unit_of_work import LearningUnitOfWork
 
 
+async def current_progress_pct(
+    uow: LearningUnitOfWork,
+    gate: AudienceGate,
+    enrollment: Enrollment,
+    version: LiveVersion,
+) -> int:
+    """Return the progress against a version without storing anything.
+
+    The stored value when it was computed for this version, else the same
+    computation ``refresh_progress`` does, minus the writes and badges.
+    """
+    if enrollment.progress_version_id == version.id:
+        return enrollment.progress_pct
+    actor = await gate.actor_for(enrollment.user_id)
+    access = await gate.course(uow, actor, enrollment.course_id)
+    step_ids = access.readable(version.manifest.step_ids())
+    done = await uow.states.completed_step_ids(enrollment.user_id, step_ids)
+    return percent(len(done), len(step_ids))
+
+
 async def refresh_progress(
     uow: LearningUnitOfWork,
     gate: AudienceGate,

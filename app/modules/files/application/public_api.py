@@ -212,8 +212,11 @@ class FilesApiImpl:
         self, file_ids: Sequence[UUID], query: str, limit: int = 10
     ) -> list[dict[str, Any]]:
         """Search only these files; the caller has already decided they are allowed."""
-        for file_id in file_ids:
-            await self._refuse_confidential(file_id)
+        if file_ids:
+            async with self._uow_factory() as uow:
+                files = await uow.files.get_many(file_ids)
+            if any(file.confidential for file in files):
+                raise ConfidentialFileError()
         return await self._search_text.execute_in(file_ids, query, limit)
 
     async def store_bytes(

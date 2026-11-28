@@ -8,7 +8,7 @@ counters; `library:stats:readers:{YYYY-MM-DD}:{item_id}` set of user ids.
 from datetime import timedelta
 from uuid import UUID
 
-from app.shared.clock import Clock
+from app.shared.clock import Clock, local_today
 from app.shared.redis_util import wait
 
 import structlog
@@ -40,7 +40,7 @@ class RedisStatsRecorder:
         self.clock = clock
 
     def _day(self) -> str:
-        return self.clock.now().date().isoformat()
+        return local_today(self.clock).isoformat()
 
     async def opened(self, item_id: UUID, user_id: UUID | None) -> None:
         """Count one open of the item and remember the reader."""
