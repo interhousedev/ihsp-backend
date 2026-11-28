@@ -1,4 +1,8 @@
-"""The web chat assistant as the bot uses it: one ongoing chat per user."""
+"""The web chat assistant as the bot uses it: one history per user, web and bot.
+
+The bot continues the user's most recently active chat of their assistant (the
+top of the web chat list); `/new` starts a fresh one, which then is the latest.
+"""
 
 from collections.abc import AsyncIterator
 from typing import Any
@@ -52,16 +56,17 @@ class BotAssistant:
         self.widgets = widgets
 
     async def chat_for(self, actor: Actor, *, fresh: bool = False) -> UUID:
-        """The user's ongoing chat; a new one when there is none or `fresh`."""
-        if not fresh:
-            found = await self.store.chat_of(actor.user_id)
-            if found is not None:
+        """The user's latest chat; a new one when none, after `/new` or `fresh`."""
+        assistant = default_assistant(actor)
+        if not await self.store.take_new(actor.user_id) and not fresh:
+            latest = await self.ai.list_chats.execute(
+                actor=actor, assistant=assistant, cursor=None, limit=1
+            )
+            if latest.items:
+                found: UUID = latest.items[0].id
                 return found
-        item = await self.ai.create_chat.execute(
-            actor=actor, assistant=default_assistant(actor)
-        )
+        item = await self.ai.create_chat.execute(actor=actor, assistant=assistant)
         chat_id: UUID = item.id
-        await self.store.set_chat(actor.user_id, chat_id)
         return chat_id
 
     async def ask(
