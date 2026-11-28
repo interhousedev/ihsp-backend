@@ -17,6 +17,11 @@ from app.modules.academic.application.classwork.ports.attendance_reports import 
     AdminView,
     GroupView,
 )
+from app.modules.academic.domain.attendance_extra import (
+    EmisAbsentDate,
+    emis_extra,
+    extras_by_key,
+)
 from app.modules.academic.domain.classwork.audience_match import group_keys
 from app.modules.academic.domain.classwork.records import (
     ReportRow,
@@ -116,6 +121,23 @@ _PARAM_TYPES: dict[str, Any] = {
 }
 
 
+_EMIS_DATES = """
+SELECT x.student_id, s.group_id, x.subject_id, x.date,
+       (SELECT count(*) FROM academic.lessons l
+        WHERE l.status = 'scheduled' AND l.subject_id = x.subject_id
+          AND l.date = x.date
+          AND l.attendance_absent @> ARRAY[x.student_id]) AS platform
+FROM (
+  SELECT DISTINCT e.student_id, e.subject_id, d AS date
+  FROM academic.emis_attendance e
+  CROSS JOIN LATERAL unnest(e.absent_dates) AS d
+  WHERE d >= :start AND d <= :end
+) x
+JOIN academic.students s ON s.user_id = x.student_id
+WHERE TRUE {extra}
+"""
+
+
 def _statement(
     sql: str, params: dict[str, Any]
 ) -> tuple[sa.TextClause, dict[str, Any]]:
@@ -193,6 +215,12 @@ class SqlAttendanceReports:
             not_on_saturday(LessonRow.date),
         )
         data = StudentAttendanceData()
+        extras = await self._emis_dates(start, end, student_id=student_id)
+        by_subject: dict[UUID, int] = {}
+        for item in extras:
+            by_subject[item.subject_id] = by_subject.get(item.subject_id, 0) + (
+                emis_extra(item)
+            )
         for row in (await self.session.execute(per_subject)).all():
             data.subjects.append(
                 SubjectStat(
@@ -204,26 +232,94 @@ class SqlAttendanceReports:
                     lessons=row.lessons,
                 )
             )
-        data.days = [
-            (day, count) for day, count in (await self.session.execute(per_day)).all()
+        data.subjects = [
+            replace(s, absences=s.absences + n, lessons=s.lessons + n)
+            for s in data.subjects
+            for n in [by_subject.pop(s.subject_id, 0)]
         ]
+        for subject_id, n in by_subject.items():
+            if n == 0:
+                continue
+            found = (
+                await self.session.execute(
+                    sa.select(Subject.name, Subject.short_name).where(
+                        Subject.id == subject_id
+                    )
+                )
+            ).first()
+            if found is not None:
+                data.subjects.append(
+                    SubjectStat(
+                        subject_id=subject_id,
+                        names=_names(found.name),
+                        short=found.short_name,
+                        absences=n,
+                        excused=0,
+                        lessons=n,
+                    )
+                )
+        days: dict[dt.date, int] = dict(
+            (await self.session.execute(per_day)).tuples().all()
+        )
+        for item in extras:
+            extra = emis_extra(item)
+            if extra:
+                days[item.date] = days.get(item.date, 0) + extra
+        data.days = sorted(days.items())
         data.not_taken = int((await self.session.execute(not_taken)).scalar_one())
         data.missed = await SqlLessonReader(self.session).student_absences(
             student_id, start, end
         )
         return data
 
+    async def _emis_dates(
+        self,
+        start: dt.date,
+        end: dt.date,
+        *,
+        group_id: UUID | None = None,
+        student_id: UUID | None = None,
+    ) -> list[EmisAbsentDate]:
+        """EMIS absent dates in the range with the platform's absences of each."""
+        extra = ""
+        binds = [
+            sa.bindparam("start", start, type_=sa.Date),
+            sa.bindparam("end", end, type_=sa.Date),
+        ]
+        if group_id is not None:
+            extra += " AND s.group_id = :group"
+            binds.append(sa.bindparam("group", group_id, type_=sa.Uuid))
+        if student_id is not None:
+            extra += " AND x.student_id = :student"
+            binds.append(sa.bindparam("student", student_id, type_=sa.Uuid))
+        stmt = sa.text(_EMIS_DATES.format(extra=extra)).bindparams(*binds)
+        return [
+            EmisAbsentDate(
+                student_id=row.student_id,
+                group_id=row.group_id,
+                subject_id=row.subject_id,
+                date=row.date,
+                platform=int(row.platform),
+            )
+            for row in (await self.session.execute(stmt)).all()
+        ]
+
     async def absence_count(
         self, student_id: UUID, start: dt.date, end: dt.date
     ) -> int:
-        """Number of lessons the student was absent from between two dates."""
+        """Missed lessons between two dates, platform and EMIS counted once."""
         stmt = sa.select(sa.func.count()).where(
             LessonRow.status == "scheduled",
             LessonRow.date >= start,
             LessonRow.date <= end,
             has_uuid(LessonRow.attendance_absent, student_id),
         )
-        return int((await self.session.execute(stmt)).scalar_one())
+        platform = int((await self.session.execute(stmt)).scalar_one())
+        extra = sum(
+            emis_extra(row)
+            for row in await self._emis_dates(start, end, student_id=student_id)
+        )
+        return platform + extra
 
     # - - - Group and admin reports - - -
 
@@ -262,6 +358,11 @@ class SqlAttendanceReports:
             params["group"] = group_id
             params["group_keys"] = group_keys(group_id)
         entries = await self._entries(view, params, group_id is not None)
+        if view in ("student", "subject", "day", "group"):
+            dates = await self._emis_dates(start, end, group_id=group_id)
+            for key, extra in extras_by_key(dates, view).items():
+                absences, excused, lessons = entries.get(key, (0, 0, 0))
+                entries[key] = (absences + extra, excused, lessons + extra)
         not_taken = await self._not_taken(view, params, group_id)
         rows = [
             ReportRow(

@@ -21,7 +21,6 @@ class Feature(StrEnum):
     LMS = "lms"
     MAIL = "mail"
     PUSH = "push"
-    EMIS_SYNC = "emis_sync"
     LIBRARY = "library"
     WEB_SEARCH = "web_search"
     VECTOR_SEARCH = "vector_search"

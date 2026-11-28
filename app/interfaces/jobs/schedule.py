@@ -111,7 +111,6 @@ JOB_FEATURES: tuple[tuple[str, Feature], ...] = (
     ("lms.", Feature.LMS),
     ("ai.", Feature.AI_ASSISTANT),
     ("library.", Feature.LIBRARY),
-    ("academic.sync_all", Feature.EMIS_SYNC),
 )
 
 

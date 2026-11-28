@@ -127,8 +127,6 @@ FEATURE_PACKAGES: dict[str, Feature] = {
     f"{V1}.lms_ai_review": Feature.LMS,
     f"{V1}.lms_public": Feature.LMS,
     f"{V1}.push": Feature.PUSH,
-    f"{V1}.admin_sync": Feature.EMIS_SYNC,
-    f"{V1}.admin_student_sync": Feature.EMIS_SYNC,
     f"{V1}.course_certificates": Feature.LMS,
 }
 
