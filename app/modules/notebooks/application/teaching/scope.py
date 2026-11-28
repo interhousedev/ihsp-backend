@@ -25,3 +25,22 @@ class DirectoryTeachingScope:
         if subject is None:
             return False
         return group_id is None or any(g.group_id == group_id for g in subject.groups)
+
+
+class EmisTeachingScope:
+    """`SubjectTeaching` over the timetable: a teacher teaches the EMIS subject."""
+
+    def __init__(self, directory: TeachingDirectory) -> None:
+        """Bind the timetable directory."""
+        self.directory = directory
+
+    async def teaches(self, actor: Actor, emis_subject_id: int) -> bool:
+        """True for admins, and for teachers with a lesson of the EMIS subject."""
+        if actor.has(Role.ADMIN):
+            return True
+        if not actor.has(Role.TEACHER):
+            return False
+        return any(
+            s.edu_subject_id == emis_subject_id
+            for s in await self.directory.subjects(actor.user_id)
+        )

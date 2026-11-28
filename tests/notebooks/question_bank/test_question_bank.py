@@ -52,7 +52,11 @@ from app.shared.base_error import (
 )
 from app.shared.contracts.teacher_ai import QuestionItem
 from tests.factories import make_actor
-from tests.notebooks.question_bank.fakes import FakeQuestionBankStore, FakeTopicCatalog
+from tests.notebooks.question_bank.fakes import (
+    FakeQuestionBankStore,
+    FakeSubjectTeaching,
+    FakeTopicCatalog,
+)
 
 import pytest
 
@@ -72,7 +76,8 @@ def rig() -> SimpleNamespace:
         {PHYSICS: ("optics", "mechanics", "t"), MATH: ("optics",)}
     )
     return SimpleNamespace(
-        store=store, service=QuestionBankService(store, clock, catalog)
+        store=store,
+        service=QuestionBankService(store, clock, catalog, FakeSubjectTeaching()),
     )
 
 
@@ -446,3 +451,58 @@ async def test_only_owner_or_admin_edits_and_deletes(rig: SimpleNamespace) -> No
     await rig.service.delete(owner, first.id)
 
     assert rig.store.rows == {}
+
+
+async def test_save_inserts_all_new_questions_in_one_batch(
+    rig: SimpleNamespace,
+) -> None:
+    teacher = make_actor(Role.TEACHER)
+    await rig.service.save_generated(
+        teacher,
+        emis_subject_id=PHYSICS,
+        topic="optics",
+        questions=[
+            QuestionItem("a?", "1"),
+            QuestionItem("A?", "1"),
+            QuestionItem("b?", "2"),
+        ],
+    )
+
+    assert rig.store.batches == [2]
+
+
+async def test_teacher_of_another_subject_is_refused_everywhere() -> None:
+    outsider, physicist, admin = (
+        make_actor(Role.TEACHER),
+        make_actor(Role.TEACHER),
+        make_actor(Role.ADMIN),
+    )
+    store = FakeQuestionBankStore()
+    service = QuestionBankService(
+        store,
+        SimpleNamespace(now=lambda: NOW),
+        FakeTopicCatalog({PHYSICS: ("optics",)}),
+        FakeSubjectTeaching({physicist.user_id: {PHYSICS}, outsider.user_id: {MATH}}),
+    )
+    await service.save_generated(
+        physicist,
+        emis_subject_id=PHYSICS,
+        topic="optics",
+        questions=items(2),
+        visibility="subject",
+    )
+
+    with pytest.raises(ForbiddenError):
+        await service.save_generated(
+            outsider, emis_subject_id=PHYSICS, topic="optics", questions=items(1)
+        )
+    with pytest.raises(ForbiddenError):
+        await service.draw(outsider, emis_subject_id=PHYSICS, topic="optics", count=1)
+    with pytest.raises(ForbiddenError):
+        await service.topics(outsider, PHYSICS)
+    with pytest.raises(ForbiddenError):
+        await service.curriculum_topics(outsider, PHYSICS)
+    with pytest.raises(ForbiddenError):
+        await service.list_questions(outsider, emis_subject_id=PHYSICS)
+    _, total = await service.list_questions(admin, emis_subject_id=PHYSICS)
+    assert total == 2 and len(store.rows) == 2

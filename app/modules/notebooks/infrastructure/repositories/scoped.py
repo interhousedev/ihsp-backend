@@ -1,5 +1,6 @@
 """Session-per-call adapters: each call runs in its own committed transaction."""
 
+from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
@@ -74,10 +75,60 @@ class ScopedQuestionBank:
         async with self.sessionmaker.begin() as session:
             await SqlQuestionBankStore(session).delete(question_id)
 
-    async def list(self, emis_subject_id: int, topic: str | None) -> list[BankQuestion]:
-        """Every question of the subject (and topic)."""
+    async def add_many(self, questions: Sequence[BankQuestion]) -> None:
+        """Insert several questions in one transaction."""
+        async with self.sessionmaker.begin() as session:
+            await SqlQuestionBankStore(session).add_many(questions)
+
+    async def visible_texts(
+        self, emis_subject_id: int, topic: str, viewer_id: UUID
+    ) -> list[tuple[UUID, str]]:
+        """(id, text) of the topic's questions the viewer sees."""
         async with self.sessionmaker() as session:
-            return await SqlQuestionBankStore(session).list(emis_subject_id, topic)
+            return await SqlQuestionBankStore(session).visible_texts(
+                emis_subject_id, topic, viewer_id
+            )
+
+    async def visible_ids(
+        self,
+        emis_subject_id: int,
+        topic: str,
+        viewer_id: UUID,
+        difficulty: str | None,
+    ) -> list[UUID]:
+        """Ids of the viewer's visible questions, oldest first."""
+        async with self.sessionmaker() as session:
+            return await SqlQuestionBankStore(session).visible_ids(
+                emis_subject_id, topic, viewer_id, difficulty
+            )
+
+    async def get_many(self, ids: Sequence[UUID]) -> list[BankQuestion]:
+        """The questions with these ids, in order."""
+        async with self.sessionmaker() as session:
+            return await SqlQuestionBankStore(session).get_many(ids)
+
+    async def count_by_topic(
+        self, emis_subject_id: int, viewer_id: UUID
+    ) -> dict[str, int]:
+        """Visible question count per topic."""
+        async with self.sessionmaker() as session:
+            return await SqlQuestionBankStore(session).count_by_topic(
+                emis_subject_id, viewer_id
+            )
+
+    async def page(
+        self,
+        emis_subject_id: int,
+        topic: str | None,
+        viewer_id: UUID | None,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[BankQuestion], int]:
+        """One page, newest first, and the total."""
+        async with self.sessionmaker() as session:
+            return await SqlQuestionBankStore(session).page(
+                emis_subject_id, topic, viewer_id, limit, offset
+            )
 
 
 class ScopedTopicCatalog:

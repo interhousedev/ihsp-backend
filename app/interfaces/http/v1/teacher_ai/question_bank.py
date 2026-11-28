@@ -1,12 +1,17 @@
 """Question bank routes: a bank per subject (EMIS id) split by curriculum topic."""
 
-from dataclasses import asdict
-from typing import Annotated, Any
+from datetime import datetime
+from typing import Annotated
 from uuid import UUID
 
 from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_actor, get_container
-from app.modules.notebooks.domain.question_bank import Difficulty, Visibility
+from app.modules.notebooks.domain.question_bank import (
+    BankQuestion,
+    Difficulty,
+    Origin,
+    Visibility,
+)
 from app.shared.actor import Actor
 from app.shared.base_error import NotFoundError
 from app.shared.contracts.teacher_ai import QuestionItem
@@ -63,10 +68,62 @@ class EditBody(BaseModel):
     difficulty: Difficulty | None = None
 
 
-def _view(row: Any) -> dict[str, Any]:
-    return {
-        k: v for k, v in asdict(row).items() if k not in ("owner_id", "emis_subject_id")
-    }
+class BankQuestionOut(BaseModel):
+    """A stored question as the staff app reads it."""
+
+    id: UUID
+    topic: str
+    question: str
+    answer: str
+    options: list[str]
+    explanation: str | None
+    difficulty: Difficulty
+    origin: Origin
+    visibility: Visibility
+    created_at: datetime
+
+
+class PageOut(BaseModel):
+    """One page of questions and the total behind it."""
+
+    items: list[BankQuestionOut]
+    total: int
+
+
+class TopicCountOut(BaseModel):
+    """A curriculum topic with the questions the caller sees in it."""
+
+    topic: str
+    count: int
+
+
+class CurriculumTopicOut(BaseModel):
+    """A curriculum topic of the subject."""
+
+    topic: str
+    grade: int | None
+
+
+class SaveOut(BaseModel):
+    """How many questions were stored and how many were duplicates."""
+
+    saved: int
+    skipped: int
+
+
+def _view(row: BankQuestion) -> BankQuestionOut:
+    return BankQuestionOut(
+        id=row.id,
+        topic=row.topic,
+        question=row.question,
+        answer=row.answer,
+        options=list(row.options),
+        explanation=row.explanation,
+        difficulty=row.difficulty,
+        origin=row.origin,
+        visibility=row.visibility,
+        created_at=row.created_at,
+    )
 
 
 async def _emis_id(container: Container, subject_id: UUID) -> int:
@@ -77,27 +134,29 @@ async def _emis_id(container: Container, subject_id: UUID) -> int:
 
 
 @router.get("/subjects/{subject_id}/topics")
-async def topics(subject_id: UUID, actor: ActorDep, container: ContainerDep) -> Any:
+async def topics(
+    subject_id: UUID, actor: ActorDep, container: ContainerDep
+) -> list[TopicCountOut]:
     """Every topic of the subject with the number of questions the caller sees."""
     emis = await _emis_id(container, subject_id)
     counts = await container.notebooks.question_bank.topics(actor, emis)
-    return [{"topic": t, "count": n} for t, n in counts.items()]
+    return [TopicCountOut(topic=t, count=n) for t, n in counts.items()]
 
 
 @router.get("/subjects/{subject_id}/curriculum-topics")
 async def curriculum_topics(
     subject_id: UUID, actor: ActorDep, container: ContainerDep
-) -> Any:
+) -> list[CurriculumTopicOut]:
     """The EMIS curriculum topics of the subject, in plan order."""
     emis = await _emis_id(container, subject_id)
     names = await container.notebooks.question_bank.curriculum_topics(actor, emis)
-    return [{"topic": t, "grade": None} for t in names]
+    return [CurriculumTopicOut(topic=t, grade=None) for t in names]
 
 
 @router.post("/subjects/{subject_id}/questions", status_code=201)
 async def save(
     subject_id: UUID, body: SaveBody, actor: ActorDep, container: ContainerDep
-) -> Any:
+) -> SaveOut:
     """Store questions; ones the caller already sees are skipped."""
     emis = await _emis_id(container, subject_id)
     result = await container.notebooks.question_bank.save_generated(
@@ -112,13 +171,13 @@ async def save(
         origin="teacher" if body.visibility == "subject" else "ai",
         visibility=body.visibility,
     )
-    return {"saved": len(result.saved), "skipped": len(result.skipped)}
+    return SaveOut(saved=len(result.saved), skipped=len(result.skipped))
 
 
 @router.post("/subjects/{subject_id}/draw")
 async def draw(
     subject_id: UUID, body: DrawBody, actor: ActorDep, container: ContainerDep
-) -> Any:
+) -> list[BankQuestionOut]:
     """A random set of questions without repeats."""
     emis = await _emis_id(container, subject_id)
     rows = await container.notebooks.question_bank.draw(
@@ -129,10 +188,7 @@ async def draw(
         difficulty=body.difficulty,
         seed=body.seed,
     )
-    return [
-        {k: v for k, v in asdict(r).items() if k not in ("owner_id", "emis_subject_id")}
-        for r in rows
-    ]
+    return [_view(r) for r in rows]
 
 
 @router.put("/questions/{question_id}/visibility", status_code=204)
@@ -153,19 +209,19 @@ async def list_questions(
     topic: Annotated[str | None, Query(max_length=255)] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0)] = 0,
-) -> Any:
+) -> PageOut:
     """One page of the questions the caller sees, optionally of one topic."""
     emis = await _emis_id(container, subject_id)
     rows, total = await container.notebooks.question_bank.list_questions(
         actor, emis_subject_id=emis, topic=topic, limit=limit, offset=offset
     )
-    return {"items": [_view(r) for r in rows], "total": total}
+    return PageOut(items=[_view(r) for r in rows], total=total)
 
 
 @router.put("/questions/{question_id}")
 async def edit_question(
     question_id: UUID, body: EditBody, actor: ActorDep, container: ContainerDep
-) -> Any:
+) -> BankQuestionOut:
     """Rewrite a question the caller owns (an administrator may edit any)."""
     row = await container.notebooks.question_bank.edit(
         actor,
