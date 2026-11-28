@@ -86,6 +86,7 @@ def group_to_entity(row: GroupRow) -> Group:
         curator_id=row.curator_id,
         head_student_id=row.head_student_id,
         status=cast(Any, row.status),
+        hidden=row.hidden,
     )
 
 
@@ -105,6 +106,7 @@ def group_apply(row: GroupRow, group: Group) -> None:
     row.curator_id = group.curator_id
     row.head_student_id = group.head_student_id
     row.status = group.status
+    row.hidden = group.hidden
 
 
 def group_new_row(group: Group) -> GroupRow:

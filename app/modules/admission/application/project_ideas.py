@@ -1,7 +1,7 @@
 """Project ideas for a student: two web searches, one model call, a kept history."""
 
 import re
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import Any, Final
 from uuid import UUID
@@ -9,6 +9,7 @@ from uuid import UUID
 from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import AdmissionContext
 from app.modules.admission.application.review_checks import nfc
+from app.modules.admission.application.study_focus import load_study_focus
 from app.modules.admission.application.words import delimit, plain
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
@@ -23,6 +24,8 @@ from app.modules.admission.domain.project_ideas import (
     MAX_CHALLENGES,
     MAX_PROJECTS,
     MAX_STEPS,
+    WEEKS_MAX,
+    WEEKS_MIN,
     Analog,
     Brief,
     ProjectIdea,
@@ -33,6 +36,7 @@ from app.modules.admission.infrastructure.ai.prompts import project_ideas as pro
 from app.modules.admission.ports.ai import PromptSource, QuotaOf, StructuredAi
 from app.modules.admission.ports.consent import AI, PurposeConsents
 from app.modules.admission.ports.project_ideas import ProjectRunRepository
+from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.ai_tasks import AiTask
 from app.shared.brand import with_brand
 from app.shared.clock import Clock
@@ -104,12 +108,22 @@ def _analogs(values: Any, known: set[str]) -> tuple[Analog, ...]:
     return tuple(out)
 
 
+def _weeks(value: Any) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int):
+        return None
+    return value if WEEKS_MIN <= value <= WEEKS_MAX else None
+
+
 def clean_ideas(data: Any, known: set[str]) -> tuple[ProjectIdea, ...]:
-    """Keep valid, distinct projects; analog URLs only from the searched pages."""
+    """Keep valid, distinct projects; analog URLs only from the searched pages.
+
+    Ideas that name their result, their measure and a way to start come first,
+    so a vague one is the first to fall off the end of the list.
+    """
     doc = data if isinstance(data, dict) else {}
     seen: set[str] = set()
     out: list[ProjectIdea] = []
-    for raw in (doc.get("projects") or [])[:MAX_PROJECTS]:
+    for raw in doc.get("projects") or []:
         if not isinstance(raw, dict):
             continue
         title = _line(raw.get("title"), _TITLE_MAX)
@@ -136,23 +150,63 @@ def clean_ideas(data: Any, known: set[str]) -> tuple[ProjectIdea, ...]:
                         if t in HELP_TAGS
                     )
                 ),
+                deliverable=_line(raw.get("deliverable"), _LINE_MAX),
+                measure=_line(raw.get("measure"), _LINE_MAX),
+                why_you=_line(raw.get("why_you"), _LINE_MAX),
+                weeks=_weeks(raw.get("weeks")),
             )
         )
     if len(out) < _MIN_PROJECTS:
         raise AiInvalidOutputError()
-    return tuple(out)
+    out.sort(key=lambda p: not p.complete)
+    return tuple(out[:MAX_PROJECTS])
 
 
 def search_queries(brief: Brief) -> list[str]:
-    """Two web queries: ideas for the interests, and the same in Uzbekistan."""
+    """Two web queries for projects that already exist: anywhere, then at home.
+
+    They look for real things people built (the analogs), not for lists of
+    ideas: such lists only return the generic topics the student already knows.
+    """
     likes = " ".join(brief.likes.split())[:120]
     future = " ".join(brief.future_interest.split())[:120]
-    experience = " ".join(brief.experience.split())[:80]
     mix = f"{likes} {future}".strip()
     return [
-        f"{mix} {experience} student project ideas".strip(),
-        f"{mix} student project Uzbekistan",
+        f"{mix} project built by high school students results",
+        f"{mix} Uzbekistan Tashkent initiative startup community",
     ]
+
+
+ContextOf = Callable[[AdmissionContext], Awaitable[list[str]]]
+_ITEMS_SHOWN: Final = 8
+
+
+def student_context(uow_factory: UowFactory) -> ContextOf:
+    """Read what the platform already knows: grade, fields, things already done.
+
+    The lines join the brief, so an idea continues the student's real work
+    and does not repeat an activity that already exists.
+    """
+
+    async def read(ctx: AdmissionContext) -> list[str]:
+        async with uow_factory() as uow:
+            focus = await load_study_focus(uow, ctx.user_id)
+            items = await uow.items.list_for(ctx.user_id)
+        lines: list[str] = []
+        if ctx.grade is not None:
+            lines.append(f"[school grade] {ctx.grade}")
+        if focus.field_ids:
+            lines.append(f"[chosen fields of study] {', '.join(focus.labels('en'))}")
+        done = [
+            " at ".join(p for p in (i.title.strip(), i.organization.strip()) if p)
+            for i in items
+            if i.kind == "activity" and i.title.strip()
+        ][:_ITEMS_SHOWN]
+        if done:
+            lines.append(f"[already does] {'; '.join(done)}"[:900])
+        return lines
+
+    return read
 
 
 def brief_lines(brief: Brief, locale: str) -> list[str]:
@@ -185,6 +239,7 @@ class ProjectIdeaService:
         *,
         web_search: WebSearchGateway | None = None,
         profile_of: Any = None,
+        context_of: ContextOf | None = None,
     ) -> None:
         """Keep the collaborators and the reader of the soft weekly limit."""
         self._runs = runs
@@ -197,6 +252,7 @@ class ProjectIdeaService:
         self._limit = weekly_limit
         self._search = web_search
         self._profile_of = profile_of
+        self._context_of = context_of
 
     async def _owner(self, ctx: AdmissionContext) -> None:
         res = await self._access.resolve(ctx, ctx.user_id)
@@ -222,12 +278,13 @@ class ProjectIdeaService:
                 window_seconds=_WEEK,
             )
         sources, known = await self._web(brief, locale)
+        about = await self._context_of(ctx) if self._context_of else []
         data, model = await self._ai.json(
             task=AiTask.ADMIT_PROJECT_IDEAS,
             system=with_brand(
                 await self._prompts.text(AiTask.ADMIT_PROJECT_IDEAS, "system", locale)
             ),
-            user=delimit(brief_lines(brief, locale) + sources),
+            user=delimit(brief_lines(brief, locale) + about + sources),
             schema_name=prompt.SCHEMA_NAME,
             schema=prompt.SCHEMA,
             max_tokens=_TOKENS,

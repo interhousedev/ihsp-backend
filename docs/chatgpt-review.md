@@ -2,6 +2,12 @@
 
 Public test accounts for the review of the IHT ChatGPT app. They hold made-up data only: no real student, teacher or EMIS record is behind them, and the passwords are public on purpose.
 
+## Submission links
+
+- Privacy policy: `https://id.ihsu.uz/legal/privacy/`
+- Terms of service: `https://id.ihsu.uz/legal/terms/`
+- Combined connector: `https://mcp.ihsu.uz/app` (OAuth metadata at `https://mcp.ihsu.uz/.well-known/oauth-protected-resource/app`)
+
 ## Servers
 
 Each server is a separate connector. Add the URL, then sign in.

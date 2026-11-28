@@ -23,6 +23,9 @@ from app.interfaces.http.v1.admin_schedule.groups.handlers.get_group import get_
 from app.interfaces.http.v1.admin_schedule.groups.handlers.list_groups import (
     list_groups,
 )
+from app.interfaces.http.v1.admin_schedule.groups.handlers.set_group_hidden import (
+    set_group_hidden,
+)
 from app.interfaces.http.v1.admin_schedule.groups.handlers.set_head_student import (
     set_head_student,
 )
@@ -53,6 +56,12 @@ router.add_api_route(
 )
 router.add_api_route(
     "/{group_id}", update_group, methods=["PATCH"], response_model=GroupDetailResponse
+)
+router.add_api_route(
+    "/{group_id}/hidden",
+    set_group_hidden,
+    methods=["PUT"],
+    response_model=GroupDetailResponse,
 )
 router.add_api_route(
     "/{group_id}/head-student",

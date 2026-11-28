@@ -34,7 +34,10 @@ LOCALES: Final = ("en", "ru", "uz")
 
 HISTORY_KEEP: Final = 5
 """Runs kept per student: the latest and the few before it."""
-MAX_PROJECTS: Final = 15
+MAX_PROJECTS: Final = 8
+"""Ideas kept per run: a short list the student can read and compare."""
+WEEKS_MIN: Final = 2
+WEEKS_MAX: Final = 16
 MAX_ANALOGS: Final = 4
 MAX_CHALLENGES: Final = 5
 MAX_STEPS: Final = 6
@@ -99,6 +102,18 @@ class ProjectIdea:
     application_effect: str
     first_steps: tuple[str, ...]
     help_tags: tuple[str, ...]
+    deliverable: str = ""
+    """What exists when the project is finished: the thing a stranger can open."""
+    measure: str = ""
+    """The number or fact that shows it worked."""
+    why_you: str = ""
+    """Why it fits this student, in words taken from the brief."""
+    weeks: int | None = None
+
+    @property
+    def complete(self) -> bool:
+        """True when the idea names its result, its measure and a way to start."""
+        return bool(self.deliverable and self.measure and len(self.first_steps) >= 2)
 
 
 @dataclass(frozen=True, slots=True)

@@ -79,6 +79,10 @@ class ProjectOut(BaseModel):
     application_effect: str
     first_steps: list[str]
     help_tags: list[HelpTag]
+    deliverable: str = ""
+    measure: str = ""
+    why_you: str = ""
+    weeks: int | None = None
 
     @classmethod
     def of(cls, idea: ProjectIdea) -> "ProjectOut":
@@ -92,6 +96,10 @@ class ProjectOut(BaseModel):
             application_effect=idea.application_effect,
             first_steps=list(idea.first_steps),
             help_tags=list(idea.help_tags),
+            deliverable=idea.deliverable,
+            measure=idea.measure,
+            why_you=idea.why_you,
+            weeks=idea.weeks,
         )
 
 

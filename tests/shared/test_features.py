@@ -95,19 +95,18 @@ def test_only_router_packages_of_the_api_are_gated() -> None:
 
 
 def test_a_switched_off_feature_loses_its_cron_jobs() -> None:
-    """notebooks.*, mail.*, lms.*, ai.* and the EMIS sync follow their flag."""
+    """notebooks.*, mail.*, lms.* and ai.* follow their flag; the EMIS sync never."""
     settings = Settings(
         features={  # type: ignore[arg-type]
             "notebooks": False,
             "mail": False,
-            "emis_sync": False,
         }
     )
 
     names = {job.task_name for job in enabled_jobs(settings)}
 
     assert not any(name.startswith(("notebooks.", "mail.")) for name in names)
-    assert "academic.sync_all" not in names
+    assert "academic.sync_all" in names
     assert "lms.prune_revisions" in names
     assert "ai.purge_admin_chats" in names
     assert "notify.dispatch_due" in names

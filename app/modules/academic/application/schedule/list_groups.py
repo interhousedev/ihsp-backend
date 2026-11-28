@@ -14,8 +14,10 @@ class ListGroups:
         self.uow_factory = uow_factory
         self.identity = identity
 
-    async def execute(self, status: str | None = None) -> list[GroupItemData]:
-        """Return groups ordered by name, optionally of one status."""
+    async def execute(
+        self, status: str | None = None, *, include_hidden: bool = False
+    ) -> list[GroupItemData]:
+        """Return groups by name, optionally of one status; hidden on request."""
         async with self.uow_factory() as uow:
-            groups = await uow.groups.list_all(status)
+            groups = await uow.groups.list_all(status, include_hidden=include_hidden)
             return await build_group_items(uow, self.identity, groups)

@@ -91,8 +91,6 @@ async def confirm_delete(
     topic = await assistant.ai.telegram_topics.of_chat(chat_id)
     await assistant.ai.delete_chat.execute(actor=actor, chat_id=chat_id)
     await assistant.ai.telegram_topics.unlink(chat_id)
-    if await assistant.store.chat_of(actor.user_id) == chat_id:
-        await assistant.store.forget_chat(actor.user_id)
     if topic is not None:
         try:
             await bot.delete_forum_topic(origin.chat.id, topic.message_thread_id)

@@ -51,7 +51,7 @@ from app.modules.certificates.infrastructure.orm.course_certificate import (
     CoursePartnerRow,
     IssuedCourseCertificateRow,
 )
-from app.shared.clock import Clock
+from app.shared.clock import Clock, local_today
 from app.shared.contracts.course_certificates import CourseCertificateFacts
 from app.shared.contracts.files import FilePurpose, FilesApi, FileScope
 from app.shared.contracts.identity import IdentityDirectory
@@ -301,7 +301,7 @@ class CourseCertificates:
                 "name": (name or "").strip()[:120] or "Alisher Abdullayev",
                 "course": course.title if course else "",
                 "tier": settings.tiers[-1].label["en"],
-                "date": self._clock.now().date().strftime("%d.%m.%Y"),
+                "date": local_today(self._clock).strftime("%d.%m.%Y"),
                 "partner": partner["name"] if partner else "",
                 "code": "SAMPLE000000",
             },
@@ -640,7 +640,7 @@ class CourseCertificates:
             "name": "—",
             "course": course.title if course else "",
             "tier": settings.tiers[0].label["en"],
-            "date": self._clock.now().date().strftime("%d.%m.%Y"),
+            "date": local_today(self._clock).strftime("%d.%m.%Y"),
             "partner": partner["name"] if partner else "",
             "code": "SAMPLE000000",
         }

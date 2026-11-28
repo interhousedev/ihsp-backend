@@ -303,6 +303,21 @@ class SqlFileRepository:
         )
         return str((await self._session.execute(stmt)).scalar_one())
 
+    async def headlines(self, documents: Sequence[str], query: str) -> list[str]:
+        """Like ``headline`` for many documents, in one query."""
+        if not documents:
+            return []
+        tsquery = func.plainto_tsquery(_SIMPLE, query)
+        stmt = select(
+            *(
+                func.ts_headline(
+                    _SIMPLE, doc[:_HEADLINE_CHARS], tsquery, _HEADLINE_OPTIONS
+                )
+                for doc in documents
+            )
+        )
+        return [str(value) for value in (await self._session.execute(stmt)).one()]
+
     async def student_term_ids(self) -> list[UUID]:
         """Terms that still have live student files."""
         stmt = select(distinct(File.term_id)).where(

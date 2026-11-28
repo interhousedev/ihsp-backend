@@ -69,6 +69,7 @@ class GroupItemData:
     slug: str
     current_semester: int | None
     status: Literal["active", "archived"]
+    hidden: bool
     students_count: int
     subgroups_assigned: int
     unregistered_count: int
@@ -97,6 +98,7 @@ class GroupDetailData:
     slug: str
     current_semester: int | None
     status: Literal["active", "archived"]
+    hidden: bool
     students_count: int
     subgroups_assigned: int
     unregistered_count: int

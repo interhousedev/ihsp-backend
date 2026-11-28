@@ -13,7 +13,11 @@ from app.modules.academic.domain.schedule.school_days import WEEK_DAYS
 from app.modules.academic.domain.schedule.teacher_status import current_and_next
 from app.shared.actor import Actor
 from app.shared.clock import Clock
-from app.shared.contracts.identity import IdentityDirectory, TeacherContacts
+from app.shared.contracts.identity import (
+    IdentityDirectory,
+    TeacherContacts,
+    peer_photo_ids,
+)
 
 LOOKAHEAD_DAYS = 14
 
@@ -118,10 +122,13 @@ async def _assemble(
     identity: IdentityDirectory,
     by_teacher: dict[UUID, list[LessonView]],
     window: _Window,
+    actor: Actor,
 ) -> list[MyTeacherData]:
     """Build the teachers that exist, ordered by name; photos in one batch call."""
     users = await identity.get_users(list(by_teacher))
-    photos = await identity.photo_urls(list(users))
+    photos = await identity.photo_urls(
+        peer_photo_ids(actor.user_id, users, actor.roles)
+    )
     result: list[MyTeacherData] = []
     for teacher_id, views in by_teacher.items():
         user = users.get(teacher_id)
@@ -205,7 +212,7 @@ class GetMyTeachers:
         views = await self.reader.projected_for_student(
             actor.user_id, window.monday, window.last, locale
         )
-        return await _assemble(self.identity, _by_teacher(views), window)
+        return await _assemble(self.identity, _by_teacher(views), window, actor)
 
 
 class GetMyTeacher:
@@ -230,7 +237,7 @@ class GetMyTeacher:
         )
         # A teacher without lessons in the window still gets a (quiet) card.
         mine = {teacher_id: _by_teacher(views).get(teacher_id, [])}
-        found = await _assemble(self.identity, mine, window)
+        found = await _assemble(self.identity, mine, window, actor)
         if not found:
             raise TeacherNotFoundError(params={"teacher_id": str(teacher_id)})
         return found[0]

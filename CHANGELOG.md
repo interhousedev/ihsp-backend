@@ -4,6 +4,34 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-11-28
+
+Migrations `academic_0019`, `identity_0017` and `identity_0018` run forward only.
+
+### Added
+
+- Student card: a permanent QR token (`POST /v1/me/student-card/tokens` issues a new one and revokes the old), the full name with patronymic, speciality and the lyceum's full name; Apple Wallet (`GET /v1/me/student-card/wallet/apple`) and Google Wallet (`POST /v1/me/student-card/wallet/google`) passes once `IHSP_WALLET__*` credentials are set.
+- "Hide from public" for the face photo: it stays for recognition, other students see a placeholder.
+- Admin: hide a group (`PUT /v1/admin/groups/{group_id}/hidden`, `include_hidden` on the list); hidden groups leave lists, standings and schedules.
+- Lyceum rating (`GET /v1/me/rating`): 100 base points, plus certificates and marks, minus absences and work-offs (`IHSP_RATING__*`).
+- Activities: decline a join request or remove a member without a ban (`:decline`, `:remove`).
+
+### Changed
+
+- EMIS attendance always syncs; the `EMIS_SYNC` feature flag is removed.
+- The Telegram bot and the web app share one assistant chat history.
+- The question bank only shows subjects the teacher teaches and pages in SQL.
+
+### Fixed
+
+- An absence recorded in both EMIS and the platform for the same lesson counts once in admin and curator reports.
+- The combined activities leaderboard sums points per person.
+- Course student lists, file search and global search no longer make one query per item; daily stats use the school's local day.
+
+### Known issues
+
+- Wallet buttons stay hidden until Apple and Google signing credentials are configured.
+
 ## [1.15.2] - 2026-11-28
 
 ### Added

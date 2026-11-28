@@ -339,10 +339,17 @@ class VaultKeyRejectedError(ValidationFailedError):
 
 
 class StudentCardNotFoundError(NotFoundError):
-    """The student card token is unknown or expired."""
+    """The student card token is unknown or was replaced."""
 
     code = "student_card_not_found"
     message_key = "id-student-card-not-found"
+
+
+class StudentCardWalletUnavailableError(NotFoundError):
+    """The requested wallet is not configured on this server."""
+
+    code = "student_card_wallet_unavailable"
+    message_key = "id-student-card-wallet-unavailable"
 
 
 class InvitedRoleForbiddenError(ValidationFailedError):

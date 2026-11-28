@@ -296,6 +296,7 @@ class FakeMarks:
         self.mark_rows: list[MarkRef] = []
         self.gpas: dict[UUID, float | None] = {}
         self.gpa_calls: list[list[UUID]] = []
+        self.marks_for_subjects_calls: list[list[UUID]] = []
 
     async def subjects_summary(
         self, user_id: UUID, semester: int | None
@@ -310,6 +311,13 @@ class FakeMarks:
         end: dt.date | None,
     ) -> list[MarkRef]:
         return [m for m in self.mark_rows if subject_id in (None, m.subject_id)]
+
+    async def marks_for_subjects(
+        self, user_id: UUID, subject_ids: Sequence[UUID], limit: int
+    ) -> list[MarkRef]:
+        self.marks_for_subjects_calls.append(list(subject_ids))
+        found = [m for m in self.mark_rows if m.subject_id in subject_ids]
+        return sorted(found, key=lambda m: m.date, reverse=True)[:limit]
 
     async def results(self, user_id: UUID, semester: int | None) -> dict[str, Any]:
         return {}

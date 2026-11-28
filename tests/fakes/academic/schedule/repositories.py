@@ -156,10 +156,17 @@ class FakeGroupRepository:
             ):
                 raise ConflictError(support_details="ix_groups_slug_active")
 
-    async def list_all(self, status: str | None = None) -> list[Group]:
+    async def list_all(
+        self, status: str | None = None, *, include_hidden: bool = False
+    ) -> list[Group]:
         """Return groups by name."""
         groups = sorted(self.store.groups.values(), key=lambda g: g.name)
-        return [_copy(g) for g in groups if status is None or g.status == status]
+        return [
+            _copy(g)
+            for g in groups
+            if (status is None or g.status == status)
+            and (include_hidden or not g.hidden)
+        ]
 
     async def curated_by(self, teacher_id: UUID) -> list[Group]:
         """Return the active groups the teacher curates."""
@@ -167,7 +174,7 @@ class FakeGroupRepository:
         return [
             _copy(g)
             for g in groups
-            if g.curator_id == teacher_id and g.status == "active"
+            if g.curator_id == teacher_id and g.status == "active" and not g.hidden
         ]
 
 

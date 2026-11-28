@@ -6,7 +6,9 @@ from uuid import UUID
 
 from app.modules.lms.application.learning.attempt_presenter import number
 from app.modules.lms.application.learning.audience import AudienceGate
-from app.modules.lms.application.learning.progress_service import ensure_progress
+from app.modules.lms.application.learning.progress_service import (
+    current_progress_pct,
+)
 from app.modules.lms.application.learning.step_context import (
     load_course,
     staff_access,
@@ -55,26 +57,29 @@ class ListCourseStudents:
                 if course.live_version_id
                 else None
             )
-            now = self.clock.now()
             widgets: dict[UUID, list[LearningStudentWidgetResultView]] = {}
-            for enrollment in enrollments:
-                if version is not None:
-                    await ensure_progress(uow, self.gate, enrollment, version, now)
-                    cards = await uow.states.cards_by_step(
-                        enrollment.user_id, version.manifest.step_ids()
+            progress: dict[UUID, int] = {}
+            if version is not None:
+                cards = await uow.states.cards_for_users(
+                    [e.user_id for e in enrollments], version.manifest.step_ids()
+                )
+                for enrollment in enrollments:
+                    progress[enrollment.user_id] = await current_progress_pct(
+                        uow, self.gate, enrollment, version
                     )
-                    widgets[enrollment.user_id] = _widget_items(cards)
+                    widgets[enrollment.user_id] = _widget_items(
+                        cards.get(enrollment.user_id, {})
+                    )
             attempts: dict[UUID, list[Attempt]] = defaultdict(list)
             for attempt in await uow.attempts.list_submitted_for_course(course_id):
                 attempts[attempt.user_id].append(attempt)
-            await uow.commit()
         users = await self.identity.get_users([e.user_id for e in enrollments])
         students = [
             LearningCourseStudentView(
                 user=LearningPersonRefView(
                     id=user.id, first_name=user.first_name, last_name=user.last_name
                 ),
-                progress_pct=enrollment.progress_pct,
+                progress_pct=progress.get(enrollment.user_id, enrollment.progress_pct),
                 completed_at=enrollment.completed_at,
                 attempts=[_attempt_item(a) for a in attempts[enrollment.user_id]],
                 widget_results=widgets.get(enrollment.user_id, []),

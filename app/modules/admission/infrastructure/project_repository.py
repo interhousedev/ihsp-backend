@@ -34,6 +34,10 @@ def _idea(raw: dict[str, Any]) -> ProjectIdea:
         application_effect=raw["application_effect"],
         first_steps=tuple(raw["first_steps"]),
         help_tags=tuple(raw["help_tags"]),
+        deliverable=raw.get("deliverable", ""),
+        measure=raw.get("measure", ""),
+        why_you=raw.get("why_you", ""),
+        weeks=raw.get("weeks"),
     )
 
 

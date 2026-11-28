@@ -8,3 +8,8 @@ proxy_set_header X-Forwarded-For   $remote_addr;
 proxy_set_header X-Forwarded-Proto $scheme;
 proxy_set_header X-Forwarded-Host  $http_host;
 proxy_set_header Connection        "";
+# OAuth redirects carry Hydra challenges of several KB (ChatGPT sends long requests):
+# the default 4k header buffer answers them with 502 "upstream sent too big header".
+proxy_buffer_size 32k;
+proxy_buffers     8 32k;
+proxy_busy_buffers_size 64k;

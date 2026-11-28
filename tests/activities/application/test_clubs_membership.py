@@ -90,6 +90,50 @@ async def test_banned_member_cannot_rejoin(
         await world.services.memberships.join(student, club.id)
 
 
+async def test_declined_request_can_be_sent_again(
+    world: ActivitiesWorld, club: Club, owner: Actor, student: Actor
+) -> None:
+    await world.services.clubs.update(owner, club.id, join_policy="request")
+    await world.services.memberships.join(student, club.id)
+    m = await world.services.memberships.decline(owner, club.id, student.user_id)
+    assert m.status == "removed"
+    with pytest.raises(BaseError):
+        await world.services.memberships.decline(owner, club.id, student.user_id)
+    again = await world.services.memberships.join(student, club.id)
+    assert again.status == "requested"
+
+
+async def test_removed_member_can_rejoin_and_owner_stays(
+    world: ActivitiesWorld, club: Club, owner: Actor, student: Actor
+) -> None:
+    await world.services.clubs.update(owner, club.id, join_policy="request")
+    await world.services.memberships.join(student, club.id)
+    with pytest.raises(BaseError):
+        await world.services.memberships.remove(owner, club.id, student.user_id)
+    await world.services.memberships.approve(owner, club.id, student.user_id)
+    m = await world.services.memberships.remove(owner, club.id, student.user_id)
+    assert m.status == "removed"
+    members = await world.services.memberships.list(owner, club.id)
+    assert student.user_id not in {x.user_id for x in members if x.status == "active"}
+    assert (await world.services.memberships.join(student, club.id)).status in (
+        "requested",
+        "active",
+    )
+    with pytest.raises(BaseError):
+        await world.services.memberships.remove(owner, club.id, owner.user_id)
+
+
+async def test_plain_student_cannot_decline_or_remove(
+    world: ActivitiesWorld, club: Club, student: Actor
+) -> None:
+    other = world.add_student()
+    await world.services.memberships.join(other, club.id)
+    with pytest.raises(PermissionDeniedError):
+        await world.services.memberships.decline(student, club.id, other.user_id)
+    with pytest.raises(PermissionDeniedError):
+        await world.services.memberships.remove(student, club.id, other.user_id)
+
+
 async def test_idor_membership_of_another_club(
     world: ActivitiesWorld, club: Club, owner: Actor, su: Actor
 ) -> None:

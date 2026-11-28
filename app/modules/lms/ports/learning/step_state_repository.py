@@ -27,6 +27,12 @@ class StepStateRepository(Protocol):
         """Return the stored cards and block results of the user per step."""
         ...
 
+    async def cards_for_users(
+        self, user_ids: Sequence[UUID], step_ids: Sequence[UUID]
+    ) -> dict[UUID, dict[UUID, dict[str, Any]]]:
+        """Return the stored cards per user and step, one query for all users."""
+        ...
+
     async def touch_viewed(
         self, user_id: UUID, step_id: UUID, *, now: datetime, complete: bool
     ) -> StepState:

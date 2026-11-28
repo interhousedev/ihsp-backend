@@ -135,6 +135,7 @@ def make_group_data(name: str = "2TN2") -> GroupItemData:
         slug=name.lower(),
         current_semester=3,
         status="active",
+        hidden=False,
         students_count=25,
         subgroups_assigned=20,
         unregistered_count=2,

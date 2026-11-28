@@ -1,4 +1,7 @@
-"""The ongoing bot conversation of each user and the tokens of approval buttons.
+"""The `/new` request of each user and the tokens of approval buttons.
+
+The ongoing chat itself is not kept here: the bot continues the user's most
+recently active assistant chat, the same list the web shows.
 
 Redis in production; a dictionary when the container has no Redis (tests).
 """
@@ -20,7 +23,7 @@ def _text(value: bytes | str | None) -> str | None:
 
 
 class AssistantStore:
-    """Chat per user (no expiry, `/new` resets it) and pending call tokens."""
+    """The `/new` flag per user (no expiry) and pending call tokens."""
 
     def __init__(self, redis: Redis | None) -> None:
         """Use Redis when there is one."""
@@ -44,18 +47,17 @@ class AssistantStore:
             return
         await self.redis.delete(key)
 
-    async def chat_of(self, user_id: UUID) -> UUID | None:
-        """The user's ongoing chat."""
-        found = await self._get(f"{PREFIX}:chat:{user_id}")
-        return UUID(found) if found else None
+    async def request_new(self, user_id: UUID) -> None:
+        """The next message starts a new chat instead of the latest one."""
+        await self._set(f"{PREFIX}:new:{user_id}", "1")
 
-    async def set_chat(self, user_id: UUID, chat_id: UUID) -> None:
-        """Make the chat the user's ongoing one."""
-        await self._set(f"{PREFIX}:chat:{user_id}", str(chat_id))
-
-    async def forget_chat(self, user_id: UUID) -> None:
-        """The next message starts a new chat."""
-        await self._delete(f"{PREFIX}:chat:{user_id}")
+    async def take_new(self, user_id: UUID) -> bool:
+        """True once after `/new`: the flag is spent by the chat it starts."""
+        key = f"{PREFIX}:new:{user_id}"
+        if await self._get(key) is None:
+            return False
+        await self._delete(key)
+        return True
 
     async def remember_call(self, user_id: UUID, chat_id: UUID, call_id: str) -> str:
         """Return a random token that stands for the user's pending tool call."""

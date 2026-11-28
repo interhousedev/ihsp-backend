@@ -778,6 +778,54 @@ class FilesSettings(BaseModel):
     """Largest lesson video uploaded to an LMS video block, in MiB (default 500)."""
 
 
+class RatingSettings(BaseModel):
+    """Weights of the overall student rating (`IHSP_RATING__*`).
+
+    The defaults equal `RatingWeights` in
+    `app/modules/academic/domain/marks/overall_rating.py`.
+    """
+
+    base: float = 100.0
+    """Score every student starts the academic year with."""
+
+    category_points: dict[str, float] = Field(
+        default_factory=lambda: {
+            "olympiad": 10.0,
+            "award": 8.0,
+            "scholarship": 8.0,
+            "research": 8.0,
+            "academic": 6.0,
+            "leadership": 5.0,
+            "arts": 5.0,
+            "sports": 5.0,
+            "other": 3.0,
+        }
+    )
+    """Points of a certificate by honor category (JSON object)."""
+
+    level_points: dict[str, float] = Field(
+        default_factory=lambda: {
+            "school": 0.0,
+            "regional": 3.0,
+            "national": 6.0,
+            "international": 10.0,
+        }
+    )
+    """Extra points of a certificate by level (JSON object)."""
+
+    marks_threshold: float = 3.0
+    """Lesson-mark average above which the marks bonus starts."""
+
+    marks_points: float = Field(default=20.0, ge=0)
+    """Bonus per mark point of the average above the threshold."""
+
+    absence_points: float = Field(default=1.0, ge=0)
+    """Points taken per missed lesson (platform and EMIS counted once)."""
+
+    work_off_points: float = Field(default=2.0, ge=0)
+    """Points taken per work-off."""
+
+
 class FacesSettings(BaseModel):
     """Face recognition at the entrance (module faces)."""
 
@@ -1458,6 +1506,66 @@ class DocsSettings(BaseModel):
     """Guide to entrance devices (`IHSP_DOCS__ENTRANCE_DEVICES_URL`)."""
 
 
+class AppleWalletSettings(BaseModel):
+    """Apple Wallet passes of the student card; disabled until every value is set."""
+
+    pass_type_id: str = ""
+    """Pass Type ID registered at Apple, e.g. `pass.uz.example.card`."""
+
+    team_id: str = ""
+    """Apple Developer team id."""
+
+    cert_path: str = ""
+    """Pass Type ID certificate file (PEM or DER)."""
+
+    key_path: str = ""
+    """Private key of the certificate (PEM)."""
+
+    key_password: SecretStr | None = None
+    """Password of the private key, if it has one."""
+
+    wwdr_path: str = ""
+    """Apple WWDR intermediate certificate (PEM or DER)."""
+
+    @property
+    def enabled(self) -> bool:
+        """Whether every required value is set."""
+        return all(
+            (
+                self.pass_type_id,
+                self.team_id,
+                self.cert_path,
+                self.key_path,
+                self.wwdr_path,
+            )
+        )
+
+
+class GoogleWalletSettings(BaseModel):
+    """Google Wallet passes of the student card; disabled until configured."""
+
+    issuer_id: str = ""
+    """Issuer id from the Google Pay & Wallet Console."""
+
+    service_account_path: str = ""
+    """Service-account JSON key file that signs the save links."""
+
+    class_suffix: str = "student_card"
+    """Suffix of the generic pass class id (`<issuer_id>.<suffix>`)."""
+
+    @property
+    def enabled(self) -> bool:
+        """Whether the issuer and the key file are set."""
+        return bool(self.issuer_id and self.service_account_path)
+
+
+class WalletSettings(BaseModel):
+    """Wallet passes of the student card."""
+
+    apple: AppleWalletSettings = Field(default_factory=AppleWalletSettings)
+    google: GoogleWalletSettings = Field(default_factory=GoogleWalletSettings)
+
+
 class Settings(BaseSettings):
     """All settings of one process; development defaults match materials/dev.env."""
 
@@ -1506,6 +1614,7 @@ class Settings(BaseSettings):
     identity: IdentitySettings = Field(default_factory=IdentitySettings)
     activities: ActivitiesSettings = Field(default_factory=ActivitiesSettings)
     files: FilesSettings = Field(default_factory=FilesSettings)
+    rating: RatingSettings = Field(default_factory=RatingSettings)
     library: LibrarySettings = Field(default_factory=LibrarySettings)
     faces: FacesSettings = Field(default_factory=FacesSettings)
     push: PushSettings = Field(default_factory=PushSettings)
@@ -1514,6 +1623,7 @@ class Settings(BaseSettings):
     smtp_in: SmtpInSettings = Field(default_factory=SmtpInSettings)
     http: HttpSettings = Field(default_factory=HttpSettings)
     migration: MigrationSettings = Field(default_factory=MigrationSettings)
+    wallet: WalletSettings = Field(default_factory=WalletSettings)
     urls: UrlsSettings = Field(default_factory=UrlsSettings)
     mcp: McpSettings = Field(default_factory=McpSettings)
     bugsink: BugsinkSettings = Field(default_factory=BugsinkSettings)

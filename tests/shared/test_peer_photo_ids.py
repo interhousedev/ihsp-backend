@@ -12,9 +12,9 @@ def test_opted_out_and_inactive_users_are_dropped_except_the_viewer() -> None:
     """The viewer always sees their own photo; peers who opted out do not show."""
     me, peer, hidden, blocked = (new_id() for _ in range(4))
     users = {
-        me: replace(make_user(me), hide_photo_from_classmates=True),
+        me: replace(make_user(me), hide_photo_from_public=True),
         peer: make_user(peer),
-        hidden: replace(make_user(hidden), hide_photo_from_classmates=True),
+        hidden: replace(make_user(hidden), hide_photo_from_public=True),
         blocked: make_user(blocked, status=UserStatus.BLOCKED),
     }
 
@@ -24,6 +24,6 @@ def test_opted_out_and_inactive_users_are_dropped_except_the_viewer() -> None:
 
 def test_user_ref_carries_the_photo_opt_out() -> None:
     """The batch user read already knows the opt-out, so no per-user lookup."""
-    hidden = make_account(preferences={"hide_photo_from_classmates": True})
-    assert hidden.to_ref().hide_photo_from_classmates is True
-    assert make_account().to_ref().hide_photo_from_classmates is False
+    hidden = make_account(preferences={"hide_photo_from_public": True})
+    assert hidden.to_ref().hide_photo_from_public is True
+    assert make_account().to_ref().hide_photo_from_public is False

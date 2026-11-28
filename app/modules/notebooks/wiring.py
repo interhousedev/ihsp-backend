@@ -122,7 +122,10 @@ from app.modules.notebooks.application.sync_course_notebook import (
 )
 from app.modules.notebooks.application.sync_lesson_notebooks import SyncLessonNotebooks
 from app.modules.notebooks.application.sync_source import SyncSource
-from app.modules.notebooks.application.teaching.scope import DirectoryTeachingScope
+from app.modules.notebooks.application.teaching.scope import (
+    DirectoryTeachingScope,
+    EmisTeachingScope,
+)
 from app.modules.notebooks.application.teaching.sinking import SinkingTeacherAi
 from app.modules.notebooks.application.teaching.tools import TeacherAi
 from app.modules.notebooks.application.teaching_directory import TeachingDirectory
@@ -351,9 +354,10 @@ def build(
         knowledge_gaps=knowledge_gaps,
         requests=requests,
     )
-    teaching_scope = DirectoryTeachingScope(
-        TeachingDirectory(schedule=schedule, terms=terms, clock=deps.clock)
+    teaching_directory = TeachingDirectory(
+        schedule=schedule, terms=terms, clock=deps.clock
     )
+    teaching_scope = DirectoryTeachingScope(teaching_directory)
     material_sink = MaterialSink(
         ScopedNotebookDirectory(deps.sessionmaker),
         ScopedSourceWriter(deps.sessionmaker),
@@ -491,6 +495,7 @@ def build(
             ScopedQuestionBank(deps.sessionmaker),
             deps.clock,
             ScopedTopicCatalog(deps.sessionmaker),
+            EmisTeachingScope(teaching_directory),
         ),
         teaching_scope=teaching_scope,
         save_flashcard_set=studio.save_flashcard_set,

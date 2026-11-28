@@ -17,7 +17,7 @@ from app.modules.library.ports.directories import AcademicDirectory
 from app.modules.library.ports.unit_of_work import LibraryUnitOfWork
 from app.settings import LibrarySettings
 from app.shared.actor import Actor
-from app.shared.clock import Clock
+from app.shared.clock import Clock, local_today
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
 
@@ -45,7 +45,7 @@ class BookSupport:
 
     def today(self) -> date:
         """The date the rights rules are checked against."""
-        return self.clock.now().date()
+        return local_today(self.clock)
 
     async def get_book(
         self, uow: LibraryUnitOfWork, book_id: UUID, *, lock: bool = False

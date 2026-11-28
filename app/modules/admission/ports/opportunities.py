@@ -47,6 +47,10 @@ class OpportunityRepository(Protocol):
         """One entry, live or archived."""
         ...
 
+    async def get_many(self, opportunity_ids: list[UUID]) -> list[Opportunity]:
+        """The entries with these ids, live or archived; unknown ids are skipped."""
+        ...
+
     async def apply(
         self, draft: OpportunityDraft, *, target_id: UUID | None, by: UUID
     ) -> UUID:

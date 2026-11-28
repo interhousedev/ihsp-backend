@@ -25,7 +25,6 @@ from app.modules.activities.domain.draft import (
     DraftSignup,
 )
 from app.modules.activities.domain.ranking import Ranked
-from app.shared.base_error import BaseError
 
 from fastapi import APIRouter, Query, status
 from pydantic import BaseModel, Field
@@ -144,22 +143,11 @@ async def leaderboard(
     svc = container.activities
     if club_id is not None:
         rows = await svc.leaderboard.top(actor, club_id, None, limit)
-        return items(
-            LeaderRowOut(rank=r.rank, display_name=r.display_name, points=r.points)
-            for r in rows
-        )
-    totals: dict[str, int] = {}
-    for club in await svc.clubs.list_mine(actor):
-        try:
-            rows = await svc.leaderboard.top(actor, club.id, None, 100)
-        except BaseError:
-            continue
-        for r in rows:
-            totals[r.display_name] = totals.get(r.display_name, 0) + r.points
-    ranked = sorted(totals.items(), key=lambda kv: (-kv[1], kv[0]))[:limit]
+    else:
+        rows = await svc.leaderboard.top_combined(actor, limit)
     return items(
-        LeaderRowOut(rank=i, display_name=name, points=pts)
-        for i, (name, pts) in enumerate(ranked, start=1)
+        LeaderRowOut(rank=r.rank, display_name=r.display_name, points=r.points)
+        for r in rows
     )
 
 

@@ -246,6 +246,24 @@ class SqlMarksReader:
         stmt = stmt.order_by(Mark.date.desc(), Mark.type, Mark.ordinal)
         return [_mark_row(r) for r in (await self.session.execute(stmt)).all()]
 
+    async def marks_in_subjects(
+        self, student_id: UUID, subject_ids: Collection[UUID], limit: int
+    ) -> list[MarkRow]:
+        """Return the newest non-removed marks of these subjects, newest first."""
+        if not subject_ids:
+            return []
+        stmt = (
+            sa.select(*_MARK_COLUMNS)
+            .where(
+                Mark.student_id == student_id,
+                Mark.removed_at.is_(None),
+                Mark.subject_id.in_(list(subject_ids)),
+            )
+            .order_by(Mark.date.desc(), Mark.type, Mark.ordinal)
+            .limit(limit)
+        )
+        return [_mark_row(r) for r in (await self.session.execute(stmt)).all()]
+
     async def temporary_values(
         self,
         student_ids: Collection[UUID],
@@ -552,7 +570,11 @@ class SqlMarksReader:
             .join(Group, Group.id == Student.group_id)
             .outerjoin(marks, marks.c.uid == Student.user_id)
             .outerjoin(attendance, attendance.c.uid == Student.user_id)
-            .where(Student.status == "active", Group.status == "active")
+            .where(
+                Student.status == "active",
+                Group.status == "active",
+                Group.hidden.is_(False),
+            )
         )
         return [
             StudentStanding(

@@ -86,6 +86,7 @@ async def test_marks_come_from_the_subject_name_newest_first(world: World) -> No
         ("Biology", 5),
         ("Biology", 4),
     ]
+    assert world.marks.marks_for_subjects_calls == [[biology.subject_id]]
 
 
 async def test_library_items_are_searched_for_the_actor(world: World) -> None:

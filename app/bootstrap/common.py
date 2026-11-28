@@ -114,6 +114,7 @@ from app.modules.activities.infrastructure.catalog import SqlOpportunityCatalog
 from app.modules.activities.infrastructure.repositories import sql as activities_sql
 from app.modules.activities.ports.bundle import Ports as ActivitiesPorts
 from app.modules.activities.wiring import build as build_activities
+from app.modules.admin.domain.lyceum_logo import LogoNotFoundError
 from app.modules.admin.infrastructure.limit_snapshot import load_limit_snapshot
 from app.modules.admin.wiring import build as build_admin
 from app.modules.admission.application.student_search import StudentSearchService
@@ -160,10 +161,16 @@ from app.modules.files.wiring import build as build_files
 from app.modules.flashcards.ports.share_resolver import ShareResolver
 from app.modules.flashcards.wiring import build as build_flashcards
 from app.modules.identity.application.register_ports import CredentialStore
-from app.modules.identity.application.student_card import StudentCardService
+from app.modules.identity.application.student_card import (
+    CardLogo,
+    StudentCardService,
+)
 from app.modules.identity.infrastructure.audit_writer import write_audit_events
 from app.modules.identity.infrastructure.hydra.factory import build_hydra_admin
-from app.modules.identity.infrastructure.redis.ticket_store import RedisTicketStore
+from app.modules.identity.infrastructure.repositories.card_token_repository import (
+    SqlStudentCardTokens,
+)
+from app.modules.identity.infrastructure.wallet import build_wallet
 from app.modules.identity.ports.email_sender import EmailSender
 from app.modules.identity.ports.hydra_gateway import HydraGateway
 from app.modules.identity.wiring import build as build_identity
@@ -530,14 +537,28 @@ class _Assembler:
         )
         if closer is not None:
             self.add_closer(closer)
+
+        async def card_logo() -> CardLogo | None:
+            try:
+                logo, data = await c.admin.lyceum_logo.read()
+            except LogoNotFoundError:
+                return None
+            return CardLogo(data, c.settings.urls.api.rstrip("/") + logo.url)
+
         c.student_card = StudentCardService(
             directory=identity.directory,
             facts=schedule.enrollment,
             emis=source,
             files=c.files.public,
-            store=RedisTicketStore(c.redis),
+            tokens=SqlStudentCardTokens(c.sessionmaker),
+            wallet=build_wallet(
+                c.settings.wallet, [c.settings.urls.sp, c.settings.urls.app]
+            ),
+            logo=card_logo,
             limiter=c.rate_limiter,
             clock=c.clock,
+            org_name=c.settings.brand.org_name,
+            share_origin=c.settings.urls.share,
         )
         c.certificates = build_certificates(
             self.deps,
@@ -570,6 +591,9 @@ class _Assembler:
             material_resync=emis_import.sync_group_timetable,
             sync_all_students=emis_import.sync_student_all,
             sync_jobs=emis_import.sync_jobs,
+            certificates=AdmissionCertificatesAdapter(
+                c.certificates.list_types, c.certificates.list_my_entries
+            ),
         )
         c.academic = AcademicModule(
             schedule=schedule,

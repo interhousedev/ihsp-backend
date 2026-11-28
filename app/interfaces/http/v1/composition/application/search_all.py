@@ -25,7 +25,6 @@ from app.shared.clock import Clock, local_today
 from app.shared.contracts.academic import (
     ClassworkQueries,
     LessonRef,
-    MarkRef,
     MarksQueries,
     ScheduleQueries,
 )
@@ -131,12 +130,9 @@ class SearchAll:
         needle = text.casefold()
         summaries = await self.marks.subjects_summary(actor.user_id, None)
         subjects = [s for s in summaries if needle in s.name.casefold()]
-        found: list[MarkRef] = []
-        for subject in subjects[: self.limit]:
-            found.extend(
-                await self.marks.marks(actor.user_id, subject.subject_id, None, None)
-            )
-        found.sort(key=lambda m: m.date, reverse=True)
+        found = await self.marks.marks_for_subjects(
+            actor.user_id, [s.subject_id for s in subjects[: self.limit]], self.limit
+        )
         return [
             {
                 "subject": subject_ref(m.subject_id, m.subject_name),

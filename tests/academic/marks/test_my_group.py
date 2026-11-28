@@ -134,9 +134,7 @@ async def test_opted_out_student_photo_is_hidden_from_classmates_only(
     """Classmates get no photo for an opted-out student; the student sees their own."""
     w = env.world
     other = await add_student(sessionmaker_in_tx, w)
-    env.identity.add(
-        make_user(w.user_id), UserPreferences(hide_photo_from_classmates=True)
-    )
+    env.identity.add(make_user(w.user_id), UserPreferences(hide_photo_from_public=True))
     env.identity.add(make_user(other))
     await _set_roles(sessionmaker_in_tx, w.group_id, None, w.user_id)
     env.identity.photos[w.user_id] = "https://files.test/a.jpg"

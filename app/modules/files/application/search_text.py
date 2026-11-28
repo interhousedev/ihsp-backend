@@ -58,17 +58,15 @@ class SearchText:
         self, uow: FilesUnitOfWork, files: list[StoredFile], query: str
     ) -> list[dict[str, Any]]:
         documents = await self._documents(files)
-        results: list[dict[str, Any]] = []
-        for file, document in zip(files, documents, strict=True):
-            snippet = await uow.files.headline(document, query)
-            results.append(
-                {
-                    "file_id": file.id,
-                    "name": file.name,
-                    "snippet": snippet or document[:FALLBACK_SNIPPET_CHARS],
-                }
-            )
-        return results
+        snippets = await uow.files.headlines(documents, query)
+        return [
+            {
+                "file_id": file.id,
+                "name": file.name,
+                "snippet": snippet or document[:FALLBACK_SNIPPET_CHARS],
+            }
+            for file, document, snippet in zip(files, documents, snippets, strict=True)
+        ]
 
     async def _documents(self, files: list[StoredFile]) -> list[str]:
         """The start of each file's extracted text, read with bounded parallelism."""

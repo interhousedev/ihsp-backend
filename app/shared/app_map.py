@@ -147,6 +147,14 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "guruh guruhim группа староста classmates sinfdoshlar group head",
     ),
     _d(
+        "sp-rating",
+        "sp",
+        "/rating/",
+        _ST,
+        ("Litsey reytingi", "Рейтинг лицея", "Lyceum rating"),
+        "reyting reytingi рейтинг ученики топ лучшие rating top students ball очки",
+    ),
+    _d(
         "sp-assistant",
         "sp",
         "/assistant/",

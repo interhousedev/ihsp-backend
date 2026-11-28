@@ -274,6 +274,10 @@ class InMemoryFileRepository:
             + document[at + len(word) : at + 40]
         )
 
+    async def headlines(self, documents: Sequence[str], query: str) -> list[str]:
+        """One fragment per document."""
+        return [await self.headline(doc, query) for doc in documents]
+
     async def student_term_ids(self) -> list[UUID]:
         """Terms with live student files."""
         return sorted(

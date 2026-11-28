@@ -48,9 +48,7 @@ class FakeIdentity:
         """Register a user (and optionally their preferences, mirrored on the ref)."""
         if prefs is not None:
             self.prefs[user.id] = prefs
-            user = replace(
-                user, hide_photo_from_classmates=prefs.hide_photo_from_classmates
-            )
+            user = replace(user, hide_photo_from_public=prefs.hide_photo_from_public)
         self.users[user.id] = user
         return user
 

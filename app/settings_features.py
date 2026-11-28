@@ -30,9 +30,6 @@ class FeaturesSettings(BaseModel):
     push: bool = True
     """Web Push routes. Delivery also needs PUSH__ENABLED and the VAPID keys."""
 
-    emis_sync: bool = True
-    """EMIS synchronization: the scheduled syncs and the `/v1/admin/sync` routes."""
-
     library: bool = True
     """The library (`lib.ihsu.uz`): its HTTP routes and cron jobs. UniLibrary has
     its own switch, LIBRARY__UNILIBRARY_ENABLED."""

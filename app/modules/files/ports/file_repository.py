@@ -82,6 +82,10 @@ class FileRepository(Protocol):
         """Return a short fragment of the document around the query words."""
         ...
 
+    async def headlines(self, documents: Sequence[str], query: str) -> list[str]:
+        """Like ``headline`` for many documents, in one query."""
+        ...
+
     async def search(self, owner_id: UUID, query: str, limit: int) -> list[StoredFile]:
         """Return ready files of the owner whose text matches, best first."""
         ...

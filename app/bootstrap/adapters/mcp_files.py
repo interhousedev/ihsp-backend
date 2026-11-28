@@ -15,7 +15,7 @@ from app.modules.lms.application.learning.redeem_media_grant import ConnectorChe
 from app.modules.notebooks.application.visible_source_files import VisibleSourceFiles
 from app.settings import Settings
 from app.shared.actor import Actor
-from app.shared.clock import Clock
+from app.shared.clock import Clock, local_today
 from app.shared.contracts.academic import ScheduleQueries
 from app.shared.contracts.links import LinksApi
 from app.shared.contracts.mcp_files_courses import (
@@ -142,7 +142,7 @@ class McpFileCatalog:
         self, actor: Actor, subject_id: UUID | None
     ) -> list[VisibleFile]:
         """Files of the student's own lessons; hidden resources stay out."""
-        today = self._clock.now().date()
+        today = local_today(self._clock)
         lessons = await self._schedule.lessons_for_student(
             actor.user_id, today - LESSONS_BACK, today + LESSONS_AHEAD
         )

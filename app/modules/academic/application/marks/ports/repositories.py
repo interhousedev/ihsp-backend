@@ -211,6 +211,12 @@ class MarksReader(Protocol):
         """Return non-removed marks, newest date first."""
         ...
 
+    async def marks_in_subjects(
+        self, student_id: UUID, subject_ids: Collection[UUID], limit: int
+    ) -> list[MarkRow]:
+        """Return the newest non-removed marks of these subjects, newest first."""
+        ...
+
     async def planned_subject_ids(
         self, group_id: UUID, semester: int
     ) -> set[UUID] | None:

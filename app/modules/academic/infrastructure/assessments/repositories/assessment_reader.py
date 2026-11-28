@@ -93,6 +93,16 @@ class SqlAssessmentReader:
                 taught.setdefault(subject_id, set()).update(
                     audience_keys.group_ids(audience)
                 )
+        every = set().union(*taught.values()) if taught else set()
+        if every:
+            hidden = set(
+                await self.session.scalars(
+                    sa.select(Group.id).where(
+                        Group.id.in_(every), Group.hidden.is_(True)
+                    )
+                )
+            )
+            taught = {s: ids - hidden for s, ids in taught.items()}
         return taught
 
     async def lesson_subject(self, lesson_id: UUID) -> UUID | None:
@@ -133,7 +143,9 @@ class SqlAssessmentReader:
     async def curricula(self) -> dict[UUID, tuple[UUID, ...]]:
         """Return the curriculum subjects of every active group that has any."""
         stmt = sa.select(Group.id, Group.subject_ids).where(
-            Group.status == "active", sa.func.cardinality(Group.subject_ids) > 0
+            Group.status == "active",
+            Group.hidden.is_(False),
+            sa.func.cardinality(Group.subject_ids) > 0,
         )
         return {
             r.id: tuple(r.subject_ids) for r in (await self.session.execute(stmt)).all()
@@ -157,5 +169,9 @@ class SqlAssessmentReader:
 
     async def active_group_ids(self) -> list[UUID]:
         """Return the ids of the active groups (those whose controls are suggested)."""
-        stmt = sa.select(Group.id).where(Group.status == "active").order_by(Group.id)
+        stmt = (
+            sa.select(Group.id)
+            .where(Group.status == "active", Group.hidden.is_(False))
+            .order_by(Group.id)
+        )
         return list(await self.session.scalars(stmt))

@@ -12,8 +12,8 @@ from aiogram.types import Message
 async def new_chat(
     message: Message, user: UserRef, container: Any, i18n: I18nContext
 ) -> None:
-    """Forget the ongoing chat (it stays in the web chat list)."""
+    """The next message starts a new chat (the old one stays in the web list)."""
     assistant = bot_assistant(container)
     if assistant is not None:
-        await assistant.store.forget_chat(user.id)
+        await assistant.store.request_new(user.id)
     await message.answer(i18n("bot-ai-new-chat"))
