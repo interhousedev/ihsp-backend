@@ -119,9 +119,15 @@ class LmsDraftCommands(Protocol):
         ...
 
     async def add_block(
-        self, actor: Actor, step_id: UUID, block: dict[str, Any], *, via_mcp: bool
+        self,
+        actor: Actor,
+        step_id: UUID,
+        block: dict[str, Any],
+        *,
+        via_mcp: bool,
+        position: int | None = None,
     ) -> dict[str, Any]:
-        """Add a block to a step."""
+        """Add a block to a step (at the end, or at `position`)."""
         ...
 
     async def add_question(

@@ -1,10 +1,11 @@
 """The universal `app` server: prefixed tools, namespaced scopes, per-call roles."""
 
+from app.interfaces.mcp.catalog import META_TOOLS
 from app.interfaces.mcp.constants import ALLOWED_ROLES_BY_SERVER, SCOPES_BY_SERVER
 from app.shared.actor import Role
 from app.shared.mcp_scopes import SCOPE_CATALOG
 from tests.mcp.conftest import World
-from tests.mcp.helpers import call, text_of
+from tests.mcp.helpers import call, data_of, text_of
 
 SCOPES = SCOPES_BY_SERVER["app"]
 
@@ -37,9 +38,13 @@ async def test_a_student_sees_no_teacher_tools(world: World) -> None:
     """tools/list is filtered by the roles of each source server."""
     names = await _names(world, (Role.STUDENT,))
 
-    assert "student_get_marks" in names
+    assert "student_get_schedule" in names
     assert not {name for name in names if name.startswith("teacher_")}
-    assert not {name for name in names if not name.startswith(("student_", "lms_"))}
+    assert not {
+        name
+        for name in names
+        if not name.startswith(("student_", "lms_")) and name not in META_TOOLS
+    }
 
 
 async def test_a_teacher_sees_teacher_and_lms_tools_but_no_student_tools(
@@ -49,7 +54,7 @@ async def test_a_teacher_sees_teacher_and_lms_tools_but_no_student_tools(
     names = await _names(world, (Role.TEACHER,))
 
     assert "teacher_get_today" in names
-    assert any(name.startswith("lms_") for name in names)
+    assert "lms_list_courses" in names
     assert not {name for name in names if name.startswith("student_")}
 
 
@@ -103,8 +108,11 @@ async def test_a_granted_namespaced_scope_runs_and_is_logged_as_app(
 
 async def test_a_student_sees_the_lms_read_tools(world: World) -> None:
     """The LMS source is open to students: its read tools are listed."""
-    names = await _names(world, (Role.STUDENT,))
+    token, _ = world.connector_token("app", *SCOPES, roles=(Role.STUDENT,))
+    async with world.session("app", token) as session:
+        result = await call(session, "search_tools", query="lms course", limit=30)
 
+    names = {item["name"] for item in data_of(result)["items"]}
     assert {"lms_list_courses", "lms_get_course"} <= names
 
 

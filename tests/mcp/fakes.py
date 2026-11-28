@@ -563,9 +563,16 @@ class FakeLmsCommands:
         return {"step_id": str(step_id)}
 
     async def add_block(
-        self, actor: Actor, step_id: UUID, block: dict[str, Any], *, via_mcp: bool
+        self,
+        actor: Actor,
+        step_id: UUID,
+        block: dict[str, Any],
+        *,
+        via_mcp: bool,
+        position: int | None = None,
     ) -> dict[str, Any]:
-        self.calls.append(LmsCall("add_block", actor, (step_id, block), via_mcp))
+        args = (step_id, block) if position is None else (step_id, block, position)
+        self.calls.append(LmsCall("add_block", actor, args, via_mcp))
         return {"step_id": step_id, "blocks": [block]}
 
     async def add_question(

@@ -44,7 +44,7 @@ def register(kit: ToolKit) -> None:
     ) -> dict[str, Any]:
         """Rename a step and/or replace its blocks in the draft.
 
-        Use add_text_block, add_test_block and add_flashcards_block to append instead.
+        Use add_block to append instead; list_block_types shows every block type.
         """
         actor = current_actor()
         await ensure_step(kit, actor, step_id)

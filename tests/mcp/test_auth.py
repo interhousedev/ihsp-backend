@@ -14,7 +14,7 @@ from app.shared.contracts.auth import (
     ConnectorTokenVerifier,
 )
 from tests.mcp.conftest import World
-from tests.mcp.helpers import tool_names
+from tests.mcp.helpers import call, data_of
 
 import pytest
 from mcp.server.fastmcp.exceptions import ToolError
@@ -52,12 +52,12 @@ async def test_connector_token_is_verified_for_the_mounted_server(
 
     async with world.serve() as server:
         async with server.session("lms", token) as session:
-            names = await tool_names(session)
+            found = await call(session, "search_tools", query="courses")
         wrong = await server.raw.post(
             "/mcp/student/", json={}, headers={"authorization": f"Bearer {token}"}
         )
 
-    assert "list_courses" in names
+    assert "list_courses" in {i["name"] for i in data_of(found)["items"]}
     assert (token, "lms") in world.connector.calls
     assert (token, "student") in world.connector.calls
     assert wrong.status_code == 401

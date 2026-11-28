@@ -3,9 +3,9 @@
 from app.interfaces.mcp.deps import McpDeps
 from app.interfaces.mcp.server import _BUILDERS
 from tests.mcp.conftest import World
+from tests.mcp.helpers import registered_tools
 
 import pytest
-from mcp.server.fastmcp import FastMCP
 
 CREATE_TOOLS = {
     "student": {"create_flashcard_set", "create_test", "create_notebook"},
@@ -17,8 +17,7 @@ CREATE_TOOLS = {
 async def test_every_tool_describes_itself(world: World, server: str) -> None:
     """Each tool has a text, all four hints and a valid object schema."""
     deps: McpDeps = world.deps()
-    # The unfiltered list: the app server's own `list_tools` needs a caller.
-    tools = await FastMCP.list_tools(_BUILDERS[server](deps))
+    tools = await registered_tools(deps, server)
 
     assert tools
     assert len({tool.name for tool in tools}) == len(tools)
@@ -39,7 +38,7 @@ async def test_every_tool_describes_itself(world: World, server: str) -> None:
 @pytest.mark.parametrize("server", sorted(CREATE_TOOLS))
 async def test_create_tools_offer_an_optional_key(world: World, server: str) -> None:
     """The key is advertised and never required."""
-    tools = await _BUILDERS[server](world.deps()).list_tools()
+    tools = await registered_tools(world.deps(), server)
     by_name = {tool.name: tool for tool in tools}
 
     for name in CREATE_TOOLS[server]:

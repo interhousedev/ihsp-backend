@@ -12,7 +12,7 @@ from app.shared.mcp_scopes import (
 )
 from tests.mcp import pending_academic, pending_content, pending_files_courses
 from tests.mcp.conftest import World
-from tests.mcp.helpers import call, text_of
+from tests.mcp.helpers import call, registered_tools, text_of
 
 import pytest
 from mcp.types import Tool
@@ -85,13 +85,15 @@ LMS_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
     ),
     "update_step": ("lms.modules.write", {"step_id": STEP, "title": "t"}),
     "delete_step": ("lms.modules.write", {"step_id": STEP}),
-    "add_text_block": ("lms.modules.write", {"step_id": STEP, "markdown": "m"}),
-    "add_test_block": ("lms.modules.write", {"step_id": STEP}),
+    "add_block": (
+        "lms.modules.write",
+        {"step_id": STEP, "block": {"type": "text", "markdown": "m"}},
+    ),
+    "list_block_types": ("lms.courses.read", {}),
     "add_question": (
         "lms.modules.write",
         {"step_id": STEP, "block_id": "b", "question": QUESTION},
     ),
-    "add_flashcards_block": ("lms.modules.write", {"step_id": STEP, "cards": CARDS}),
     "move_section": (
         "lms.modules.write",
         {"course_id": COURSE, "section_id": "s", "position": 0},
@@ -203,12 +205,9 @@ async def test_server_offers_exactly_the_tools_of_mcp_8(
     world: World, server: ServerName
 ) -> None:
     """MCP-8: the tools of each server, nothing else."""
-    token, _ = world.connector_token(server, *SCOPES_BY_SERVER[server])
+    listed = await registered_tools(world.deps(), server)
 
-    async with world.session(server, token) as session:
-        listed = await session.list_tools()
-
-    assert {tool.name for tool in listed.tools} == server_tools(server) - PENDING
+    assert {tool.name for tool in listed} == server_tools(server) - PENDING
 
 
 @pytest.mark.parametrize("server", ["student", "lms", "admin"])
@@ -223,12 +222,9 @@ async def test_no_server_has_a_publish_tool_and_only_lms_deletes(
     world: World, server: ServerName
 ) -> None:
     """MCP-6: only the LMS server publishes or deletes."""
-    token, _ = world.connector_token(server, *SCOPES_BY_SERVER[server])
+    listed = await registered_tools(world.deps(), server)
 
-    async with world.session(server, token) as session:
-        listed = await session.list_tools()
-
-    names = [tool.name for tool in listed.tools]
+    names = [tool.name for tool in listed]
     forbidden = LMS_FORBIDDEN_VERBS if server == "lms" else FORBIDDEN_VERBS
     # The one student delete: own cards only, under its own scope (`flashcards:delete`).
     assert not [
@@ -239,12 +235,9 @@ async def test_no_server_has_a_publish_tool_and_only_lms_deletes(
 
 async def test_lms_server_writes_drafts_and_course_operations(world: World) -> None:
     """MCP-6: the LMS writers are the draft CRUD and the course operations."""
-    token, _ = world.connector_token("lms", *SCOPES_BY_SERVER["lms"])
+    listed = await registered_tools(world.deps(), "lms")
 
-    async with world.session("lms", token) as session:
-        listed = await session.list_tools()
-
-    writers = _writers(listed.tools)
+    writers = _writers(listed)
     assert writers == {
         "create_course",
         "update_course",
@@ -256,10 +249,8 @@ async def test_lms_server_writes_drafts_and_course_operations(world: World) -> N
         "create_step",
         "update_step",
         "delete_step",
-        "add_text_block",
-        "add_test_block",
+        "add_block",
         "add_question",
-        "add_flashcards_block",
         "move_section",
         "move_step",
         "move_block",
@@ -281,7 +272,7 @@ async def test_lms_server_writes_drafts_and_course_operations(world: World) -> N
     }
     destructive = {
         t.name
-        for t in listed.tools
+        for t in listed
         if t.annotations is not None and t.annotations.destructiveHint
     }
     assert destructive == {
@@ -298,10 +289,7 @@ async def test_students_server_writes_only_under_write_scopes(
     world: World,
 ) -> None:
     """MCP-6: the Students write tools are those the registry calls writes."""
-    token, _ = world.connector_token("student", *SCOPES_BY_SERVER["student"])
-
-    async with world.session("student", token) as session:
-        listed = await session.list_tools()
+    listed = await registered_tools(world.deps(), "student")
 
     expected = {
         tool
@@ -310,18 +298,15 @@ async def test_students_server_writes_only_under_write_scopes(
         for tool in info.tools
         if tool not in READ_ONLY_TOOLS_IN_WRITE_SCOPES
     }
-    assert _writers(listed.tools) == expected - PENDING
+    assert _writers(listed) == expected - PENDING
 
 
 async def test_administration_server_is_read_only(world: World) -> None:
     """MCP-1: every Administration tool is read-only and on the read list."""
-    token, _ = world.connector_token("admin", *SCOPES_BY_SERVER["admin"])
+    listed = await registered_tools(world.deps(), "admin")
 
-    async with world.session("admin", token) as session:
-        listed = await session.list_tools()
-
-    assert {tool.name for tool in listed.tools} == ADMIN_READ_TOOLS
-    assert _writers(listed.tools) == set()
+    assert {tool.name for tool in listed} == ADMIN_READ_TOOLS
+    assert _writers(listed) == set()
 
 
 @pytest.mark.parametrize("server", ["student", "lms", "admin"])
@@ -343,12 +328,9 @@ async def test_every_tool_needs_its_scope_from_mcp_8(
 
 async def test_tools_describe_their_arguments_for_ai_clients(world: World) -> None:
     """Typed parameters with descriptions (MCP-8)."""
-    token, _ = world.connector_token("student", *SCOPES_BY_SERVER["student"])
+    listed = await registered_tools(world.deps(), "student")
 
-    async with world.session("student", token) as session:
-        listed = await session.list_tools()
-
-    by_name = {tool.name: tool for tool in listed.tools}
+    by_name = {tool.name: tool for tool in listed}
     schema = by_name["get_marks"].inputSchema["properties"]
     assert schema["subject_id"]["description"]
     assert schema["date_from"]["description"]
@@ -358,12 +340,9 @@ async def test_tools_describe_their_arguments_for_ai_clients(world: World) -> No
 
 async def test_a_tool_that_rotates_a_grant_is_not_idempotent(world: World) -> None:
     """MCP-B5: asking twice for a media link kills the first link."""
-    token, _ = world.connector_token("student", *SCOPES_BY_SERVER["student"])
+    listed = await registered_tools(world.deps(), "student")
 
-    async with world.session("student", token) as session:
-        listed = await session.list_tools()
-
-    by_name = {tool.name: tool for tool in listed.tools}
+    by_name = {tool.name: tool for tool in listed}
     media = by_name["get_course_media_link"].annotations
     assert media is not None and media.idempotentHint is False
     plain = by_name["list_files"].annotations
@@ -411,24 +390,18 @@ async def test_teacher_server_lists_its_tools_without_ai_when_unwired(
     world: World,
 ) -> None:
     """Without the AI port the teacher server has no generation tools."""
-    token, _ = world.connector_token("teacher", *SCOPES_BY_SERVER["teacher"])
+    listed = await registered_tools(world.deps(), "teacher")
 
-    async with world.session("teacher", token) as session:
-        listed = await session.list_tools()
-
-    assert {t.name for t in listed.tools} == server_tools("teacher") - TEACHER_AI_TOOLS
+    assert {t.name for t in listed} == server_tools("teacher") - TEACHER_AI_TOOLS
 
 
 async def test_teacher_writes_are_the_marked_ones_and_deletes_destructive(
     world: World,
 ) -> None:
     """MCP-6: only homework, temporary marks and assessments write."""
-    token, _ = world.connector_token("teacher", *SCOPES_BY_SERVER["teacher"])
+    listed = await registered_tools(world.deps(), "teacher")
 
-    async with world.session("teacher", token) as session:
-        listed = await session.list_tools()
-
-    assert _writers(listed.tools) == {
+    assert _writers(listed) == {
         "set_homework",
         "clear_homework",
         "set_temporary_mark",
@@ -439,7 +412,7 @@ async def test_teacher_writes_are_the_marked_ones_and_deletes_destructive(
     }
     destructive = {
         t.name
-        for t in listed.tools
+        for t in listed
         if t.annotations is not None and t.annotations.destructiveHint
     }
     assert destructive == {"clear_homework", "delete_temporary_mark"}

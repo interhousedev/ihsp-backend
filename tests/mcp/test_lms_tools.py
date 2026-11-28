@@ -24,13 +24,16 @@ def _steps(world: World) -> None:
     }
 
 
-async def test_add_text_block_lands_as_an_mcp_draft_change(world: World) -> None:
+async def test_add_block_text_lands_as_an_mcp_draft_change(world: World) -> None:
     """UF-LMS-16 step 2: the block is appended with via_mcp=True and no id of ours."""
     token, actor = world.connector_token("lms", *ALL)
 
     async with world.session("lms", token) as session:
         result = await call(
-            session, "add_text_block", step_id=str(STEP_A), markdown="# Derivatives"
+            session,
+            "add_block",
+            step_id=str(STEP_A),
+            block={"type": "text", "markdown": "# Derivatives"},
         )
 
     assert not result.isError
@@ -71,7 +74,7 @@ async def test_section_and_step_are_created_via_mcp(world: World) -> None:
     assert world.lms_commands.calls[1].args == (COURSE_A, "s1", "Definition")
 
 
-async def test_add_test_block_builds_config_defaults_and_questions(
+async def test_add_block_test_builds_config_defaults_and_questions(
     world: World,
 ) -> None:
     """LMS-15, LMS-16: a test block with settings and mixed questions."""
@@ -102,10 +105,13 @@ async def test_add_test_block_builds_config_defaults_and_questions(
     async with world.session("lms", token) as session:
         result = await call(
             session,
-            "add_test_block",
+            "add_block",
             step_id=str(STEP_A),
-            questions=questions,
-            settings={"passing_score_pct": 70, "max_attempts": 3},
+            block={
+                "type": "test",
+                "questions": questions,
+                "settings": {"passing_score_pct": 70, "max_attempts": 3},
+            },
         )
 
     assert not result.isError, text_of(result)
@@ -199,16 +205,16 @@ async def test_invalid_questions_are_refused_before_the_use_case(world: World) -
     assert world.lms_commands.calls == []
 
 
-async def test_add_flashcards_block_uses_course_cards(world: World) -> None:
+async def test_add_block_flashcards_uses_course_cards(world: World) -> None:
     """LMS-18: a flash cards block with its own cards."""
     token, _ = world.connector_token("lms", *ALL)
 
     async with world.session("lms", token) as session:
         await call(
             session,
-            "add_flashcards_block",
+            "add_block",
             step_id=str(STEP_A),
-            cards=[{"front": "f", "back": "b"}],
+            block={"type": "flashcards", "cards": [{"front": "f", "back": "b"}]},
         )
 
     [recorded] = world.lms_commands.calls
@@ -266,10 +272,16 @@ async def test_connector_limited_to_courses_sees_only_those(world: World) -> Non
         other_course = await call(session, "get_course", course_id=str(COURSE_B))
         other_step = await call(session, "get_step", step_id=str(STEP_B))
         own_write = await call(
-            session, "add_text_block", step_id=str(STEP_A), markdown="x"
+            session,
+            "add_block",
+            step_id=str(STEP_A),
+            block={"type": "text", "markdown": "x"},
         )
         other_write = await call(
-            session, "add_text_block", step_id=str(STEP_B), markdown="x"
+            session,
+            "add_block",
+            step_id=str(STEP_B),
+            block={"type": "text", "markdown": "x"},
         )
         other_section = await call(
             session, "create_section", course_id=str(COURSE_B), title="x"
@@ -331,7 +343,54 @@ async def test_version_conflict_is_reported_to_the_client(world: World) -> None:
 
     async with world.session("lms", token) as session:
         result = await call(
-            session, "add_text_block", step_id=str(STEP_A), markdown="x"
+            session,
+            "add_block",
+            step_id=str(STEP_A),
+            block={"type": "text", "markdown": "x"},
         )
 
     assert result.isError
+
+
+async def test_add_block_creates_video_and_code_blocks(world: World) -> None:
+    """Any author block type goes through add_block."""
+    token, _ = world.connector_token("lms", *ALL)
+
+    async with world.session("lms", token) as session:
+        video = await call(
+            session,
+            "add_block",
+            step_id=str(STEP_A),
+            block={"type": "video", "url": "https://youtu.be/abc"},
+        )
+        code = await call(
+            session,
+            "add_block",
+            step_id=str(STEP_A),
+            block={"type": "code", "language": "python", "starter": "x = 1"},
+            position=0,
+        )
+        listed = await call(session, "list_block_types")
+
+    assert not video.isError, text_of(video)
+    assert not code.isError, text_of(code)
+    first, second = world.lms_commands.calls
+    assert first.args[1]["source"] == "link"
+    assert second.args[1]["type"] == "code"
+    assert second.args[2] == 0
+    types = {b["type"] for b in data_of(listed)["block_types"]}
+    assert {"video", "code", "html", "exam", "ai_review", "h5p"} <= types
+
+
+async def test_add_block_invalid_payload_names_the_field(world: World) -> None:
+    """A wrong field yields the invalid-input error with its path."""
+    token, _ = world.connector_token("lms", *ALL)
+
+    async with world.session("lms", token) as session:
+        result = await call(
+            session, "add_block", step_id=str(STEP_A), block={"type": "video"}
+        )
+
+    assert result.isError
+    assert "url" in text_of(result)
+    assert world.lms_commands.calls == []

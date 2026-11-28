@@ -19,7 +19,7 @@ from app.interfaces.mcp.upload_fetch import (
 )
 from app.shared.contracts.files import FileScope
 from tests.mcp.conftest import World
-from tests.mcp.helpers import call, data_of, text_of
+from tests.mcp.helpers import call, data_of, registered_tools, text_of
 
 import httpx
 import pytest
@@ -294,11 +294,9 @@ async def test_both_or_neither_source_is_refused(world: World) -> None:
 async def test_the_tool_declares_its_file_parameter_and_needs_the_scope(
     world: World,
 ) -> None:
-    token, _ = world.connector_token("student", "files:write")
-    async with world.serve() as running, running.session("student", token) as session:
-        listed = await session.list_tools()
+    listed = await registered_tools(world.deps(), "student")
 
-    [tool] = [t for t in listed.tools if t.name == "upload_file"]
+    [tool] = [t for t in listed if t.name == "upload_file"]
     assert tool.meta is not None and tool.meta["openai/fileParams"] == ["file"]
 
     other, _ = world.connector_token("student", "files:read")

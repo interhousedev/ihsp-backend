@@ -6,7 +6,7 @@ from uuid import UUID
 from app.interfaces.mcp.constants import SCOPES_BY_SERVER
 from app.shared.ids import new_id
 from tests.mcp.conftest import World
-from tests.mcp.helpers import call, data_of, text_of
+from tests.mcp.helpers import call, data_of, registered_tools, text_of
 
 import pytest
 
@@ -225,11 +225,11 @@ async def test_knowledge_audience_comes_from_the_server(world: World) -> None:
         "staff": [{"key": "staff-only", "title": "S", "value": "s", "tags": []}],
     }
 
+    listed = await registered_tools(world.deps(), "student")
     async with world.session("student", token) as session:
-        listed = await session.list_tools()
         result = await call(session, "search_knowledge", query="rules")
 
-    [tool] = [t for t in listed.tools if t.name == "search_knowledge"]
+    [tool] = [t for t in listed if t.name == "search_knowledge"]
     assert "audience" not in tool.inputSchema["properties"]
     data = data_of(result)
     assert [hit["key"] for hit in data["hits"]] == ["k"]
@@ -322,13 +322,13 @@ async def test_add_sources_takes_no_url_and_needs_something(world: World) -> Non
     notebook_id = new_id()
     world.content_tools.notebooks[notebook_id] = actor.user_id
 
+    listed = await registered_tools(world.deps(), "student")
     async with world.session("student", token) as session:
-        listed = await session.list_tools()
         empty = await call(
             session, "add_notebook_sources", notebook_id=str(notebook_id)
         )
 
-    [tool] = [t for t in listed.tools if t.name == "add_notebook_sources"]
+    [tool] = [t for t in listed if t.name == "add_notebook_sources"]
     assert set(tool.inputSchema["properties"]) == {"notebook_id", "file_ids", "texts"}
     assert empty.isError
 

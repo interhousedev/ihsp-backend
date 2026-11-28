@@ -1,8 +1,9 @@
 """The Students MCP server: the student's own data and own flash cards (MCP-1)."""
 
 from app.interfaces.mcp import upload_file
+from app.interfaces.mcp.catalog import CatalogMcp
 from app.interfaces.mcp.deps import McpDeps
-from app.interfaces.mcp.factory import make_toolkit
+from app.interfaces.mcp.factory import finish_catalog, make_toolkit
 from app.interfaces.mcp.student.tools import (
     add_flashcards,
     create_flashcard_set,
@@ -59,7 +60,11 @@ def build_student_server(deps: McpDeps) -> FastMCP:
         "student",
         title=f"{current_brand().name} Students",
         instructions_key="mcp-instructions-student",
+        cls=CatalogMcp,
     )
     for module in TOOL_MODULES:
         module.register(kit)
+    finish_catalog(
+        kit, "student", ["find_feature", "get_schedule", "get_homework", "get_marks"]
+    )
     return kit.mcp

@@ -103,3 +103,20 @@ def test_text_question_accepts_a_regex_alone() -> None:
     built = build_question(QuestionInput(type="text", prompt="q", regex="^a+$"))
 
     assert built["answer"] == {"accepted": [], "regex": "^a+$", "case_sensitive": False}
+
+
+def test_list_block_types_covers_every_domain_block_type() -> None:
+    """A domain block type without an author input model fails here."""
+    from typing import get_args
+
+    from app.interfaces.mcp.lms.tools.list_block_types import describe_block_type
+    from app.modules.lms.domain.step_content import Block
+    from app.shared.contracts.lms_blocks import AUTHOR_BLOCK_MODELS
+
+    domain = {m.model_fields["type"].default for m in get_args(get_args(Block)[0])}
+    described = {describe_block_type(m)["type"] for m in AUTHOR_BLOCK_MODELS}
+    assert domain <= described
+    for model in AUTHOR_BLOCK_MODELS:
+        info = describe_block_type(model)
+        assert info["example"]["type"] == info["type"]
+        assert info["description"]
