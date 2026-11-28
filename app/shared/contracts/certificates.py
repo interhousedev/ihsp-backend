@@ -1,6 +1,7 @@
 """A student's platform certificates as admission reads them."""
 
 import datetime as dt
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 from uuid import UUID
@@ -30,4 +31,14 @@ class CertificateDirectory(Protocol):
 
     async def for_student(self, student_id: UUID) -> list[StudentCertificate]:
         """Return the student's entries, newest first."""
+        ...
+
+
+class CertificateRoster(Protocol):
+    """Read the certificate entries of many students at once (overall rating)."""
+
+    async def for_students(
+        self, student_ids: Sequence[UUID]
+    ) -> dict[UUID, list[StudentCertificate]]:
+        """Return each student's entries; students without one are left out."""
         ...

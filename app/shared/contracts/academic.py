@@ -303,6 +303,12 @@ class MarksQueries(Protocol):
         """Return marks, optionally filtered."""
         ...
 
+    async def marks_for_subjects(
+        self, user_id: UUID, subject_ids: Sequence[UUID], limit: int
+    ) -> list[MarkRef]:
+        """Return the newest marks of these subjects together, newest first."""
+        ...
+
     async def results(self, user_id: UUID, semester: int | None) -> dict[str, Any]:
         """Return {"semester", "gpa", "subjects": [...]}.
 

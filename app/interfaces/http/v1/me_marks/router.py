@@ -13,6 +13,10 @@ from app.interfaces.http.v1.me_marks.handlers.get_my_group_rankings import (
 from app.interfaces.http.v1.me_marks.handlers.get_my_group_rating import (
     get_my_group_rating,
 )
+from app.interfaces.http.v1.me_marks.handlers.get_overall_rating import (
+    OverallRatingResponse,
+    get_overall_rating,
+)
 from app.interfaces.http.v1.me_marks.handlers.get_planner import get_planner
 from app.interfaces.http.v1.me_marks.handlers.get_rating_book import get_rating_book
 from app.interfaces.http.v1.me_marks.handlers.get_record_book import get_record_book
@@ -116,4 +120,10 @@ router.add_api_route(
 )
 router.add_api_route(
     "/honours", get_honours, methods=["GET"], response_model=HonoursResponse
+)
+router.add_api_route(
+    "/rating",
+    get_overall_rating,
+    methods=["GET"],
+    response_model=OverallRatingResponse,
 )

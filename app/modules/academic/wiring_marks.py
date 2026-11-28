@@ -15,6 +15,9 @@ from app.modules.academic.application.marks.get_my_group import (
     GetGroupRankings,
     GetMyGroup,
 )
+from app.modules.academic.application.marks.get_overall_rating import (
+    GetOverallRating,
+)
 from app.modules.academic.application.marks.get_rating_book import GetRatingBook
 from app.modules.academic.application.marks.get_record_book import GetRecordBook
 from app.modules.academic.application.marks.get_semester_grades import (
@@ -61,10 +64,16 @@ from app.modules.academic.application.schedule.student_sync_jobs import (
     StudentSyncJobs,
 )
 from app.modules.academic.application.schedule.sync_student_all import SyncStudentAll
+from app.modules.academic.domain.marks.overall_rating import RatingWeights
+from app.modules.academic.infrastructure.marks.repositories.rating_source import (
+    SqlRatingSource,
+)
 from app.modules.academic.infrastructure.marks.sync_control import RedisSyncControl
 from app.modules.academic.infrastructure.marks.uow import SqlMarksUnitOfWork
 from app.modules.academic.wiring_schedule import sql_schedule_uow_factory
+from app.settings import RatingSettings
 from app.shared.contracts.academic import AcademicEnrollment, ScheduleQueries
+from app.shared.contracts.certificates import CertificateRoster
 from app.shared.contracts.emis import EmisSource
 from app.shared.contracts.identity import IdentityCommands, IdentityDirectory
 from app.shared.contracts.links import LinksApi
@@ -104,6 +113,7 @@ class MarksServices:
     get_group_rankings: GetGroupRankings
     get_honours: GetHonours
     get_rating_book: GetRatingBook
+    get_overall_rating: GetOverallRating
     queries: MarksQueriesImpl
     apply_ratings: ApplyRatings
     uow_factory: Callable[[], SqlMarksUnitOfWork]
@@ -123,6 +133,7 @@ def build_marks(
     material_resync: MaterialResync,
     sync_all_students: SyncStudentAll,
     sync_jobs: StudentSyncJobs,
+    certificates: CertificateRoster,
 ) -> MarksServices:
     """Wire the marks use cases to SQL repositories and other modules' contracts."""
 
@@ -224,9 +235,29 @@ def build_marks(
         get_group_rankings=GetGroupRankings(uow_factory=uow_factory, clock=deps.clock),
         get_honours=GetHonours(uow_factory=uow_factory, identity=identity, emis=emis),
         get_rating_book=GetRatingBook(emis=emis),
+        get_overall_rating=GetOverallRating(
+            source=SqlRatingSource(deps.sessionmaker),
+            certificates=certificates,
+            identity=identity,
+            clock=deps.clock,
+            weights=rating_weights(deps.settings.rating),
+        ),
         queries=MarksQueriesImpl(
             uow_factory=uow_factory, identity=identity, clock=deps.clock
         ),
         apply_ratings=apply_ratings,
         uow_factory=uow_factory,
+    )
+
+
+def rating_weights(settings: RatingSettings) -> RatingWeights:
+    """The rating weights the settings give."""
+    return RatingWeights(
+        base=settings.base,
+        category_points=dict(settings.category_points),
+        level_points=dict(settings.level_points),
+        marks_threshold=settings.marks_threshold,
+        marks_points=settings.marks_points,
+        absence_points=settings.absence_points,
+        work_off_points=settings.work_off_points,
     )

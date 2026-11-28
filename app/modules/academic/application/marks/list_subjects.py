@@ -87,6 +87,7 @@ class ListSubjects:
                 user_ids={t for ids in teachers.values() for t in ids},
                 lessons=upcoming.values(),
                 photos_for=actor.user_id,
+                viewer_roles=actor.roles,
             )
         cards = [
             _card(
