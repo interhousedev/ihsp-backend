@@ -26,6 +26,7 @@ class AiReviewSession(IdMixin, TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("status IN ('open', 'reviewed')", name="status"),
         Index("ix_ai_review_sessions_block", "step_id", "block_id", "user_id"),
+        Index("ix_ai_review_sessions_user", "user_id", "id"),
         {"schema": "lms"},
     )
 

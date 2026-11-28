@@ -18,6 +18,7 @@ from app.modules.identity.domain.scopes import (
 from app.modules.identity.domain.user import User
 from app.modules.identity.ports.hydra_gateway import ConsentRequest, HydraClient
 from app.shared.actor import Role
+from app.shared.mcp_scopes import scopes_for_roles
 
 
 def mcp_server(request: ConsentRequest, mcp_base: str) -> Server:
@@ -91,12 +92,15 @@ def requested_scopes(
     """Scopes of the server the client asked for; all of them if it asked for none.
 
     On the app server only the namespaced scopes of the sub-servers the roles allow
-    are offered.
+    are offered; on the admission server only the scopes of the caller's roles.
     """
     asked = set(request.requested_scope)
     ordered = [info.scope for info in SCOPE_CATALOG[server]]
     if server == "app" and roles is not None:
         allowed = app_scopes_for_roles(frozenset(ordered), roles)
+        ordered = [scope for scope in ordered if scope in allowed]
+    if server == "admission" and roles is not None:
+        allowed = scopes_for_roles(server, roles)
         ordered = [scope for scope in ordered if scope in allowed]
     chosen = [scope for scope in ordered if scope in asked]
     return chosen or ordered

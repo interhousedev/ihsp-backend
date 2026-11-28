@@ -11,7 +11,7 @@ from app.modules.lms.domain.learning.variant import Variant
 from app.modules.lms.infrastructure.orm.course_step import CourseStep
 from app.modules.lms.infrastructure.orm.test_attempt import TestAttempt as AttemptRow
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, literal, select, tuple_, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -237,3 +237,56 @@ class SqlAttemptRepository:
             .execution_options(populate_existing=True)
         )
         return [_to_entity(row) for row in rows]
+
+    async def list_submitted_for_user(
+        self,
+        user_id: UUID,
+        course_id: UUID,
+        *,
+        step_id: UUID | None = None,
+        limit: int,
+        before: tuple[datetime, UUID] | None = None,
+    ) -> list[Attempt]:
+        """Return the user's submitted non-preview attempts, newest first."""
+        query = (
+            select(AttemptRow)
+            .join(CourseStep, CourseStep.id == AttemptRow.step_id)
+            .where(
+                AttemptRow.user_id == user_id,
+                CourseStep.course_id == course_id,
+                AttemptRow.is_preview.is_(False),
+                AttemptRow.submitted_at.is_not(None),
+            )
+        )
+        if step_id is not None:
+            query = query.where(AttemptRow.step_id == step_id)
+        if before is not None:
+            query = query.where(
+                tuple_(AttemptRow.submitted_at, AttemptRow.id)
+                < tuple_(literal(before[0]), literal(before[1]))
+            )
+        rows = await self.session.scalars(
+            query.order_by(AttemptRow.submitted_at.desc(), AttemptRow.id.desc())
+            .limit(limit)
+            .execution_options(populate_existing=True)
+        )
+        return [_to_entity(row) for row in rows]
+
+    async def last_submitted_by_course(
+        self, user_id: UUID, course_ids: Sequence[UUID]
+    ) -> dict[UUID, datetime]:
+        """Return when the user last submitted a non-preview attempt per course."""
+        if not course_ids:
+            return {}
+        rows = await self.session.execute(
+            select(CourseStep.course_id, func.max(AttemptRow.submitted_at))
+            .join(CourseStep, CourseStep.id == AttemptRow.step_id)
+            .where(
+                AttemptRow.user_id == user_id,
+                CourseStep.course_id.in_(course_ids),
+                AttemptRow.is_preview.is_(False),
+                AttemptRow.submitted_at.is_not(None),
+            )
+            .group_by(CourseStep.course_id)
+        )
+        return {course_id: at for course_id, at in rows if at is not None}

@@ -17,7 +17,13 @@ EXAMS: Final = ("ielts", "toefl", "duolingo", "sat", "act")
 _LINE: Final = 75
 
 CalendarSourceName = Literal[
-    "university", "checklist", "exam", "opportunity", "test_score"
+    "university",
+    "checklist",
+    "exam",
+    "opportunity",
+    "test_score",
+    "personal",
+    "milestone",
 ]
 
 
@@ -47,6 +53,7 @@ class CalendarEntry:
     title_key: str | None = None
     subject: str | None = None
     list_entry_id: UUID | None = None
+    description: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,6 +178,8 @@ def render_ics(
                 f"DTEND:{_stamp(e.due_utc)}",
             ]
         lines.append(f"SUMMARY:{_escape(e.title)}")
+        if e.description:
+            lines.append(f"DESCRIPTION:{_escape(e.description)}")
         for days in alarm_offsets:
             lines += [
                 "BEGIN:VALARM",

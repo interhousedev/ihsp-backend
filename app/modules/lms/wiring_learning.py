@@ -50,6 +50,9 @@ from app.modules.lms.application.learning.get_video_stream import (
 )
 from app.modules.lms.application.learning.issue_media_grant import IssueMediaGrant
 from app.modules.lms.application.learning.join_course import JoinCourse
+from app.modules.lms.application.learning.learning_record import (
+    LearningRecordQueries,
+)
 from app.modules.lms.application.learning.list_broadcast_audience import (
     ListBroadcastAudience,
 )
@@ -149,6 +152,7 @@ class LearningServices:
     coach_insights: CoachInsightsReport
     levels: LevelServices
     badge_authoring: BadgeAuthoringServices
+    learning_record: LearningRecordQueries
 
 
 def build_learning(
@@ -265,6 +269,7 @@ def build_learning(
             else None
         ),
         badge_authoring=build_badge_authoring(deps, uow_factory),
+        learning_record=LearningRecordQueries(engagement_uow, gate),
         open_coach=OpenCoach(coach_sessions, coach_attempts, coach_gate, clock),
         coach_reply=CoachReply(
             coach_sessions,

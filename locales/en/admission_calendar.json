@@ -30,5 +30,13 @@
   "calendar-exam-day-sat": "SAT test day",
   "calendar-exam-day-act": "ACT test day",
   "calendar-test-registration": "Test registration deadline",
-  "calendar-test-day": "Test day"
+  "calendar-test-day": "Test day",
+  "calendar-source-personal": "My finds",
+  "calendar-source-milestone": "Goal plan",
+  "calendar-personal-unverified": "Added by the student. Not verified by the school.",
+  "calendar-feed-exists": "You already have a calendar link. Replace it to get a new one; the old link will stop working.",
+  "calendar-personal-registration": "Registration deadline",
+  "calendar-personal-start": "Starts",
+  "calendar-personal-end": "Ends",
+  "calendar-milestone": "Goal plan step"
 }

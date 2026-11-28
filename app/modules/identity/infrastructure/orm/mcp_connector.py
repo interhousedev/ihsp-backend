@@ -42,6 +42,7 @@ class McpConnector(IdMixin, TimestampMixin, Base):
             "admin",
             "teacher",
             "app",
+            "admission",
             name="server",
             native_enum=False,
             create_constraint=True,

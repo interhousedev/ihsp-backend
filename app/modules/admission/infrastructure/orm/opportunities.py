@@ -1,6 +1,6 @@
 """The opportunities catalog, its taxonomy, submissions and student plans."""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
@@ -16,6 +16,7 @@ from app.shared.db.base import Base, IdMixin
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     Index,
@@ -120,6 +121,46 @@ class OpportunityPlanEntryRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     note: Mapped[str | None] = mapped_column(String(500))
 
 
+class OpportunityPersonalEntryRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
+    """A find the student added to their plan; not part of the catalog."""
+
+    __tablename__ = "opportunity_personal_entries"
+    __table_args__ = (
+        UniqueConstraint("student_id", "dedup_key"),
+        check_in("kind", _KINDS),
+        check_in("origin", ("web", "mcp")),
+        CheckConstraint("planned_grade BETWEEN 1 AND 12", name="planned_grade"),
+        CheckConstraint(
+            "planned_term IN ('fall', 'spring', 'summer')", name="planned_term"
+        ),
+        CheckConstraint("ends_on >= starts_on", name="dates"),
+        S,
+    )
+
+    student_id: Mapped[UUID] = mapped_column(Uuid, index=True)
+    kind: Mapped[str] = mapped_column(String(24))
+    title: Mapped[str] = mapped_column(String(200))
+    provider: Mapped[str | None] = mapped_column(String(300))
+    url: Mapped[str | None] = mapped_column(String(2000))
+    summary: Mapped[str | None] = mapped_column(String(2000))
+    registration_deadline: Mapped[date | None] = mapped_column(Date)
+    starts_on: Mapped[date | None] = mapped_column(Date)
+    ends_on: Mapped[date | None] = mapped_column(Date)
+    planned_grade: Mapped[int | None] = mapped_column(SmallInteger)
+    planned_term: Mapped[str | None] = mapped_column(String(8))
+    note: Mapped[str | None] = mapped_column(String(500))
+    origin: Mapped[str] = mapped_column(String(8))
+    dedup_key: Mapped[str] = mapped_column(String(64))
+    submission_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey(
+            "admission.opportunity_submissions.id",
+            ondelete="SET NULL",
+            name="fk_opp_personal_entries_submission_id",
+        ),
+        index=True,
+    )
+
+
 class OpportunityAiPlanRow(UpdatedMixin, Base):
     """The last generated plan of a student."""
 
@@ -133,6 +174,7 @@ class OpportunityAiPlanRow(UpdatedMixin, Base):
 
 __all__ = [
     "OpportunityAiPlanRow",
+    "OpportunityPersonalEntryRow",
     "OpportunityPlanEntryRow",
     "OpportunityRow",
     "OpportunitySubmissionRow",

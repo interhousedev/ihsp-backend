@@ -15,7 +15,9 @@ from app.modules.admission.application.assistant import AssistantService
 from app.modules.admission.application.budget import BudgetService
 from app.modules.admission.application.calendar import (
     CalendarService,
+    MilestoneSource,
     OpportunitySource,
+    PersonalSource,
     ScoreCalendarSource,
 )
 from app.modules.admission.application.career import CareerService
@@ -91,6 +93,7 @@ from app.modules.admission.application.opportunity_intake import OpportunityInta
 from app.modules.admission.application.opportunity_planner import OpportunityPlanner
 from app.modules.admission.application.orgs import OrgService
 from app.modules.admission.application.outcomes import OutcomeService
+from app.modules.admission.application.personal_entries import PersonalEntryService
 from app.modules.admission.application.privacy import Eraser, PrivacyService
 from app.modules.admission.application.professions import ProfessionService
 from app.modules.admission.application.profile import ProfileService
@@ -179,6 +182,7 @@ from app.modules.admission.ports.ai import PromptSource, QuotaOf, StructuredAi
 from app.modules.admission.ports.calendar import CalendarStore
 from app.modules.admission.ports.consent import (
     MemoryPurposeConsents,
+    PurposeConsents,
     PurposeConsentStore,
 )
 from app.modules.admission.ports.courses import CourseSources
@@ -273,6 +277,7 @@ class AdmissionServices:
     orgs: OrgService
     opportunity_comments: OppCommentService
     opportunity_planner: OpportunityPlanner
+    personal_entries: PersonalEntryService
     app_review: AppReviewService
     career: CareerService
     career_ai: CareerSuggester
@@ -315,6 +320,7 @@ class AdmissionServices:
     essay_short_answers: EssayShortAnswers
     essay_deep_read: EssayDeepReadService
     essay_keys: EssayKeyAdmin
+    consents: PurposeConsents
 
 
 @dataclass(frozen=True, slots=True)
@@ -411,6 +417,8 @@ def build(
     calendar.register(OpportunitySource(opportunities.deadlines_for, calendar.store))
     scores = ScoreService(uow_factory, access, deps.clock, certificates)
     calendar.register(ScoreCalendarSource(scores.dated, calendar.store, deps.i18n.t))
+    calendar.register(PersonalSource(uow_factory, calendar.store, deps.i18n.t))
+    calendar.register(MilestoneSource(uow_factory, calendar.store, deps.i18n.t))
     list_plan = ListPlanService(
         uow_factory,
         access,
@@ -648,6 +656,9 @@ def build(
         opportunity_comments=OppCommentService(
             uow_factory, opportunities, deps.clock, identity
         ),
+        personal_entries=PersonalEntryService(
+            uow_factory, access, opportunities, deps.clock, deps.rate_limiter
+        ),
         opportunity_planner=OpportunityPlanner(
             uow_factory,
             access,
@@ -832,6 +843,7 @@ def build(
             deps.clock,
             settle=lambda: asyncio.sleep(CACHE_TTL_SECONDS + 5),
         ),
+        consents=consents,
     )
 
 

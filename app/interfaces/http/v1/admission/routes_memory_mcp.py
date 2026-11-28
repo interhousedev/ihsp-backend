@@ -17,6 +17,7 @@ from app.modules.identity.domain.personal_token import (
     ADMISSION_MAX_EXPIRY_DAYS,
     ADMISSION_SCOPES,
 )
+from app.shared.mcp_scopes import scopes_for_roles
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, Field
@@ -51,6 +52,11 @@ class McpConnectionOut(BaseModel):
     url: str
     scopes: list[str]
     max_expiry_days: int
+    oauth_scopes: list[str] = Field(
+        description="OAuth scopes of the admission server this caller's roles may hold"
+    )
+    app_url: str = Field(description="URL of the combined `/app` MCP server")
+    connectors_url: str = Field(description="Page where the user connects AI services")
     example_config: dict[str, Any]
 
 
@@ -114,6 +120,9 @@ async def mcp_connection(
         url=url,
         scopes=sorted(ADMISSION_SCOPES),
         max_expiry_days=ADMISSION_MAX_EXPIRY_DAYS,
+        oauth_scopes=sorted(scopes_for_roles("admission", ctx.actor.roles)),
+        app_url=f"{container.settings.urls.mcp.rstrip('/')}/app",
+        connectors_url=f"{container.settings.urls.id.rstrip('/')}/connectors/",
         example_config={
             "mcpServers": {
                 "admission": {
