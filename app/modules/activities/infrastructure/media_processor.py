@@ -8,6 +8,7 @@ the declared type or the file name: the content decides.
 """
 
 import asyncio
+import importlib
 import io
 import json
 import shutil
@@ -67,10 +68,10 @@ Image.MAX_IMAGE_PIXELS = MAX_PIXELS  # Pillow raises DecompressionBombError at 2
 
 def _register_heif() -> bool:
     try:
-        from pillow_heif import register_heif_opener  # type: ignore[import-not-found]
+        heif = importlib.import_module("pillow_heif")
     except ImportError:
         return False
-    register_heif_opener()
+    heif.register_heif_opener()
     return True
 
 
