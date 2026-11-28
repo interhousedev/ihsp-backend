@@ -134,8 +134,10 @@ FROM (
   WHERE d >= :start AND d <= :end
 ) x
 JOIN academic.students s ON s.user_id = x.student_id
-WHERE TRUE {extra}
+WHERE (CAST(:group AS uuid) IS NULL OR s.group_id = :group)
+  AND (CAST(:student AS uuid) IS NULL OR x.student_id = :student)
 """
+_EMIS_DATES_STMT = sa.text(_EMIS_DATES)
 
 
 def _statement(
@@ -281,19 +283,12 @@ class SqlAttendanceReports:
         student_id: UUID | None = None,
     ) -> list[EmisAbsentDate]:
         """EMIS absent dates in the range with the platform's absences of each."""
-        extra = ""
-        binds = [
+        stmt = _EMIS_DATES_STMT.bindparams(
             sa.bindparam("start", start, type_=sa.Date),
             sa.bindparam("end", end, type_=sa.Date),
-        ]
-        if group_id is not None:
-            extra += " AND s.group_id = :group"
-            binds.append(sa.bindparam("group", group_id, type_=sa.Uuid))
-        if student_id is not None:
-            extra += " AND x.student_id = :student"
-            binds.append(sa.bindparam("student", student_id, type_=sa.Uuid))
-        # nosemgrep: avoid-sqlalchemy-text -- constant fragments, values are bound
-        stmt = sa.text(_EMIS_DATES.format(extra=extra)).bindparams(*binds)
+            sa.bindparam("group", group_id, type_=sa.Uuid),
+            sa.bindparam("student", student_id, type_=sa.Uuid),
+        )
         return [
             EmisAbsentDate(
                 student_id=row.student_id,
