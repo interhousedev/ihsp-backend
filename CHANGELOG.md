@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.15.2] - 2026-11-28
+
+### Added
+
+- `POST /v1/admin/activities/clubs` (superusers): create a club that is active at once, with a chosen owner.
+
 ## [1.15.1] - 2026-11-28
 
 ### Security
