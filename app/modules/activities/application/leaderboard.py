@@ -49,6 +49,22 @@ class LeaderboardService:
         names = {u: await p.users.display_name(u) for u in totals}
         return top(totals, names, await p.points.opted_out(), limit)
 
+    async def top_combined(self, actor: Actor, limit: int = 20) -> list[LeaderRow]:
+        """One table over the actor's clubs that keep points, summed per student."""
+        p = self._p
+        totals: dict[UUID, int] = {}
+        for m in await p.members.list_for_user(actor.user_id):
+            if not m.is_active:
+                continue
+            club = await load_club(p, m.club_id)
+            if ClubCapability.POINTS not in club.capabilities:
+                continue
+            club_totals = await p.points.totals(club.id, None, None)
+            for user_id, points in club_totals.items():
+                totals[user_id] = totals.get(user_id, 0) + points
+        names = {u: await p.users.display_name(u) for u in totals}
+        return top(totals, names, await p.points.opted_out(), limit)
+
     async def my_points(self, actor: Actor, club_id: UUID) -> dict[str, Any]:
         """The actor's total and entries on this club."""
         p = self._p

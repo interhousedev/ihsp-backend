@@ -297,6 +297,22 @@ async def approve_member(
     return await container.activities.memberships.approve(actor, club_id, user_id)
 
 
+@router.post("/clubs/{club_id}/members/{user_id}:decline")
+async def decline_member(
+    club_id: UUID, user_id: UUID, container: ContainerDep, actor: ActorDep
+) -> Membership:
+    """Turn a join request down; the person may ask again."""
+    return await container.activities.memberships.decline(actor, club_id, user_id)
+
+
+@router.post("/clubs/{club_id}/members/{user_id}:remove")
+async def remove_member(
+    club_id: UUID, user_id: UUID, container: ContainerDep, actor: ActorDep
+) -> Membership:
+    """Remove a member without a ban; the person may join again."""
+    return await container.activities.memberships.remove(actor, club_id, user_id)
+
+
 @router.post("/clubs/{club_id}/members/{user_id}:ban")
 async def ban_member(
     club_id: UUID,

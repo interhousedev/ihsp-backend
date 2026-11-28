@@ -17,6 +17,7 @@ from app.modules.admission.domain.errors import (
 )
 from app.modules.admission.domain.project_ideas import (
     HISTORY_KEEP,
+    MAX_PROJECTS,
     Contacts,
     Helper,
     ProjectRun,
@@ -87,6 +88,21 @@ def test_clean_ideas_keeps_only_searched_urls_and_known_tags() -> None:
     assert out[0].help_tags == ("pitching",)
     with pytest.raises(AiInvalidOutputError):
         clean_ideas({"projects": []}, set())
+
+
+def test_clean_ideas_puts_concrete_ideas_first_and_caps_the_list() -> None:
+    full = {
+        "deliverable": "A bank of 200 solved tasks.",
+        "measure": "30 classmates used it twice.",
+        "first_steps": ["Ask the teacher", "Make a form"],
+        "weeks": 6,
+    }
+    vague = [_idea(f"Vague {n}", weeks=99) for n in range(MAX_PROJECTS)]
+    out = clean_ideas({"projects": [*vague, _idea("Task bank", **full)]}, set())
+    assert len(out) == MAX_PROJECTS
+    assert out[0].title == "Task bank" and out[0].complete and out[0].weeks == 6
+    assert out[1].title == "Vague 0" and out[1].weeks is None
+    assert not out[1].complete
 
 
 def test_search_has_an_uzbekistan_query() -> None:

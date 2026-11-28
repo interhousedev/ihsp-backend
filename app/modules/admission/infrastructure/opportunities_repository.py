@@ -142,6 +142,13 @@ class SqlOpportunityRepository:
         row = await self._s.get(OpportunityRow, opportunity_id)
         return _opp(row) if row else None
 
+    async def get_many(self, opportunity_ids: list[UUID]) -> list[Opportunity]:
+        """The entries with these ids, live or archived; unknown ids are skipped."""
+        if not opportunity_ids:
+            return []
+        q = select(OpportunityRow).where(OpportunityRow.id.in_(opportunity_ids))
+        return [_opp(r) for r in await self._s.scalars(q)]
+
     async def apply(
         self, draft: OpportunityDraft, *, target_id: UUID | None, by: UUID
     ) -> UUID:

@@ -121,6 +121,40 @@ class MembershipService:
         m.leave(self._p.clock.now())
         await self._p.members.save(m)
 
+    async def decline(self, actor: Actor, club_id: UUID, user_id: UUID) -> Membership:
+        """Turn a join request down; the person may ask again."""
+        return await self._remove(
+            actor, club_id, user_id, MemberStatus.REQUESTED, "activities.member.decline"
+        )
+
+    async def remove(self, actor: Actor, club_id: UUID, user_id: UUID) -> Membership:
+        """Remove a member without a ban; the person may join again."""
+        return await self._remove(
+            actor, club_id, user_id, MemberStatus.ACTIVE, "activities.member.remove"
+        )
+
+    async def _remove(
+        self,
+        actor: Actor,
+        club_id: UUID,
+        user_id: UUID,
+        expected: MemberStatus,
+        action: str,
+    ) -> Membership:
+        """Mark a row of the expected status as removed; never the owner."""
+        p = self._p
+        await require(p, actor, club_id, Permission.EDIT_CLUB)
+        m = await p.members.get(club_id, user_id)
+        if m is None:
+            raise ActivitiesNotFoundError()
+        if m.status != expected or m.role == MemberRole.OWNER:
+            raise MembershipStateError()
+        m.remove()
+        m.left_at = p.clock.now()
+        await p.members.save(m)
+        await p.audit.record(actor.user_id, action, club_id)
+        return m
+
     async def ban(
         self, actor: Actor, club_id: UUID, user_id: UUID, reason: str
     ) -> Membership:
@@ -143,10 +177,14 @@ class MembershipService:
         return await self._p.members.list(club_id)
 
     async def members(self, actor: Actor, club_id: UUID) -> builtins.list[MemberView]:
-        """Active members with names."""
-        if Permission.VIEW_MEMBERS not in await permissions(self._p, actor, club_id):
+        """Active members with names; club editors also see the join requests."""
+        granted = await permissions(self._p, actor, club_id)
+        if Permission.VIEW_MEMBERS not in granted:
             raise PermissionDeniedError()
-        rows = [m for m in await self._p.members.list(club_id) if m.is_active]
+        shown = {MemberStatus.ACTIVE}
+        if Permission.EDIT_CLUB in granted:
+            shown.add(MemberStatus.REQUESTED)
+        rows = [m for m in await self._p.members.list(club_id) if m.status in shown]
         return [
             MemberView(
                 m.user_id,

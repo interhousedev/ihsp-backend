@@ -741,11 +741,8 @@ class OpportunityService:
             repo = uow.opportunities
             entries = await repo.plan(student_id)
             nodes = await repo.taxonomy()
-            catalog: dict[UUID, Opportunity] = {}
-            for e in entries:
-                row = await repo.get(e.opportunity_id)
-                if row is not None:
-                    catalog[row.id] = row
+            rows = await repo.get_many([e.opportunity_id for e in entries])
+            catalog: dict[UUID, Opportunity] = {row.id: row for row in rows}
         today = self._clock.now().date()
         horizon = today + dt.timedelta(days=HORIZON_DAYS)
         _, fld = _parents(nodes)

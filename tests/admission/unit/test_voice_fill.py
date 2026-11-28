@@ -107,5 +107,8 @@ def test_future_interest_is_optional_and_reaches_the_model_and_search() -> None:
 
 
 def test_project_prompt_crosses_interests() -> None:
-    assert "CROSS" in project_ideas.SYSTEM
+    assert "Join two interests in one idea only when the join is natural" in (
+        project_ideas.SYSTEM
+    )
+    assert "never glue unrelated interests together" in project_ideas.SYSTEM
     assert "[future interest]" in project_ideas.SYSTEM

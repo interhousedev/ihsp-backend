@@ -97,7 +97,12 @@ from app.modules.admission.application.profile import ProfileService
 from app.modules.admission.application.profile_alignment import AlignmentService
 from app.modules.admission.application.profile_details import ProfileDetailsService
 from app.modules.admission.application.project_helpers import ProjectHelperService
-from app.modules.admission.application.project_ideas import ProjectIdeaService
+from app.modules.admission.application.project_ideas import (
+    ProjectIdeaService,
+)
+from app.modules.admission.application.project_ideas import (
+    student_context as project_student_context,
+)
 from app.modules.admission.application.prompt_studio import (
     CoreStudioRunner,
     PromptStudioService,
@@ -752,6 +757,7 @@ def build(
             _quota_of(deps, "admit_project_ideas_per_week"),
             web_search=web_search,
             profile_of=profile_of,
+            context_of=project_student_context(uow_factory),
         ),
         project_helpers=ProjectHelperService(
             SqlHelperRepository(deps.sessionmaker),

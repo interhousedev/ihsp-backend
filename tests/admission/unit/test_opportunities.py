@@ -82,6 +82,9 @@ class FakeOpportunities:
     async def get(self, opportunity_id: UUID) -> Opportunity | None:
         return self.rows.get(opportunity_id)
 
+    async def get_many(self, opportunity_ids: list[UUID]) -> list[Opportunity]:
+        return [self.rows[i] for i in opportunity_ids if i in self.rows]
+
     async def apply(
         self, draft: OpportunityDraft, *, target_id: UUID | None, by: UUID
     ) -> UUID:
