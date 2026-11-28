@@ -7093,6 +7093,90 @@
         "title": "BanIn",
         "type": "object"
       },
+      "BankQuestionOut": {
+        "description": "A stored question as the staff app reads it.",
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "difficulty": {
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ],
+            "title": "Difficulty",
+            "type": "string"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "origin": {
+            "enum": [
+              "ai",
+              "teacher"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "teacher",
+              "subject"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "topic",
+          "question",
+          "answer",
+          "options",
+          "explanation",
+          "difficulty",
+          "origin",
+          "visibility",
+          "created_at"
+        ],
+        "title": "BankQuestionOut",
+        "type": "object"
+      },
       "BaseReviewOut": {
         "description": "The review of the writing; the same for every university.",
         "properties": {
@@ -19626,6 +19710,32 @@
         "title": "CurriculumSyncResponse",
         "type": "object"
       },
+      "CurriculumTopicOut": {
+        "description": "A curriculum topic of the subject.",
+        "properties": {
+          "grade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          }
+        },
+        "required": [
+          "topic",
+          "grade"
+        ],
+        "title": "CurriculumTopicOut",
+        "type": "object"
+      },
       "CurveDoc": {
         "description": "A quadratic curve (`base`) or a cumulative table (`steps`).",
         "properties": {
@@ -29820,6 +29930,20 @@
         "title": "GoalPlanPutIn",
         "type": "object"
       },
+      "GoogleWalletLinkResponse": {
+        "description": "The \"Add to Google Wallet\" link.",
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "GoogleWalletLinkResponse",
+        "type": "object"
+      },
       "GradeRow": {
         "description": "A subject row of the grade table.",
         "properties": {
@@ -30213,6 +30337,10 @@
               }
             ]
           },
+          "hidden": {
+            "title": "Hidden",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -30260,6 +30388,7 @@
           "slug",
           "current_semester",
           "status",
+          "hidden",
           "students_count",
           "subgroups_assigned",
           "unregistered_count",
@@ -30311,6 +30440,20 @@
           "full_name"
         ],
         "title": "GroupHeadRef",
+        "type": "object"
+      },
+      "GroupHiddenBody": {
+        "description": "Body of PUT /v1/admin/groups/{id}/hidden.",
+        "properties": {
+          "hidden": {
+            "title": "Hidden",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "hidden"
+        ],
+        "title": "GroupHiddenBody",
         "type": "object"
       },
       "GroupMemberRow": {
@@ -43554,7 +43697,7 @@
         "type": "object"
       },
       "LyceumNameOut": {
-        "description": "The lyceum name in the three languages.",
+        "description": "The lyceum name in the three languages, as EMIS gives it.",
         "properties": {
           "en": {
             "title": "En",
@@ -47848,6 +47991,62 @@
         "title": "MyProfessionOut",
         "type": "object"
       },
+      "MyRatingRow": {
+        "description": "The caller's row with the breakdown.",
+        "properties": {
+          "breakdown": {
+            "$ref": "#/components/schemas/RatingBreakdown"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          },
+          "is_me": {
+            "title": "Is Me",
+            "type": "boolean"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "place": {
+            "title": "Place",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "place",
+          "student_id",
+          "full_name",
+          "group_name",
+          "score",
+          "photo_url",
+          "is_me",
+          "breakdown"
+        ],
+        "title": "MyRatingRow",
+        "type": "object"
+      },
       "MySuggestionResponse": {
         "description": "`MySuggestion`: one of the signed-in person's suggestions and its status.",
         "properties": {
@@ -52097,6 +52296,54 @@
         "title": "OutlineStepView",
         "type": "object"
       },
+      "OverallRatingResponse": {
+        "description": "Top students, the caller's place and the weights.",
+        "properties": {
+          "academic_year": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RatingYear"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "me": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MyRatingRow"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "top": {
+            "items": {
+              "$ref": "#/components/schemas/RatingRow"
+            },
+            "title": "Top",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "weights": {
+            "$ref": "#/components/schemas/RatingWeightsResponse"
+          }
+        },
+        "required": [
+          "academic_year",
+          "weights",
+          "total",
+          "top",
+          "me"
+        ],
+        "title": "OverallRatingResponse",
+        "type": "object"
+      },
       "OverlapOut": {
         "description": "Preference tags a university meets, out of those it can be judged on.",
         "properties": {
@@ -52181,6 +52428,28 @@
           "expires_at"
         ],
         "title": "OwnershipTransfer",
+        "type": "object"
+      },
+      "PageOut": {
+        "description": "One page of questions and the total behind it.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BankQuestionOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "PageOut",
         "type": "object"
       },
       "PageResponse_NotebookItemResponse_": {
@@ -56063,7 +56332,7 @@
             ],
             "title": "Bottom Nav"
           },
-          "hide_photo_from_classmates": {
+          "hide_photo_from_public": {
             "anyOf": [
               {
                 "type": "boolean"
@@ -56072,7 +56341,7 @@
                 "type": "null"
               }
             ],
-            "title": "Hide Photo From Classmates"
+            "title": "Hide Photo From Public"
           },
           "lessons_links_lead_min": {
             "anyOf": [
@@ -57131,6 +57400,11 @@
             "title": "Challenges",
             "type": "array"
           },
+          "deliverable": {
+            "default": "",
+            "title": "Deliverable",
+            "type": "string"
+          },
           "first_steps": {
             "items": {
               "type": "string"
@@ -57157,12 +57431,33 @@
             "title": "Key",
             "type": "string"
           },
+          "measure": {
+            "default": "",
+            "title": "Measure",
+            "type": "string"
+          },
           "summary": {
             "title": "Summary",
             "type": "string"
           },
           "title": {
             "title": "Title",
+            "type": "string"
+          },
+          "weeks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weeks"
+          },
+          "why_you": {
+            "default": "",
+            "title": "Why You",
             "type": "string"
           }
         },
@@ -58865,8 +59160,12 @@
         "type": "object"
       },
       "PublicStudentCardResponse": {
-        "description": "The card seen through a token; the owner's id is not part of it.",
+        "description": "The card as a verifier sees it through the QR code; no owner id.",
         "properties": {
+          "academic_year": {
+            "title": "Academic Year",
+            "type": "string"
+          },
           "course": {
             "anyOf": [
               {
@@ -58889,13 +59188,12 @@
             ],
             "title": "Direction"
           },
-          "expires_at": {
-            "format": "date-time",
-            "title": "Expires At",
-            "type": "string"
-          },
           "first_name": {
             "title": "First Name",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
             "type": "string"
           },
           "group": {
@@ -58927,6 +59225,21 @@
               }
             ]
           },
+          "middle_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Middle Name"
+          },
+          "org_name": {
+            "title": "Org Name",
+            "type": "string"
+          },
           "speciality": {
             "anyOf": [
               {
@@ -58937,18 +59250,33 @@
               }
             ],
             "title": "Speciality"
+          },
+          "student_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Id"
           }
         },
         "required": [
           "first_name",
           "last_name",
+          "middle_name",
+          "full_name",
+          "student_id",
           "group",
           "course",
+          "academic_year",
+          "org_name",
           "lyceum_name",
           "direction",
           "speciality",
-          "has_photo",
-          "expires_at"
+          "has_photo"
         ],
         "title": "PublicStudentCardResponse",
         "type": "object"
@@ -60679,6 +61007,111 @@
         "title": "RatingBookResponse",
         "type": "object"
       },
+      "RatingBreakdown": {
+        "description": "The parts of the caller's score (penalties negative).",
+        "properties": {
+          "absence_points": {
+            "title": "Absence Points",
+            "type": "number"
+          },
+          "absences": {
+            "title": "Absences",
+            "type": "integer"
+          },
+          "base": {
+            "title": "Base",
+            "type": "number"
+          },
+          "certificate_points": {
+            "title": "Certificate Points",
+            "type": "number"
+          },
+          "certificates": {
+            "items": {
+              "$ref": "#/components/schemas/RatingCertificate"
+            },
+            "title": "Certificates",
+            "type": "array"
+          },
+          "mark_average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mark Average"
+          },
+          "mark_count": {
+            "title": "Mark Count",
+            "type": "integer"
+          },
+          "marks_points": {
+            "title": "Marks Points",
+            "type": "number"
+          },
+          "work_off_points": {
+            "title": "Work Off Points",
+            "type": "number"
+          },
+          "work_offs": {
+            "title": "Work Offs",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "base",
+          "certificates",
+          "certificate_points",
+          "mark_average",
+          "mark_count",
+          "marks_points",
+          "absences",
+          "absence_points",
+          "work_offs",
+          "work_off_points"
+        ],
+        "title": "RatingBreakdown",
+        "type": "object"
+      },
+      "RatingCertificate": {
+        "description": "A certificate of the year with its points.",
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "points": {
+            "title": "Points",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "category",
+          "level",
+          "points"
+        ],
+        "title": "RatingCertificate",
+        "type": "object"
+      },
       "RatingCommentOut": {
         "description": "A rating comment; the author only when not anonymous.",
         "properties": {
@@ -60775,6 +61208,134 @@
           "score"
         ],
         "title": "RatingIn",
+        "type": "object"
+      },
+      "RatingRow": {
+        "description": "One ranked student.",
+        "properties": {
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          },
+          "is_me": {
+            "title": "Is Me",
+            "type": "boolean"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "place": {
+            "title": "Place",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "place",
+          "student_id",
+          "full_name",
+          "group_name",
+          "score",
+          "photo_url",
+          "is_me"
+        ],
+        "title": "RatingRow",
+        "type": "object"
+      },
+      "RatingWeightsResponse": {
+        "description": "How the score is built (penalties are positive numbers here).",
+        "properties": {
+          "absence_points": {
+            "title": "Absence Points",
+            "type": "number"
+          },
+          "base": {
+            "title": "Base",
+            "type": "number"
+          },
+          "category_points": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Category Points",
+            "type": "object"
+          },
+          "level_points": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Level Points",
+            "type": "object"
+          },
+          "marks_points": {
+            "title": "Marks Points",
+            "type": "number"
+          },
+          "marks_threshold": {
+            "title": "Marks Threshold",
+            "type": "number"
+          },
+          "work_off_points": {
+            "title": "Work Off Points",
+            "type": "number"
+          }
+        },
+        "required": [
+          "base",
+          "category_points",
+          "level_points",
+          "marks_threshold",
+          "marks_points",
+          "absence_points",
+          "work_off_points"
+        ],
+        "title": "RatingWeightsResponse",
+        "type": "object"
+      },
+      "RatingYear": {
+        "description": "The rated academic year.",
+        "properties": {
+          "ends_on": {
+            "format": "date",
+            "title": "Ends On",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "starts_on",
+          "ends_on"
+        ],
+        "title": "RatingYear",
         "type": "object"
       },
       "RatingsBody": {
@@ -65075,6 +65636,25 @@
           }
         },
         "title": "SaveNoteBody",
+        "type": "object"
+      },
+      "SaveOut": {
+        "description": "How many questions were stored and how many were duplicates.",
+        "properties": {
+          "saved": {
+            "title": "Saved",
+            "type": "integer"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "saved",
+          "skipped"
+        ],
+        "title": "SaveOut",
         "type": "object"
       },
       "SaveStepDraftBody": {
@@ -72913,8 +73493,12 @@
         "type": "object"
       },
       "StudentCardResponse": {
-        "description": "The student's own card.",
+        "description": "The student's own card with its permanent QR token.",
         "properties": {
+          "academic_year": {
+            "title": "Academic Year",
+            "type": "string"
+          },
           "course": {
             "anyOf": [
               {
@@ -72939,6 +73523,10 @@
           },
           "first_name": {
             "title": "First Name",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
             "type": "string"
           },
           "group": {
@@ -72970,6 +73558,25 @@
               }
             ]
           },
+          "middle_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Middle Name"
+          },
+          "org_name": {
+            "title": "Org Name",
+            "type": "string"
+          },
+          "qr_token": {
+            "title": "Qr Token",
+            "type": "string"
+          },
           "speciality": {
             "anyOf": [
               {
@@ -72980,42 +73587,52 @@
               }
             ],
             "title": "Speciality"
+          },
+          "student_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Id"
+          },
+          "wallet": {
+            "$ref": "#/components/schemas/WalletAvailabilityOut"
           }
         },
         "required": [
           "first_name",
           "last_name",
+          "middle_name",
+          "full_name",
+          "student_id",
           "group",
           "course",
+          "academic_year",
+          "org_name",
           "lyceum_name",
           "direction",
           "speciality",
-          "has_photo"
+          "has_photo",
+          "qr_token",
+          "wallet"
         ],
         "title": "StudentCardResponse",
         "type": "object"
       },
       "StudentCardTokenResponse": {
-        "description": "A share token: shown as a QR code, valid for two minutes.",
+        "description": "The new permanent QR token; the previous one no longer works.",
         "properties": {
-          "expires_at": {
-            "format": "date-time",
-            "title": "Expires At",
-            "type": "string"
-          },
-          "refresh_in": {
-            "title": "Refresh In",
-            "type": "integer"
-          },
           "token": {
             "title": "Token",
             "type": "string"
           }
         },
         "required": [
-          "token",
-          "expires_at",
-          "refresh_in"
+          "token"
         ],
         "title": "StudentCardTokenResponse",
         "type": "object"
@@ -80533,6 +81150,25 @@
         "title": "TopUserOut",
         "type": "object"
       },
+      "TopicCountOut": {
+        "description": "A curriculum topic with the questions the caller sees in it.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          }
+        },
+        "required": [
+          "topic",
+          "count"
+        ],
+        "title": "TopicCountOut",
+        "type": "object"
+      },
       "TopicRefSchema": {
         "description": "A topic the item feeds, with the page range.",
         "properties": {
@@ -83451,9 +84087,9 @@
             "$ref": "#/components/schemas/TeacherContacts",
             "default": {}
           },
-          "hide_photo_from_classmates": {
+          "hide_photo_from_public": {
             "default": false,
-            "title": "Hide Photo From Classmates",
+            "title": "Hide Photo From Public",
             "type": "boolean"
           },
           "lessons_links_lead_min": {
@@ -84398,6 +85034,25 @@
           "values"
         ],
         "title": "VoiceFillOut",
+        "type": "object"
+      },
+      "WalletAvailabilityOut": {
+        "description": "Which wallet buttons to show: a wallet without settings is off.",
+        "properties": {
+          "apple": {
+            "title": "Apple",
+            "type": "boolean"
+          },
+          "google": {
+            "title": "Google",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "apple",
+          "google"
+        ],
+        "title": "WalletAvailabilityOut",
         "type": "object"
       },
       "WebAuthnOptionsResponse": {
@@ -86080,6 +86735,10 @@
               }
             ]
           },
+          "hidden": {
+            "title": "Hidden",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -86120,6 +86779,7 @@
           "slug",
           "current_semester",
           "status",
+          "hidden",
           "students_count",
           "subgroups_assigned",
           "unregistered_count",
@@ -94660,6 +95320,114 @@
         ]
       }
     },
+    "/v1/activities/clubs/{club_id}/members/{user_id}:decline": {
+      "post": {
+        "description": "Turn a join request down; the person may ask again.",
+        "operationId": "decline_member_v1_activities_clubs__club_id__members__user_id__decline_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "club_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Club Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Membership"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decline Member",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/clubs/{club_id}/members/{user_id}:remove": {
+      "post": {
+        "description": "Remove a member without a ban; the person may join again.",
+        "operationId": "remove_member_v1_activities_clubs__club_id__members__user_id__remove_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "club_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Club Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Membership"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Member",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
     "/v1/activities/clubs/{club_id}/planner": {
       "get": {
         "description": "The planner board.",
@@ -102053,7 +102821,7 @@
     },
     "/v1/admin/groups": {
       "get": {
-        "description": "List groups with student and subgroup counts.",
+        "description": "List groups with student and subgroup counts; hidden ones on request.",
         "operationId": "list_groups_v1_admin_groups_get",
         "parameters": [
           {
@@ -102074,6 +102842,16 @@
                 }
               ],
               "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_hidden",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Hidden",
+              "type": "boolean"
             }
           }
         ],
@@ -102461,6 +103239,60 @@
           }
         },
         "summary": "Set Head Student",
+        "tags": [
+          "admin-schedule"
+        ]
+      }
+    },
+    "/v1/admin/groups/{group_id}/hidden": {
+      "put": {
+        "description": "Hide a group from lists, pickers and standings, or show it again.",
+        "operationId": "set_group_hidden_v1_admin_groups__group_id__hidden_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Group Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupHiddenBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Group Hidden",
         "tags": [
           "admin-schedule"
         ]
@@ -151983,6 +152815,52 @@
         ]
       }
     },
+    "/v1/me/rating": {
+      "get": {
+        "description": "The lyceum's students ranked by the overall score of the year.",
+        "operationId": "get_overall_rating_v1_me_rating_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverallRatingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Overall Rating",
+        "tags": [
+          "marks"
+        ]
+      }
+    },
     "/v1/me/record-book": {
       "get": {
         "description": "Return every semester with its GPA and semester marks.",
@@ -152096,7 +152974,7 @@
     },
     "/v1/me/student-card": {
       "get": {
-        "description": "Return the caller's student card.",
+        "description": "Return the caller's student card and its QR token.",
         "operationId": "get_student_card_v1_me_student_card_get",
         "responses": {
           "200": {
@@ -152118,8 +152996,8 @@
     },
     "/v1/me/student-card/tokens": {
       "post": {
-        "description": "Issue a two-minute token that shows the card to a verifier.",
-        "operationId": "issue_student_card_token_v1_me_student_card_tokens_post",
+        "description": "Replace the QR token; the printed or shared old code stops working.",
+        "operationId": "regenerate_student_card_token_v1_me_student_card_tokens_post",
         "responses": {
           "200": {
             "content": {
@@ -152132,7 +153010,47 @@
             "description": "Successful Response"
           }
         },
-        "summary": "Issue Student Card Token",
+        "summary": "Regenerate Student Card Token",
+        "tags": [
+          "student-card"
+        ]
+      }
+    },
+    "/v1/me/student-card/wallet/apple": {
+      "get": {
+        "description": "Return the signed Apple Wallet pass; 404 when Apple Wallet is off.",
+        "operationId": "get_student_card_apple_pass_v1_me_student_card_wallet_apple_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.apple.pkpass": {}
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Student Card Apple Pass",
+        "tags": [
+          "student-card"
+        ]
+      }
+    },
+    "/v1/me/student-card/wallet/google": {
+      "post": {
+        "description": "Return the \"Add to Google Wallet\" link; 404 when Google Wallet is off.",
+        "operationId": "get_student_card_google_link_v1_me_student_card_wallet_google_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleWalletLinkResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Student Card Google Link",
         "tags": [
           "student-card"
         ]
@@ -158126,7 +159044,7 @@
     },
     "/v1/public/student-cards/{token}": {
       "get": {
-        "description": "Return the card behind a token; 404 when it is unknown or expired.",
+        "description": "Return the card behind a token; 404 when it is unknown or was replaced.",
         "operationId": "get_public_student_card_v1_public_student_cards__token__get",
         "parameters": [
           {
@@ -158169,7 +159087,7 @@
     },
     "/v1/public/student-cards/{token}/photo": {
       "get": {
-        "description": "Return the photo behind a token; never cached.",
+        "description": "Return the photo behind a token; 404 when none or hidden from the public.",
         "operationId": "get_public_student_card_photo_v1_public_student_cards__token__photo_get",
         "parameters": [
           {
@@ -162264,7 +163182,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Edit Question V1 Teacher Question Bank Questions  Question Id  Put"
+                  "$ref": "#/components/schemas/BankQuestionOut"
                 }
               }
             },
@@ -162355,7 +163273,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Curriculum Topics V1 Teacher Question Bank Subjects  Subject Id  Curriculum Topics Get"
+                  "items": {
+                    "$ref": "#/components/schemas/CurriculumTopicOut"
+                  },
+                  "title": "Response Curriculum Topics V1 Teacher Question Bank Subjects  Subject Id  Curriculum Topics Get",
+                  "type": "array"
                 }
               }
             },
@@ -162409,7 +163331,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Draw V1 Teacher Question Bank Subjects  Subject Id  Draw Post"
+                  "items": {
+                    "$ref": "#/components/schemas/BankQuestionOut"
+                  },
+                  "title": "Response Draw V1 Teacher Question Bank Subjects  Subject Id  Draw Post",
+                  "type": "array"
                 }
               }
             },
@@ -162493,7 +163419,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response List Questions V1 Teacher Question Bank Subjects  Subject Id  Questions Get"
+                  "$ref": "#/components/schemas/PageOut"
                 }
               }
             },
@@ -162545,7 +163471,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Save V1 Teacher Question Bank Subjects  Subject Id  Questions Post"
+                  "$ref": "#/components/schemas/SaveOut"
                 }
               }
             },
@@ -162589,7 +163515,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Topics V1 Teacher Question Bank Subjects  Subject Id  Topics Get"
+                  "items": {
+                    "$ref": "#/components/schemas/TopicCountOut"
+                  },
+                  "title": "Response Topics V1 Teacher Question Bank Subjects  Subject Id  Topics Get",
+                  "type": "array"
                 }
               }
             },
