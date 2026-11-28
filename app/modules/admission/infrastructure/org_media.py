@@ -18,6 +18,7 @@ from typing import Any
 
 from app.modules.admission.domain.errors import MediaUnreachableError
 from app.modules.admission.infrastructure.orm.catalog import InstitutionRow
+from app.modules.admission.infrastructure.orm.opp_social import OrgRow
 from app.modules.admission.infrastructure.orm.opportunities import OpportunityRow
 from app.modules.admission.ports.media_mirror import MediaMirror
 
@@ -199,6 +200,7 @@ class MirrorReport:
 
     institutions: int
     opportunities: int
+    orgs: int
     failed: list[str]
 
 
@@ -250,10 +252,33 @@ async def _mirror_opportunities(
     return count
 
 
+async def _mirror_orgs(
+    session: AsyncSession,
+    mirror: MediaMirror,
+    own: str,
+    dry_run: bool,
+    failed: list[str],
+) -> int:
+    """Mirror the logo URLs of organizations; the count of URLs tried."""
+    count = 0
+    for org in await session.scalars(select(OrgRow)):
+        url = org.logo_url
+        if not url or url.startswith(own):
+            continue
+        count += 1
+        if dry_run:
+            continue
+        try:
+            org.logo_url = await mirror.mirror(url)
+        except MediaUnreachableError:
+            failed.append(f"org:{org.id}:logo_url: {url}")
+    return count
+
+
 async def mirror_existing_media(
     session: AsyncSession, mirror: MediaMirror, *, dry_run: bool = False
 ) -> MirrorReport:
-    """Replace every external institution and opportunity logo or cover URL.
+    """Replace every external institution, opportunity and organization image URL.
 
     Unreachable URLs stay as they are and are listed in the report; the caller
     commits. In dry-run nothing is downloaded or changed and the counts are the
@@ -263,4 +288,5 @@ async def mirror_existing_media(
     failed: list[str] = []
     inst = await _mirror_institutions(session, mirror, own, dry_run, failed)
     opp = await _mirror_opportunities(session, mirror, own, dry_run, failed)
-    return MirrorReport(inst, opp, failed)
+    orgs = await _mirror_orgs(session, mirror, own, dry_run, failed)
+    return MirrorReport(inst, opp, orgs, failed)

@@ -168,12 +168,14 @@ class GetStepView:
         limit: int | None = rules["attempts_left"]  # the cached render holds the limit
         left = None if limit is None else max(0, limit - len(attempts))
         open_attempt = next((a for a in reversed(attempts) if not a.is_submitted), None)
+        last_submitted = next((a for a in reversed(attempts) if a.is_submitted), None)
         return LearningQuizBlockView(
             id=block["id"],
             type="test",
             rules=LearningQuizRulesView(**{**rules, "attempts_left": left}),
             best=await self._best(uow, attempts, left),
             open_attempt_id=open_attempt.id if open_attempt else None,
+            last_attempt_id=last_submitted.id if last_submitted else None,
             passed=any(a.passed for a in attempts if a.is_submitted),
             points_total=number(points[0]),
             points_earned=number(points[1]),

@@ -1,5 +1,7 @@
 """Use case: open a course page (UF-LMS-01 step 3, UF-LMS-05)."""
 
+from uuid import UUID
+
 from app.modules.lms.application.learning.course_page import CoursePageBuilder
 from app.modules.lms.application.learning.step_context import staff_access
 from app.modules.lms.application.learning.types import UowFactory
@@ -8,6 +10,19 @@ from app.modules.lms.domain.learning.entities import Enrollment, LearningCourse
 from app.modules.lms.domain.learning.errors import CourseNotFoundError
 from app.modules.lms.ports.learning.unit_of_work import LearningUnitOfWork
 from app.shared.actor import Actor
+
+
+async def find_course(
+    uow: LearningUnitOfWork, ref: UUID | str
+) -> LearningCourse | None:
+    """Return a course by id or slug (a UUID-shaped slug falls back to the id)."""
+    if isinstance(ref, UUID):
+        return await uow.courses.get(ref)
+    try:
+        by_id = UUID(ref)
+    except ValueError:
+        return await uow.courses.get_by_slug(ref)
+    return await uow.courses.get(by_id) or await uow.courses.get_by_slug(ref)
 
 
 class GetCoursePage:
@@ -21,7 +36,7 @@ class GetCoursePage:
     async def execute(self, actor: Actor, slug: str) -> LearningCoursePageView:
         """Return the page; invite-only courses are hidden from non-members."""
         async with self.uow_factory() as uow:
-            course = await uow.courses.get_by_slug(slug)
+            course = await find_course(uow, slug)
             if course is None:
                 raise CourseNotFoundError(params={"slug": slug})
             enrollment = await uow.enrollments.get(course.id, actor.user_id)

@@ -31,7 +31,8 @@ class XpEvent(IdMixin, TimestampMixin, Base):
             "user_id", "source", "ref", name="uq_xp_events_user_source_ref"
         ),
         CheckConstraint(
-            "source IN ('step', 'test', 'review', 'quest', 'exam', 'widget')",
+            "source IN ('step', 'test', 'review', 'quest', 'exam', 'widget',"
+            " 'coach')",
             name="source",
         ),
         CheckConstraint("xp >= 0", name="xp_non_negative"),

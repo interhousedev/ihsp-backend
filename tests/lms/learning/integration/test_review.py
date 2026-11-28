@@ -107,7 +107,8 @@ async def test_a_reviewer_sees_the_variant_answers_and_revision_of_an_attempt(
 
     as_owner = await learning.get_attempt.execute(student, result.id)
 
-    assert as_owner.review is None
+    assert as_owner.review is not None
+    assert all(i.correct_answer is None for i in as_owner.review)
     assert as_owner.user.last_name == "Student"
     assert as_owner.variant["question_ids"] == ["q1", "q2", "q3"]
     assert as_owner.answers == ONE_RIGHT

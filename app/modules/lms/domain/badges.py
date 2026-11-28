@@ -90,6 +90,19 @@ class BadgeEvent(StrEnum):
     STREAK_REACHED = "streak_reached"
     COURSE_COMPLETED = "course_completed"
     REVIEWS_DONE = "reviews_done"
+    # Platform events: facts across all of the learner's courses.
+    LEVEL_REACHED = "level_reached"
+    COACH_RESOLVED = "coach_resolved"
+    COURSES_COMPLETED = "courses_completed"
+
+
+AGGREGATE_EVENTS = frozenset(
+    {
+        BadgeEvent.LEVEL_REACHED,
+        BadgeEvent.COACH_RESOLVED,
+        BadgeEvent.COURSES_COMPLETED,
+    }
+)
 
 
 # - - - Rule AST - - -

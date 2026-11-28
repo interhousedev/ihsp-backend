@@ -122,6 +122,7 @@ class UserPreferences(BaseModel):
     marks_values: list[int] = [2, 3, 4, 5]
     marks_subject_ids: list[UUID] | None = None
     alerts_drops: bool = True
+    notify_absences: bool = True  # absences EMIS reports (Telegram + in-app)
     alerts_gpa_below: float | None = None
     alerts_semester_mark_below: float | None = None
     alerts_mark_below: int | None = None

@@ -37,7 +37,11 @@ class OrgRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     __tablename__ = "orgs"
     __table_args__ = (
         check_in("kind", ORG_KINDS),
-        CheckConstraint("logo_url IS NULL OR logo_url LIKE 'https://%'", "logo_https"),
+        CheckConstraint(
+            "logo_url IS NULL OR logo_url LIKE 'https://%'"
+            " OR logo_url LIKE 'http://localhost:%'",
+            "logo_https",
+        ),
         CheckConstraint("website IS NULL OR website LIKE 'https://%'", "website_https"),
         CheckConstraint("logo_zoom BETWEEN 0.5 AND 3", "logo_zoom_range"),
         S,

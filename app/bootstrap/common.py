@@ -5,11 +5,23 @@ the credentials it needs; modules talk to each other through the contracts in
 `app/shared/contracts`, never by importing another module's internals.
 """
 
+import hashlib
+import hmac
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Literal, cast
 from uuid import UUID
 
+from app import settings as settings_module
+from app.bootstrap.adapters.activities import (
+    ActivitiesAudit,
+    ActivitiesCaptcha,
+    ActivitiesContactRelay,
+    ActivitiesNotifier,
+    ActivitiesUsers,
+    LmsCourseDirectory,
+    per_call,
+)
 from app.bootstrap.adapters.admin_tools import AdminToolBackendAdapter
 from app.bootstrap.adapters.admission import (
     AdmissionCourseSourcesAdapter,
@@ -61,6 +73,7 @@ from app.bootstrap.adapters.mcp_ports import (
     McpCallLogAdapter,
 )
 from app.bootstrap.adapters.mcp_teacher import build_teacher_tools
+from app.bootstrap.adapters.media import MediaFilesAdapter, MediaOwnerAccess
 from app.bootstrap.adapters.notebook_terms import NotebookTermsAdapter
 from app.bootstrap.adapters.onboarding import (
     OnboardingCertificatesAdapter,
@@ -80,16 +93,27 @@ from app.bootstrap.adapters.telegram import (
 from app.bootstrap.adapters.term_resolver import TermResolverAdapter
 from app.bootstrap.adapters.usage_resolver import UsageResolverAdapter
 from app.bootstrap.container import Container, build_infrastructure
+from app.modules.academic.infrastructure.classwork.submission_reader import (
+    SqlSubmissionReader,
+)
+from app.modules.academic.infrastructure.curriculum_topics.refresher import (
+    RefreshCurriculumTopics,
+)
 from app.modules.academic.wiring import (
     AcademicModule,
     build_assessments,
     build_classwork,
+    build_day_blocks,
     build_emis_import,
     build_excuses,
     build_marks,
     build_schedule,
     build_teaching,
 )
+from app.modules.activities.infrastructure.catalog import SqlOpportunityCatalog
+from app.modules.activities.infrastructure.repositories import sql as activities_sql
+from app.modules.activities.ports.bundle import Ports as ActivitiesPorts
+from app.modules.activities.wiring import build as build_activities
 from app.modules.admin.infrastructure.limit_snapshot import load_limit_snapshot
 from app.modules.admin.wiring import build as build_admin
 from app.modules.admission.application.student_search import StudentSearchService
@@ -150,8 +174,12 @@ from app.modules.library.wiring import build as build_library
 from app.modules.links.wiring import build as build_links
 from app.modules.lms.wiring import build as build_lms
 from app.modules.lms.wiring_lesson_ai import build_lesson_ai
+from app.modules.media.wiring import build as build_media
 from app.modules.notebooks.application.export.render import DocumentExporter
 from app.modules.notebooks.application.llm import NotebookLlm
+from app.modules.notebooks.application.teaching.submissions import (
+    SubmissionResolvingTeacherAi,
+)
 from app.modules.notebooks.infrastructure.web_fetcher import HttpWebFetcher
 from app.modules.notebooks.infrastructure.youtube_transcript import (
     YouTubeTranscriptProvider,
@@ -336,7 +364,9 @@ class _Assembler:
         if self.plan.full:
             self.build_library()
             self.build_admission()
+            self.build_activities()
             self.build_notebooks()
+            self.build_media()
             self.build_mcp_ports()
 
     # - - - Steps - - -
@@ -383,7 +413,11 @@ class _Assembler:
             identity_commands=identity.commands,
             files=self.files_proxy.view,
         )
-        c.academic = AcademicModule(schedule=schedule)
+        c.academic = AcademicModule(
+            schedule=schedule,
+            day_blocks=build_day_blocks(self.deps),
+            curriculum_topics=RefreshCurriculumTopics(self.deps.sessionmaker),
+        )
         if self.plan.emis:
             emis = identity.attach_emis(
                 self.deps,
@@ -553,6 +587,7 @@ class _Assembler:
                 classwork=classwork.queries,
             ),
             excuses=excuses,
+            day_blocks=c.academic.day_blocks,
         )
 
     def build_mail(self) -> None:
@@ -699,6 +734,39 @@ class _Assembler:
     async def _forget_admission_acceptances(self, user_id: UUID) -> None:
         """Delete the user's admission document acceptances (re-consent needed)."""
         await self.container.legal.forget_scope.execute(user_id, "admission")
+
+    def build_activities(self) -> None:
+        """Clubs, events and the shared opportunity catalog."""
+        c = self.container
+        s = c.sessionmaker
+        c.activities = build_activities(
+            ActivitiesPorts(
+                clubs=per_call(s, activities_sql.SqlClubRepository),
+                members=per_call(s, activities_sql.SqlMembershipRepository),
+                transfers=per_call(s, activities_sql.SqlTransferRepository),
+                events=per_call(s, activities_sql.SqlEventRepository),
+                ratings=per_call(s, activities_sql.SqlRatingRepository),
+                announcements=per_call(s, activities_sql.SqlAnnouncementRepository),
+                planner=per_call(s, activities_sql.SqlPlannerRepository),
+                drafts=per_call(s, activities_sql.SqlDraftRepository),
+                points=per_call(s, activities_sql.SqlPointsRepository),
+                team=per_call(s, activities_sql.SqlTeamRepository),
+                links=per_call(s, activities_sql.SqlCourseLinkRepository),
+                notifier=ActivitiesNotifier(s),
+                users=ActivitiesUsers(c.identity.directory, s),
+                courses=LmsCourseDirectory(s),
+                captcha=ActivitiesCaptcha(c.settings.activities),
+                contact_relay=ActivitiesContactRelay(
+                    c.identity.directory, c.telegram, c.i18n
+                ),
+                limiter=c.rate_limiter,
+                audit=ActivitiesAudit(s),
+                catalog=per_call(s, SqlOpportunityCatalog),
+                clock=c.clock,
+                secret=_activities_key(c.settings, "secret"),
+                ip_salt=_activities_key(c.settings, "ip_salt"),
+            )
+        )
 
     def build_feedback(self) -> None:
         """Platform feedback; responses go out through notify and mail."""
@@ -847,6 +915,17 @@ class _Assembler:
         self.embedding_index = build_vectors(self.deps, gateway=gateway).index
         return self.embedding_index
 
+    def build_media(self) -> None:
+        """Media jobs: voice-overs and videos pushed into the subject notebook."""
+        c = self.container
+        c.media = build_media(
+            self.deps,
+            files=MediaFilesAdapter(c.files.public),
+            notebook_sink=c.notebooks.material_sink,
+            access=MediaOwnerAccess(c.identity.directory, c.notebooks.teaching_scope),
+            scope=c.notebooks.teaching_scope,
+        )
+
     def build_notebooks(self) -> None:
         """Notebooks: built after AI and LMS; the assistant reaches it late-bound."""
         c = self.container
@@ -909,11 +988,18 @@ class _Assembler:
         c.mcp_teacher_tools = build_teacher_tools(c)
         c.mcp_content_tools = build_content_tools(c)
         c.mcp_history_tools = build_history_tools(c)
-        c.teacher_ai_tools = c.notebooks.teacher_ai
+        c.teacher_ai_tools = SubmissionResolvingTeacherAi(
+            c.notebooks.teacher_ai,
+            SqlSubmissionReader(c.sessionmaker, c.files.public),
+        )
         # The bot is a full process without LMS and serves no MCP tools.
         if self.plan.lms:
             c.mcp_files_courses_tools = build_files_courses_tools(c)
             c.lms_ai_tools = LmsAi(llm=c.llm, settings=c.settings)
+            c.lms.learning.badge_authoring.draft.model = LessonModelAdapter(
+                c.llm, c.settings
+            )
+            c.lms_authoring = c.lms.authoring.question_blocks
             c.lms_lesson_ai = build_lesson_ai(
                 self.deps,
                 learning=c.lms.learning,
@@ -948,3 +1034,14 @@ async def build_container(
     _Assembler(container, plan, given).build()
     log.info("container_built", process=process)
     return container
+
+
+def _activities_key(settings: Any, field: str) -> str:
+    """The configured activities key; a dev default is replaced by a derived one."""
+    configured = getattr(settings.activities, field).get_secret_value()
+    if configured != getattr(settings_module, f"DEV_ACTIVITIES_{field.upper()}"):
+        return str(configured)
+    service = settings.tokens.service_token.get_secret_value()
+    return hmac.new(
+        service.encode(), f"activities:{field}".encode(), hashlib.sha256
+    ).hexdigest()

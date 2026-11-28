@@ -74,7 +74,12 @@ class LearningOutlineStepView(BaseModel):
     points_total: float = 0.0
     points_earned: float | None = None
     locked: bool = False
+    # Why the step is locked: the audience rule or the mastery threshold.
+    lock_reason: Literal["access", "mastery"] | None = None
     access: Literal["public", "signed_in", "students", "chosen"] = "public"
+    # The type of the step's first block and the minutes it takes to work through.
+    kind: str | None = None
+    estimated_minutes: int | None = None
 
 
 class LearningOutlineSectionView(BaseModel):
@@ -99,6 +104,9 @@ class LearningCoursePageBaseView(LearningCourseCardView):
     points_earned: float | None = None
     # Set when the course or a lesson is locked for a chosen audience.
     contact: LearningContactView | None = None
+    # How the viewer joined and where to resume (None when not enrolled).
+    enrolled_via: str | None = None
+    continue_step_id: UUID | None = None
 
 
 class LearningCoursePageView(LearningCoursePageBaseView):
@@ -149,6 +157,7 @@ class LearningAttemptReviewView(LearningAttemptResultView):
     user: LearningPersonRefView
     variant: dict[str, Any]
     answers: dict[str, dict[str, Any]]
+    questions: list["LearningAttemptQuestionView"]
     revision_id: UUID
     override_score: float | None
     override_comment: str | None
@@ -256,6 +265,7 @@ class LearningQuizBlockView(BaseModel):
     rules: LearningQuizRulesView
     best: LearningAttemptResultView | None
     open_attempt_id: UUID | None
+    last_attempt_id: UUID | None = None
     passed: bool = False
     points_total: float = 0.0
     points_earned: float = 0.0

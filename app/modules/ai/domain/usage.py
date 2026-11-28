@@ -67,6 +67,7 @@ _FEATURE_OF: dict[str, str] = {
     "lms_tutor": "assistant",
     "lms_ai_review": "assistant",
     "lms_video_checks": "lms_author",
+    "lms_badge_draft": "lms_author",
     "web_search": "web_search",
     "discover": "web_search",
     "embedding": "embedding",

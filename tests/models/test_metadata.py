@@ -149,6 +149,36 @@ EXPECTED_TABLES = {
     "ai.telegram_topics",
     "ai.tracing_settings",
     "ai.prompt_versions",
+    "media.media_jobs",
+    "notebooks.question_bank",
+    "academic.curriculum_topics",
+    # day blocks, activities (clubs), lms levels and coach
+    "academic.day_blocks",
+    "activities.activities_announcements",
+    "activities.activities_club_courses",
+    "activities.activities_club_profiles",
+    "activities.activities_clubs",
+    "activities.activities_consent_events",
+    "activities.activities_declarations",
+    "activities.activities_draft_picks",
+    "activities.activities_draft_rounds",
+    "activities.activities_draft_signups",
+    "activities.activities_event_reports",
+    "activities.activities_events",
+    "activities.activities_memberships",
+    "activities.activities_planner_items",
+    "activities.activities_points_ledger",
+    "activities.activities_points_optout",
+    "activities.activities_position_applications",
+    "activities.activities_positions",
+    "activities.activities_ratings",
+    "activities.activities_rsvps",
+    "activities.activities_team_seats",
+    "activities.activities_transfers",
+    "lms.level_marks",
+    "lms.level_schemes",
+    "lms.tutor_sessions",
+    "lms.tutor_turns",
     # notify (2), admin (1), mail (1)
     "notify.notifications",
     "notify.push_subscriptions",
@@ -298,10 +328,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """spec -> Models plus the later modules (270 tables)."""
+    """spec -> Models plus the later modules (299 tables)."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 270
+    assert len(EXPECTED_TABLES) == 299
     assert actual == EXPECTED_TABLES
 
 

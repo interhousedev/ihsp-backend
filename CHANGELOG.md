@@ -4,6 +4,39 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.15.2] - 2026-11-28
+
+### Added
+
+- `POST /v1/admin/activities/clubs` (superusers): create a club that is active at once, with a chosen owner.
+
+## [1.15.1] - 2026-11-28
+
+### Security
+
+- The image picks up the Debian `libzstd1` fix for CVE-2026-124851 (the 1.15.0 image build stopped at the Trivy gate and was not published).
+
+## [1.15.0] - 2026-11-28
+
+Migrations `academic_0016` to `academic_0018`, `activities_0001` to `activities_0004`, `admission_0069` to `admission_0070`, `lms_0010` to `lms_0014`, `media_0001`, `notebooks_0017` to `notebooks_0018` and `notify_0023` to `notify_0024` run forward only.
+
+### Added
+
+- Admission: a catalog push token. Curators create an `admission:catalog-write` token on the staff Catalog page and push country facts and institutions with `POST /v1/admission/staff/catalog/push/{countries,institutions}` or `scripts/push_catalog.py`; each item reports created, updated, unchanged, skipped or invalid.
+- LMS Duo: one path through all stages and lessons for every course type, with a coach, levels and badges (v2).
+- Question bank per EMIS subject and topic: generate tests from the bank (random shuffle) or into it.
+- Unified media module: video and voice-over in one place; the finished material goes to the subject notebook with its text and timecodes, so the assistant can link to the video.
+- Teacher AI routes and a homework work check; AI text verification is embedded in the homework checker.
+- Clubs and activities module: IHT Volunteers as a club (forms, drafting by performance, points), club to LMS course links in both directions, one shared opportunities database for admission and my.iht.
+- Admin: pages for activities, clubs, activities analytics, LMS levels and LMS badges.
+- Tests: the test creator chooses whether students see the correct answers. Students always see their score and which questions they missed; with answers allowed they also see the correct answer and can ask the AI to explain the mistake (`GET /v1/lms/attempts/{id}` returns the review; the step view carries `last_attempt_id`).
+- Club ownership transfer: the new owner gets an in-app, push and Telegram notification; Telegram has Accept and Decline buttons, and the club page opens an accept or decline dialog. `GET /v1/activities/transfers/incoming` lists open offers.
+
+### Known issues
+
+- The public clubs contact form needs the Turnstile keys set in production before it enforces the captcha.
+- Dev curriculum topics stay empty until the EMIS sync runs; the save-to-bank dialog then offers a manual topic.
+
 ## [1.14.0] - 2026-11-23
 
 Migrations `admission_0067` to `admission_0068`, `lms_0006` to `lms_0009`, `certificates_0006` and `notify_0022` run forward only.

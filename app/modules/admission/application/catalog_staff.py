@@ -59,8 +59,11 @@ def _normalize(key: str, raw: Any) -> Any:
     return value
 
 
-def _clean(values: dict[str, Any]) -> dict[str, Any]:
-    """Return the known fields trimmed, empty ones as None; raise when invalid."""
+def _clean(values: dict[str, Any], own: str | None = None) -> dict[str, Any]:
+    """Return the known fields trimmed, empty ones as None; raise when invalid.
+
+    Media URLs must be https or start with `own`, our storage (plain http in dev).
+    """
     cleaned = {k: _normalize(k, v) for k, v in values.items() if k in EDITABLE}
     for key in _REQUIRED:
         if key in cleaned and cleaned[key] is None:
@@ -75,24 +78,41 @@ def _clean(values: dict[str, Any]) -> dict[str, Any]:
     bad = invalid_field("institution", probe)
     if bad is not None:
         raise ValidationFailedError(params={"field": bad})
-    _check_display(cleaned)
+    _check_display(cleaned, own)
     return cleaned
 
 
-def _check_display(values: dict[str, Any]) -> None:
+def _check_media(values: dict[str, Any], own: str | None) -> None:
     for key in MEDIA_FIELDS:
-        if values.get(key) is not None and not is_https_url(values[key]):
+        value = values.get(key)
+        if value is None:
+            continue
+        if own is not None and str(value).startswith(own):
+            value = "https://" + str(value).split("://", 1)[1]
+        if not is_https_url(value):
             raise InvalidMediaUrlError(params={"field": key})
+
+
+def _check_logo(values: dict[str, Any]) -> None:
     if "logo_zoom" in values and not valid_logo_zoom(values["logo_zoom"]):
         raise ValidationFailedError(params={"field": "logo_zoom"})
     fit = values.get("logo_fit")
     if fit is not None and fit not in LOGO_FITS:
         raise ValidationFailedError(params={"field": "logo_fit"})
+
+
+def _check_status(values: dict[str, Any]) -> None:
     status = values.get("status")
     if status is not None and status not in INSTITUTION_STATUSES:
         raise ValidationFailedError(params={"field": "status"})
     if "status" in values and status is None:
         raise ValidationFailedError(params={"field": "status"})
+
+
+def _check_display(values: dict[str, Any], own: str | None = None) -> None:
+    _check_media(values, own)
+    _check_logo(values)
+    _check_status(values)
 
 
 class CatalogStaffService:
@@ -108,6 +128,7 @@ class CatalogStaffService:
         self._uow = uow_factory
         self._can_curate = can_curate
         self._mirror = mirror
+        self._own = mirror.own_prefix if mirror is not None else None
 
     def require_curator(self, ctx: AdmissionContext) -> None:
         """Raise `AdmissionForbiddenError` unless the caller may curate."""
@@ -153,7 +174,9 @@ class CatalogStaffService:
     ) -> StaffInstitution:
         """Add an institution (published unless `status` says otherwise)."""
         self.require_curator(ctx)
-        cleaned = await mirror_media(self._mirror, _clean(values), MEDIA_FIELDS)
+        cleaned = await mirror_media(
+            self._mirror, _clean(values, self._own), MEDIA_FIELDS
+        )
         for key in _REQUIRED:
             if cleaned.get(key) is None:
                 raise ValidationFailedError(params={"field": key})
@@ -192,7 +215,9 @@ class CatalogStaffService:
     ) -> StaffInstitution:
         """Overwrite the given fields; a stale `lock_version` conflicts."""
         self.require_curator(ctx)
-        cleaned = await mirror_media(self._mirror, _clean(values), MEDIA_FIELDS)
+        cleaned = await mirror_media(
+            self._mirror, _clean(values, self._own), MEDIA_FIELDS
+        )
         if not cleaned:
             raise ValidationFailedError(params={"field": "fields"})
         async with self._uow() as uow:

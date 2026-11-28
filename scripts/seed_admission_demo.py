@@ -10,6 +10,7 @@ Passwords are fixed dev-only `Demo...` values; nothing here is a real secret.
 
 import asyncio
 import sys
+from dataclasses import replace
 from typing import cast
 from uuid import NAMESPACE_URL, UUID, uuid5
 
@@ -18,6 +19,7 @@ from app.bootstrap.container import Container
 from app.bootstrap.seed.users import _ensure
 from app.modules.admission.application.checklist import ensure_all
 from app.modules.admission.domain.errors import EssayKeyUnavailableError
+from app.modules.admission.domain.essay_flow import PromptTarget
 from app.modules.admission.domain.essays import Essay
 from app.modules.admission.infrastructure.catalog_loader import load_catalog
 from app.modules.admission.infrastructure.chooser_repositories import (
@@ -41,6 +43,7 @@ from app.modules.admission.infrastructure.orm.applications import (
 )
 from app.modules.admission.infrastructure.orm.catalog import InstitutionRow
 from app.modules.admission.infrastructure.orm.profile import EssayRow, ItemRow
+from app.modules.admission.infrastructure.orm.supp_prompts import SuppPromptRow
 from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork
 from app.settings import load_settings
 from app.shared.actor import Role
@@ -197,29 +200,46 @@ PRIORITIES = {
 }
 
 
+LISTED = ("harvard", "yale", "mit", "stanford")
+"""Schools with seed supplemental prompts, so the essay groups have content."""
+
+
+async def _list_entry(s: AsyncSession, student: UUID, key: str, inst: UUID) -> None:
+    """Add a list entry for `inst` unless the student already lists it."""
+    entry_id = uuid5(_NS, key)
+    if await s.get(ListEntryRow, entry_id) is not None:
+        return
+    has = await s.scalar(
+        select(ListEntryRow.id).where(
+            ListEntryRow.student_id == student,
+            ListEntryRow.institution_id == inst,
+        )
+    )
+    if has is None:
+        s.add(
+            ListEntryRow(
+                id=entry_id, student_id=student, institution_id=inst, round="RD"
+            )
+        )
+        await s.flush()
+
+
 async def _checklist(s: AsyncSession, student: UUID) -> None:
-    """One list entry (the first published institution), then generate the rows."""
-    entry_id = uuid5(_NS, "list-entry")
+    """List entries (the first published institution and `LISTED`), then the rows."""
     inst = await s.scalar(
         select(InstitutionRow.id)
         .where(InstitutionRow.status == "published")
         .order_by(InstitutionRow.name)
         .limit(1)
     )
-    if inst is not None and await s.get(ListEntryRow, entry_id) is None:
-        has = await s.scalar(
-            select(ListEntryRow.id).where(
-                ListEntryRow.student_id == student,
-                ListEntryRow.institution_id == inst,
-            )
+    if inst is not None:
+        await _list_entry(s, student, "list-entry", inst)
+    for slug in LISTED:
+        found = await s.scalar(
+            select(InstitutionRow.id).where(InstitutionRow.slug == slug)
         )
-        if has is None:
-            s.add(
-                ListEntryRow(
-                    id=entry_id, student_id=student, institution_id=inst, round="RD"
-                )
-            )
-            await s.flush()
+        if found is not None:
+            await _list_entry(s, student, f"list-entry:{slug}", found)
     await ensure_all(cast("AdmissionUnitOfWork", _ChecklistUow(s)), student)
     for key, (important, urgent) in PRIORITIES.items():
         await s.execute(
@@ -238,28 +258,72 @@ ESSAY_TEXTS = (
         "Why robotics",
         "Building the robot taught me to test every idea until it works. "
         "I led a team of twelve through three failed prototypes before the fourth.",
+        ("harvard", 2),
     ),
     (
         "Serving the community",
         "Every Saturday the food bank needs more hands than it has. "
         "Packing those boxes showed me how much planning sits behind one meal.",
+        ("yale", 7),
     ),
 )
+"""Title, body and the (school slug, prompt position) the essay answers."""
+
+
+async def _link(
+    s: AsyncSession, student: UUID, slug: str, position: int
+) -> tuple[UUID | None, tuple[PromptTarget, ...]]:
+    """The student's list entry and the latest-cycle prompt of a school."""
+    inst = await s.scalar(select(InstitutionRow.id).where(InstitutionRow.slug == slug))
+    if inst is None:
+        return None, ()
+    entry = await s.scalar(
+        select(ListEntryRow.id).where(
+            ListEntryRow.student_id == student, ListEntryRow.institution_id == inst
+        )
+    )
+    row = await s.scalar(
+        select(SuppPromptRow)
+        .where(SuppPromptRow.institution_id == inst, SuppPromptRow.position == position)
+        .order_by(SuppPromptRow.cycle.desc())
+        .limit(1)
+    )
+    if row is None:
+        return entry, ()
+    return entry, (PromptTarget(inst, position, row.prompt, row.word_limit),)
 
 
 async def _essays(container: Container, s: AsyncSession, student: UUID) -> None:
-    """Demo essays with fixed ids; a row whose text no longer opens is recreated."""
+    """Demo essays with fixed ids, linked to a listed school's prompt.
+
+    A row whose text no longer opens is recreated; an unlinked one gets its link.
+    """
     repo = SqlEssayRepository(s, essay_cipher(container.settings))
-    for n, (title, body) in enumerate(ESSAY_TEXTS):
+    for n, (title, body, (slug, position)) in enumerate(ESSAY_TEXTS):
         essay_id = uuid5(_NS, f"essay:{n}")
+        entry, targets = await _link(s, student, slug, position)
         if await s.get(EssayRow, essay_id) is not None:
             try:
-                await repo.get(essay_id)
-                continue
+                essay = await repo.get(essay_id)
             except (EssayKeyUnavailableError, ValueError):
                 await repo.delete(essay_id)
                 print(f"recreating demo essay {n}: its key is gone")
-        await repo.add(Essay(id=essay_id, student_id=student, title=title, body=body))
+            else:
+                if essay is not None and not essay.targets and targets:
+                    await repo.update(
+                        replace(essay, list_entry_id=entry, targets=targets)
+                    )
+                continue
+        await repo.add(
+            Essay(
+                id=essay_id,
+                student_id=student,
+                title=title,
+                body=body,
+                list_entry_id=entry,
+                targets=targets,
+            )
+        )
 
 
 async def _repair(container: Container, user_id: UUID, roles: set[Role]) -> None:
@@ -333,9 +397,12 @@ async def _run() -> None:
 def main() -> int:
     """Run the seed and print the demo logins."""
     asyncio.run(_run())
-    out("Admission demo accounts (dev only, password sign-in via iht.id):")
+    out(
+        "Admission demo accounts (dev only, password sign-in via iht.id;"
+        " the password is PASSWORD in scripts/seed_admission_demo.py):"
+    )
     for key, login, *_ in ACCOUNTS:
-        out(f"  {key:<20} {login} / {PASSWORD}")
+        out(f"  {key:<20} {login}")
     return 0
 
 

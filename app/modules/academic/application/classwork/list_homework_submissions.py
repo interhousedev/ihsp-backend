@@ -61,6 +61,7 @@ class ListHomeworkSubmissions:
             counts[status] += 1
             rows.append(
                 {
+                    "id": str(record.id) if record and record.id else None,
                     "student": {
                         "id": str(student.user_id),
                         "first_name": student.first_name,

@@ -10,6 +10,7 @@ from uuid import UUID
 
 from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.application.media_mirroring import https_probe
 from app.modules.admission.application.study_focus import StudyFocus, load_study_focus
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
@@ -42,6 +43,7 @@ from app.modules.admission.domain.opportunities import (
 )
 from app.modules.admission.domain.permissions import KIND_ROLE, Permission
 from app.modules.admission.domain.study_fields import group_of
+from app.modules.admission.ports.media_mirror import MediaMirror
 from app.modules.admission.ports.opportunities import OpportunityUnitOfWork
 from app.modules.admission.ports.repositories import AuditEvent
 from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork
@@ -299,14 +301,21 @@ class OpportunityService:
         lms: LmsCourseLookup | None = None,
         limiter: RateLimiter | None = None,
         org_exists: Callable[[UUID], Awaitable[bool]] | None = None,
+        *,
+        mirror: MediaMirror | None = None,
     ) -> None:
-        """Keep the collaborators; `lms` is None where LMS is not built."""
+        """Keep the collaborators; `lms` is None where LMS is not built.
+
+        `mirror` copies logos into our storage on approval: the apps' CSP blocks
+        images from other hosts.
+        """
         self._uow = uow_factory
         self._access = access
         self._clock = clock
         self._lms = lms
         self._limiter = limiter
         self._org_exists = org_exists or _any_org
+        self._mirror = mirror
 
     # - - - Roles - - -
 
@@ -414,7 +423,7 @@ class OpportunityService:
         if bad:
             raise ValidationFailedError(params={"field": bad[0]})
         for url in draft.urls():
-            _https(url)
+            _https(https_probe(url, self._mirror) or url)
         if not set(draft.subject_ids) <= subjects:
             raise ValidationFailedError(params={"field": "subject_ids"})
         courses = [draft.lms_course_id] + [m.lms_course_id for m in draft.materials]
@@ -507,6 +516,10 @@ class OpportunityService:
                 await self._validate(
                     draft, {n.id for n in nodes if n.level == "subject"}
                 )
+                if draft.logo_url and self._mirror is not None:
+                    draft = dataclasses.replace(
+                        draft, logo_url=await self._mirror.mirror(draft.logo_url)
+                    )
                 applied = await repo.apply(
                     draft, target_id=current.target_id, by=current.submitted_by
                 )

@@ -34,6 +34,7 @@ class _View:
     t: I18nContext
     urls: UrlsSettings
     staff: bool
+    locale: str = "en"
 
     def lesson_link(self, lesson_id: Any) -> str:
         """Link to the lesson page of the reader's app."""
@@ -97,6 +98,15 @@ def _curator_exam_mark(p: dict[str, Any], v: _View) -> Description:
 
 
 def _lesson_absence(p: dict[str, Any], v: _View) -> Description:
+    if p.get("source") == "emis":  # absence EMIS reported: no period or teacher
+        body = v.t(
+            "notify-lesson-absence-emis-body",
+            date=fmt_date(p.get("date")),
+            subject=p.get("subject_name", ""),
+        )
+        return Description(
+            v.t("notify-lesson-absence-title"), body, f"{v.urls.sp}/attendance/"
+        )
     title = (
         "notify-lesson-absence-title-update"
         if p.get("update")
@@ -922,6 +932,121 @@ def _lms_deadline_soon(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+def _event_url(p: dict[str, Any], v: _View) -> str:
+    """The event page of the activities app."""
+    return f"{v.urls.sp}/activities/event?id={p.get('event_id', '')}"
+
+
+def _club_url(p: dict[str, Any], v: _View) -> str:
+    """The club page of the activities app."""
+    return f"{v.urls.sp}/activities/club?id={p.get('club_id', '')}"
+
+
+def _event_reminder(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-event-reminder-title"),
+        v.t("notify-event-reminder-body"),
+        _event_url(p, v),
+    )
+
+
+def _event_changed(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-event-changed-title"),
+        v.t("notify-event-changed-body"),
+        _event_url(p, v),
+    )
+
+
+def _event_cancelled(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-event-cancelled-title"),
+        v.t("notify-event-cancelled-body"),
+        _event_url(p, v),
+    )
+
+
+def _event_rating_request(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-event-rating-request-title"),
+        v.t("notify-event-rating-request-body"),
+        _event_url(p, v),
+    )
+
+
+def _club_announcement(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-club-announcement-title"),
+        v.t("notify-club-announcement-body", text=str(p.get("text", ""))),
+        _club_url(p, v),
+    )
+
+
+def _club_join_request(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-club-join-request-title"),
+        v.t("notify-club-join-request-body"),
+        _club_url(p, v),
+    )
+
+
+def _club_join_result(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-club-join-result-title"),
+        v.t("notify-club-join-result-body"),
+        _club_url(p, v),
+    )
+
+
+def _club_label(p: dict[str, Any], locale: str) -> str:
+    """The club's name in the reader's language (names are stored per locale)."""
+    name = p.get("club_name")
+    if isinstance(name, dict):
+        return str(name.get(locale) or name.get("ru") or next(iter(name.values()), ""))
+    return str(name or "")
+
+
+def _club_transfer_offer(p: dict[str, Any], v: _View) -> Description:
+    club = _club_label(p, v.locale)
+    result = p.get("result")
+    if result in ("accepted", "declined"):
+        return Description(
+            v.t(f"notify-club-transfer-{result}-title"),
+            v.t(f"notify-club-transfer-{result}-body", club=club),
+            _club_url(p, v),
+        )
+    link = f"{_club_url(p, v)}&transfer={p.get('transfer_id', '')}"
+    return Description(
+        v.t("notify-club-transfer-offer-title"),
+        v.t("notify-club-transfer-offer-body", club=club),
+        link,
+    )
+
+
+def _draft_invite(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-draft-invite-title"),
+        v.t("notify-draft-invite-body"),
+        _club_url(p, v),
+    )
+
+
+def _position_application_result(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-position-application-result-title"),
+        v.t("notify-position-application-result-body"),
+        _club_url(p, v),
+    )
+
+
+def _club_owner_graduating(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-club-owner-graduating-title"),
+        v.t("notify-club-owner-graduating-body"),
+        _club_url(p, v),
+    )
+
+
 _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.MARKS: _marks,
     NotificationType.RESULT_DROP: _result_drop,
@@ -984,6 +1109,17 @@ _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.LMS_REVIEW_DUE: _lms_review_due,
     NotificationType.LMS_STREAK_AT_RISK: _lms_streak_at_risk,
     NotificationType.LMS_DEADLINE_SOON: _lms_deadline_soon,
+    NotificationType.EVENT_REMINDER: _event_reminder,
+    NotificationType.EVENT_CHANGED: _event_changed,
+    NotificationType.EVENT_CANCELLED: _event_cancelled,
+    NotificationType.EVENT_RATING_REQUEST: _event_rating_request,
+    NotificationType.CLUB_ANNOUNCEMENT: _club_announcement,
+    NotificationType.CLUB_JOIN_REQUEST: _club_join_request,
+    NotificationType.CLUB_JOIN_RESULT: _club_join_result,
+    NotificationType.CLUB_TRANSFER_OFFER: _club_transfer_offer,
+    NotificationType.DRAFT_INVITE: _draft_invite,
+    NotificationType.POSITION_APPLICATION_RESULT: _position_application_result,
+    NotificationType.CLUB_OWNER_GRADUATING: _club_owner_graduating,
 }
 
 
@@ -1000,5 +1136,5 @@ def describe(
 
     `staff` picks the staff portal instead of the student app for lesson links.
     """
-    view = _View(t=i18n.get_context(locale), urls=urls, staff=staff)
+    view = _View(t=i18n.get_context(locale), urls=urls, staff=staff, locale=locale)
     return _BUILDERS[notification_type](payload, view)

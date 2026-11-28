@@ -8,6 +8,7 @@ from app.shared.personal_data import PersonalData, PersonalTable, SqlPersonalDat
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 MODULES = (
+    "activities",
     "academic",
     "admin",
     "admission",
@@ -25,6 +26,7 @@ MODULES = (
     "links",
     "lms",
     "mail",
+    "media",
     "notebooks",
     "notify",
     "onboarding",

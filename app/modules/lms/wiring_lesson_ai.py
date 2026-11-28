@@ -6,6 +6,7 @@ from app.modules.lms.application.authoring.suggest_video_checks import (
     SuggestVideoChecks,
 )
 from app.modules.lms.application.learning.ask_tutor import AskTutor
+from app.modules.lms.application.learning.coach_model import LessonCoachModel
 from app.modules.lms.infrastructure.authoring.uow import SqlAuthoringUnitOfWork
 from app.modules.lms.infrastructure.tutor_history import RedisTutorHistory
 from app.modules.lms.ports.authoring.unit_of_work import AuthoringUnitOfWork
@@ -37,6 +38,7 @@ def build_lesson_ai(
 
     limits = deps.effective_limits
     reader = learning.source_reader
+    learning.coach_reply.model = LessonCoachModel(model)
     return LessonAiServices(
         ask_tutor=AskTutor(
             reader.uow_factory,

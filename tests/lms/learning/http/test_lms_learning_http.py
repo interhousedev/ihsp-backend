@@ -128,7 +128,10 @@ async def test_enrolling_returns_the_course_page(
         "points_earned": 0.0,
         "points_total": 0.0,
         "locked": False,
+        "lock_reason": None,
         "access": "public",
+        "kind": "text",
+        "estimated_minutes": 1,
     }
     assert page.headers["cache-control"] == "private, no-store"
 
@@ -222,6 +225,7 @@ async def test_a_step_is_read_and_marked_viewed(
         },
         "best": None,
         "open_attempt_id": None,
+        "last_attempt_id": None,
         "passed": False,
         "points_earned": 0.0,
         "points_total": 3.0,

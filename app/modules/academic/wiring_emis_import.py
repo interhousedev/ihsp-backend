@@ -1,5 +1,6 @@
 """Wiring of what the schedule imports from EMIS: bells, timetables, lessons."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from app.modules.academic.application.curriculum.sync_group_curriculum import (
@@ -40,6 +41,9 @@ from app.modules.academic.application.schedule.sync_group_timetable import (
 )
 from app.modules.academic.application.schedule.sync_student_all import (
     SyncStudentAll,
+)
+from app.modules.academic.infrastructure.curriculum_topics.refresher import (
+    RefreshCurriculumTopics,
 )
 from app.modules.academic.infrastructure.schedule.lesson_fetch_store import (
     RedisLessonFetchStore,
@@ -98,6 +102,7 @@ def assemble_emis_import(
     kicker: TaskKicker,
     clock: Clock,
     import_topics: bool = False,
+    after_curriculum: Callable[[], Awaitable[object]] | None = None,
     sync_state: SyncStateStore | None = None,
     sync_jobs: StudentSyncJobs | None = None,
 ) -> EmisImportServices:
@@ -108,7 +113,11 @@ def assemble_emis_import(
         uow_factory=uow_factory, emis=emis, generate=generate, clock=clock
     )
     sync_group_curriculum = SyncGroupCurriculum(
-        uow_factory=uow_factory, emis=emis, identity=identity, clock=clock
+        uow_factory=uow_factory,
+        emis=emis,
+        identity=identity,
+        clock=clock,
+        after_sync=after_curriculum,
     )
     sync_group_timetable = SyncGroupTimetable(
         uow_factory=uow_factory,
@@ -183,6 +192,7 @@ def build_emis_import(
         kicker=deps.kicker,
         clock=deps.clock,
         import_topics=deps.settings.emis.import_topics,
+        after_curriculum=RefreshCurriculumTopics(deps.sessionmaker).execute,
         sync_state=RedisSyncState(deps.redis),
         sync_jobs=SqlStudentSyncJobs(sql_schedule_uow_factory(deps)),
     )

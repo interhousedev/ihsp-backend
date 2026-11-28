@@ -7,6 +7,7 @@ from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, StudentCtx
+from app.interfaces.http.v1.admission.media import served_media
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.interfaces.http.v1.admission.schemas_focuses import FocusOut, focuses_out
 from app.modules.admission.application.chooser import ListItem
@@ -277,8 +278,8 @@ class InstitutionOut(BaseModel):
             aid_basis=i.aid_basis,
             merit_available=i.merit_available,
             scholarship_count=i.scholarship_count,
-            logo_url=i.logo_url,
-            cover_url=i.cover_url,
+            logo_url=served_media(i.logo_url),
+            cover_url=served_media(i.cover_url),
             website_url=(f"https://{i.website_domain}" if i.website_domain else None),
             description=_description(i.description, locale),
             fit_total=fit.total if fit is not None else None,

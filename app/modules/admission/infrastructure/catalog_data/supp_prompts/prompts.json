@@ -1,0 +1,513 @@
+{
+  "harvard": {
+    "source_url": "https://college.harvard.edu/guides/application-tips",
+    "cycles": {
+      "2024-25": [
+        {
+          "prompt": "Harvard has long recognized the importance of enrolling a diverse student body. How will the life experiences that shape who you are today enable you to contribute to Harvard?",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "Describe a time when you strongly disagreed with someone about an idea or issue. How did you communicate or engage with this person? What did you learn from this experience?",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "Briefly describe any of your extracurricular activities, employment experience, travel, or family responsibilities that have shaped who you are.",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "How do you hope to use your Harvard education in the future?",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "Top 3 things your roommates might like to know about you.",
+          "word_limit": 150,
+          "required": true
+        }
+      ],
+      "2025-26": [
+        {
+          "prompt": "Harvard has long recognized the importance of enrolling a student body with a diversity of perspectives and experiences. How will the life experiences that shaped who you are today enable you to contribute to Harvard?",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "Describe a time when you strongly disagreed with someone about an idea or issue. How did you communicate or engage with this person? What did you learn from this experience?",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "Briefly describe any of your extracurricular activities, employment experience, travel, or family responsibilities that have shaped who you are.",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "How do you hope to use your Harvard education in the future?",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "Top 3 things your roommates might like to know about you.",
+          "word_limit": 150,
+          "required": true
+        }
+      ]
+    }
+  },
+  "yale": {
+    "source_url": "https://admissions.yale.edu/essay-topics",
+    "cycles": {
+      "2024-25": [
+        {
+          "prompt": "What is it about Yale that has led you to apply?",
+          "word_limit": 125,
+          "required": true
+        },
+        {
+          "prompt": "Tell us about a topic or idea that excites you and is related to one or more academic areas you selected above. Why are you drawn to it?",
+          "word_limit": 200,
+          "required": true
+        },
+        {
+          "prompt": "What inspires you? (200 characters)",
+          "word_limit": null,
+          "required": true
+        },
+        {
+          "prompt": "If you could teach a college course, write a book, or create an original piece of art of any kind, what would it be? (200 characters)",
+          "word_limit": null,
+          "required": true
+        },
+        {
+          "prompt": "Other than a family member, who is someone who has had a significant influence on you? What has been the impact of their influence? (200 characters)",
+          "word_limit": null,
+          "required": true
+        },
+        {
+          "prompt": "What is something about you that is not included anywhere else in your application? (200 characters)",
+          "word_limit": null,
+          "required": true
+        },
+        {
+          "prompt": "Reflect on a time when you discussed an issue of importance with someone holding an opinion different from yours. Why was the experience meaningful to you?",
+          "word_limit": 400,
+          "required": false
+        },
+        {
+          "prompt": "Reflect on your membership in a community to which you feel connected. Why is this community meaningful to you? You may define community however you like.",
+          "word_limit": 400,
+          "required": false
+        },
+        {
+          "prompt": "Reflect on an element of your personal experience that you feel will enrich your college. How has it shaped you?",
+          "word_limit": 400,
+          "required": false
+        }
+      ],
+      "2025-26": [
+        {
+          "prompt": "Reflect on how your interests, values, and/or experiences have drawn you to Yale.",
+          "word_limit": 125,
+          "required": true
+        },
+        {
+          "prompt": "Tell us about a topic or idea that excites you and is related to one or more academic areas you selected above. Why are you drawn to it?",
+          "word_limit": 200,
+          "required": true
+        },
+        {
+          "prompt": "What inspires you? (200 characters)",
+          "word_limit": null,
+          "required": true
+        },
+        {
+          "prompt": "If you could teach a college course, write a book, or create an original piece of art of any kind, what would it be? (200 characters)",
+          "word_limit": null,
+          "required": true
+        },
+        {
+          "prompt": "Other than a family member, who is someone who has had a significant influence on you? What has been the impact of their influence? (200 characters)",
+          "word_limit": null,
+          "required": true
+        },
+        {
+          "prompt": "What is something about you that is not included anywhere else in your application? (200 characters)",
+          "word_limit": null,
+          "required": true
+        },
+        {
+          "prompt": "Reflect on a time when you discussed an issue of importance with someone holding an opinion different from yours. Why was the experience meaningful to you?",
+          "word_limit": 400,
+          "required": false
+        },
+        {
+          "prompt": "Reflect on your membership in a community to which you feel connected. Why is this community meaningful to you? You may define community however you like.",
+          "word_limit": 400,
+          "required": false
+        },
+        {
+          "prompt": "Reflect on an element of your personal experience that you feel will enrich your college. How has it shaped you?",
+          "word_limit": 400,
+          "required": false
+        }
+      ]
+    }
+  },
+  "columbia": {
+    "source_url": "https://undergrad.admissions.columbia.edu/apply/process/columbia-questions",
+    "cycles": {
+      "2024-25": [
+        {
+          "prompt": "List a selection of texts, resources and outlets that have contributed to your intellectual development outside of academic courses, including but not limited to books, journals, websites, podcasts, essays, plays, presentations, videos, museums and other content that you enjoy.",
+          "word_limit": 100,
+          "required": true
+        },
+        {
+          "prompt": "A hallmark of the Columbia experience is being able to learn and thrive in an equitable and inclusive community with a wide range of perspectives. Tell us about an aspect of your own perspective, viewpoint or lived experience that is important to you, and describe how it has shaped the way you would learn from and contribute to Columbia's diverse and collaborative community.",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "In college/university, students are often challenged in ways that they could not predict or anticipate. It is important to us, therefore, to understand an applicant's ability to navigate through adversity. Please describe a barrier or obstacle you have faced and discuss the personal qualities, skills or insights you have developed as a result.",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "Why are you interested in attending Columbia University? We encourage you to consider the aspect(s) that you find unique and compelling about Columbia.",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "What attracts you to your preferred areas of study at Columbia College or Columbia Engineering?",
+          "word_limit": 150,
+          "required": true
+        }
+      ],
+      "2025-26": [
+        {
+          "prompt": "List a selection of texts, resources and outlets that have contributed to your intellectual development outside of academic courses, including but not limited to books, journals, websites, podcasts, essays, plays, presentations, videos, museums and other content that you enjoy.",
+          "word_limit": 100,
+          "required": true
+        },
+        {
+          "prompt": "Tell us about an aspect of your life so far or your lived experience that is important to you, and describe how it has shaped the way you would learn from and contribute to Columbia's multidimensional and collaborative environment.",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "In college/university, students are often challenged in ways that they could not anticipate. Please describe a situation in which you have navigated through adversity and discuss how you changed as a result.",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "Why are you interested in attending Columbia University? We encourage you to consider the aspect(s) that you find unique and compelling about Columbia.",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "What attracts you to your preferred areas of study at Columbia College or Columbia Engineering?",
+          "word_limit": 150,
+          "required": true
+        },
+        {
+          "prompt": "At Columbia, students representing a wide range of perspectives are invited to live and learn together. In such a community, questions and debates naturally arise. Please describe a time when you did not agree with someone and discuss how you engaged with them and what you took away from the interaction.",
+          "word_limit": 150,
+          "required": true
+        }
+      ]
+    }
+  },
+  "mit": {
+    "source_url": "https://mitadmissions.org/apply/firstyear/essays-activities-academics/",
+    "cycles": {
+      "2024-25": [
+        {
+          "prompt": "What field of study appeals to you the most right now? Tell us more about why this field of study at MIT appeals to you.",
+          "word_limit": 100,
+          "required": true
+        },
+        {
+          "prompt": "We know you lead a busy life, full of activities, many of which are required of you. Tell us about something you do simply for the pleasure of it.",
+          "word_limit": 200,
+          "required": true
+        },
+        {
+          "prompt": "How has the world you come from—including your opportunities, experiences, and challenges—shaped your dreams and aspirations?",
+          "word_limit": 200,
+          "required": true
+        },
+        {
+          "prompt": "MIT brings people with diverse backgrounds and experiences together to better the lives of others. Our students work to improve their communities in different ways, from tackling the world's biggest challenges to being a good friend. Describe one way you have collaborated with people who are different from you to contribute to your community.",
+          "word_limit": 200,
+          "required": true
+        },
+        {
+          "prompt": "Tell us about a challenge that you've faced or something that didn't go according to plan that you feel comfortable sharing. How did you manage the situation?",
+          "word_limit": 200,
+          "required": true
+        }
+      ],
+      "2025-26": [
+        {
+          "prompt": "What field of study appeals to you the most right now? Tell us more about why this field of study at MIT appeals to you.",
+          "word_limit": 100,
+          "required": true
+        },
+        {
+          "prompt": "We know you lead a busy life, full of activities, many of which are required of you. Tell us about something you do simply for the pleasure of it.",
+          "word_limit": 200,
+          "required": true
+        },
+        {
+          "prompt": "How has the world you come from—including your opportunities, experiences, and challenges—shaped your dreams and aspirations?",
+          "word_limit": 200,
+          "required": true
+        },
+        {
+          "prompt": "MIT brings people with diverse backgrounds and experiences together to better the lives of others. Our students work to improve their communities in different ways, from tackling the world's biggest challenges to being a good friend. Describe one way you have collaborated with people who are different from you to contribute to your community.",
+          "word_limit": 200,
+          "required": true
+        },
+        {
+          "prompt": "Tell us about a challenge that you've faced or something that didn't go according to plan that you feel comfortable sharing. How did you manage the situation?",
+          "word_limit": 200,
+          "required": true
+        }
+      ]
+    }
+  },
+  "stanford": {
+    "source_url": "https://admission.stanford.edu/apply/freshman/essays.html",
+    "cycles": {
+      "2024-25": [
+        {
+          "prompt": "What is the most significant challenge that society faces today?",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "How did you spend your last two summers?",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "What historical moment or event do you wish you could have witnessed?",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "Briefly elaborate on one of your extracurricular activities, a job you hold, or responsibilities you have for your family.",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "List five things that are important to you.",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "The Stanford community is deeply curious and driven to learn in and out of the classroom. Reflect on an idea or experience that makes you genuinely excited about learning.",
+          "word_limit": 250,
+          "required": true
+        },
+        {
+          "prompt": "Virtually all of Stanford's undergraduates live on campus. Write a note to your future roommate that reveals something about you or that will help your roommate—and us—get to know you better.",
+          "word_limit": 250,
+          "required": true
+        },
+        {
+          "prompt": "Please describe what aspects of your life experiences, interests and character would help you make a distinctive contribution as an undergraduate to Stanford University.",
+          "word_limit": 250,
+          "required": true
+        }
+      ],
+      "2025-26": [
+        {
+          "prompt": "What is the most significant challenge that society faces today?",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "How did you spend your last two summers?",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "What historical moment or event do you wish you could have witnessed?",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "Briefly elaborate on one of your extracurricular activities, a job you hold, or responsibilities you have for your family.",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "List five things that are important to you.",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "The Stanford community is deeply curious and driven to learn in and out of the classroom. Reflect on an idea or experience that makes you genuinely excited about learning.",
+          "word_limit": 250,
+          "required": true
+        },
+        {
+          "prompt": "Virtually all of Stanford's undergraduates live on campus. Write a note to your future roommate that reveals something about you or that will help your roommate—and us—get to know you better.",
+          "word_limit": 250,
+          "required": true
+        },
+        {
+          "prompt": "Please describe what aspects of your life experiences, interests and character would help you make a distinctive contribution as an undergraduate to Stanford University.",
+          "word_limit": 250,
+          "required": true
+        }
+      ]
+    }
+  },
+  "princeton": {
+    "source_url": "https://admission.princeton.edu/apply/princeton-specific-questions",
+    "cycles": {
+      "2024-25": [
+        {
+          "prompt": "As a research institution that also prides itself on its liberal arts curriculum, Princeton allows students to explore areas across the humanities and the arts, the natural sciences, and the social sciences. What academic areas most pique your curiosity, and how do the programs offered at Princeton suit your particular interests?",
+          "word_limit": 250,
+          "required": true
+        },
+        {
+          "prompt": "Princeton values community and encourages students, faculty, staff and leadership to engage in respectful conversations that can expand their perspectives and challenge their ideas and beliefs. As a prospective member of this community, reflect on how your lived experiences will impact the conversations you will have in the classroom, the dining hall or other campus spaces. What lessons have you learned in life thus far? What will your classmates learn from you? In short, how has your lived experience shaped you?",
+          "word_limit": 500,
+          "required": true
+        },
+        {
+          "prompt": "Princeton has a longstanding commitment to service and civic engagement. Tell us how your story intersects (or will intersect) with these ideals.",
+          "word_limit": 250,
+          "required": true
+        },
+        {
+          "prompt": "What is a new skill you would like to learn in college?",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "What brings you joy?",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "What song represents the soundtrack of your life at this moment?",
+          "word_limit": 50,
+          "required": true
+        }
+      ],
+      "2025-26": [
+        {
+          "prompt": "As a research institution that also prides itself on its liberal arts curriculum, Princeton allows students to explore areas across the humanities and the arts, the natural sciences, and the social sciences. What academic areas most pique your curiosity, and how do the programs offered at Princeton suit your particular interests?",
+          "word_limit": 250,
+          "required": true
+        },
+        {
+          "prompt": "Princeton values community and encourages students, faculty, staff and leadership to engage in respectful conversations that can expand their perspectives and challenge their ideas and beliefs. As a prospective member of this community, reflect on how your lived experiences will impact the conversations you will have in the classroom, the dining hall or other campus spaces. What lessons have you learned in life thus far? What will your classmates learn from you? In short, how has your lived experience shaped you?",
+          "word_limit": 500,
+          "required": true
+        },
+        {
+          "prompt": "Princeton has a longstanding commitment to service and civic engagement. Tell us how your story intersects (or will intersect) with these ideals.",
+          "word_limit": 250,
+          "required": true
+        },
+        {
+          "prompt": "What is a new skill you would like to learn in college?",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "What brings you joy?",
+          "word_limit": 50,
+          "required": true
+        },
+        {
+          "prompt": "What song represents the soundtrack of your life at this moment?",
+          "word_limit": 50,
+          "required": true
+        }
+      ]
+    }
+  },
+  "upenn": {
+    "source_url": "https://admissions.upenn.edu/how-to-apply/first-year-applicants/writing-supplement",
+    "cycles": {
+      "2024-25": [
+        {
+          "prompt": "Write a short thank-you note to someone you have not yet thanked and would like to acknowledge. (We encourage you to share this note with that person, if possible, and reflect on the experience!)",
+          "word_limit": 200,
+          "required": true
+        },
+        {
+          "prompt": "How will you explore community at Penn? Consider how Penn will help shape your perspective, and how your experiences and perspective will help shape Penn.",
+          "word_limit": 200,
+          "required": true
+        }
+      ],
+      "2025-26": [
+        {
+          "prompt": "Write a short thank-you note to someone you have not yet thanked and would like to acknowledge. (We encourage you to share this note with that person, if possible, and reflect on the experience!)",
+          "word_limit": 200,
+          "required": true
+        },
+        {
+          "prompt": "How will you explore community at Penn? Consider how Penn will help shape your perspective, and how your experiences and perspective will help shape Penn.",
+          "word_limit": 200,
+          "required": true
+        }
+      ]
+    }
+  },
+  "jhu": {
+    "source_url": "https://apply.jhu.edu/application-process/essays/",
+    "cycles": {
+      "2024-25": [
+        {
+          "prompt": "Tell us about an aspect of your identity (e.g., race, gender, sexuality, religion, community, etc.) or a life experience that has shaped you as an individual and how that influenced what you'd like to pursue in college at Hopkins.",
+          "word_limit": 350,
+          "required": true
+        }
+      ],
+      "2025-26": [
+        {
+          "prompt": "As we commemorate the university's sesquicentennial—150 years since its founding—we continue to celebrate first steps just as much as final achievements. Tell us about an important first in your life—big or small—that has shaped you.",
+          "word_limit": 350,
+          "required": true
+        }
+      ]
+    }
+  },
+  "gatech": {
+    "source_url": "https://admission.gatech.edu/first-year/personal-essays",
+    "cycles": {
+      "2025-26": [
+        {
+          "prompt": "Why do you want to study your chosen major, and why do you want to study that major at Georgia Tech?",
+          "word_limit": 300,
+          "required": true
+        }
+      ]
+    }
+  },
+  "cornell": {
+    "source_url": "https://admissions.cornell.edu/apply/first-year-applicants/cornell-essay-questions",
+    "cycles": {
+      "2025-26": [
+        {
+          "prompt": "We all contribute to, and are influenced by, the communities that are meaningful to us. Share how you've been shaped by one of the communities you belong to.",
+          "word_limit": 350,
+          "required": true
+        }
+      ]
+    }
+  }
+}

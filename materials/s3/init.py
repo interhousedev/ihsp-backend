@@ -7,6 +7,7 @@ S3_CORS_ORIGINS (comma separated).
 """
 
 import asyncio
+import json
 import os
 
 from aiobotocore.config import AioConfig
@@ -83,6 +84,24 @@ async def main() -> None:
         except ClientError as exc:
             if exc.response["Error"]["Code"] not in EXISTS:
                 print("S3 Initialization error:", exc)
+        # Mirrored university logos and covers are linked directly from the apps
+        # (the apps' CSP allows only our storage), so this prefix is public.
+        await s3.put_bucket_policy(
+            Bucket=bucket,
+            Policy=json.dumps(
+                {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {"AWS": ["*"]},
+                            "Action": ["s3:GetObject"],
+                            "Resource": [f"arn:aws:s3:::{bucket}/admission/org-media/*"],
+                        }
+                    ],
+                }
+            ),
+        )
 
 
 if __name__ == "__main__":

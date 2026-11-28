@@ -11,6 +11,10 @@ Lessons are built from blocks. Besides text, video, tests and flashcards, a less
 | Video captions | A video block can carry caption tracks (VTT). |
 | Tutor and micro-checks | A tutor answers questions about the lesson; interactive videos stop for short checks. With the tutor off the console logs a harmless 403. |
 
+## Test results
+
+A learner always sees the score and which questions were missed. The test setting `show_answers` (`never`, `after_submit`, `after_pass`, `after_last_attempt`; the editor shows it as "show correct answers to the student") decides when the correct answers and explanations are also returned. `GET /v1/lms/attempts/{attempt_id}` returns the owner's review; the test block in the step view carries `last_attempt_id`.
+
 ## AI Review routes
 
 Sessions are created per block: `POST /v1/lms/steps/{step_id}/blocks/{block_id}/ai-review/sessions`. A session is read at `/v1/lms/ai-review/sessions/{session_id}`. Work is submitted with `POST /v1/lms/courses/{course_id}/steps/{step_id}/blocks/{block_id}/ai-review/submissions`. Model calls are named AI tasks and count against the usual AI limits.

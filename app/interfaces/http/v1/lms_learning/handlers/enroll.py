@@ -1,7 +1,6 @@
-"""POST /v1/lms/courses/{id}/enroll: enroll in a public course."""
+"""POST /v1/lms/courses/{id or slug}/enroll: enroll in a public course."""
 
 from typing import Annotated
-from uuid import UUID
 
 from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_actor, get_container
@@ -12,7 +11,7 @@ from fastapi import Depends
 
 
 async def enroll(
-    course_id: UUID,
+    course_id: str,
     actor: Annotated[Actor, Depends(get_actor)],
     container: Annotated[Container, Depends(get_container)],
 ) -> LearningCoursePageView:

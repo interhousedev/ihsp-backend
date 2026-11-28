@@ -1,4 +1,4 @@
-"""Fake answers of the lesson AI (`lms_tutor_reply`, `lms_video_checks`)."""
+"""Fake answers of the lesson AI (tutor reply, coach reply, video checks)."""
 
 import re
 from typing import Any
@@ -21,6 +21,24 @@ def build_lesson_ai_document(
                 f"talks about «{' '.join(last.split()[:8])}»? What would you try "
                 "first?"
             )
+        }
+    if schema_name == "lms_coach_reply":
+        return {
+            "message": "(fake coach) What is the first thing the task asks you find?",
+            "hint_level": 0,
+            "ask_back": True,
+        }
+    if schema_name == "lms_badge_draft":
+        return {
+            "template": "first_lesson",
+            "days": 14,
+            "count": 5,
+            "name_uz": "Birinchi dars",
+            "name_ru": "Первый урок",
+            "name_en": "First lesson",
+            "description_uz": "Birinchi darsni tugatdi.",
+            "description_ru": "Прошёл первый урок.",
+            "description_en": "Finished the first lesson.",
         }
     if schema_name == "lms_video_checks":
         text = str(messages[-1]["content"]) if messages else ""

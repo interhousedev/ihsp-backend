@@ -4,6 +4,7 @@ import datetime as dt
 from typing import Annotated, Literal
 from uuid import UUID
 
+from app.interfaces.http.v1.admission.media import served_media
 from app.modules.admission.application.country_facts import (
     CountryInstitution,
     CountryOverview,
@@ -177,7 +178,7 @@ class CountryInstitutionOut(BaseModel):
             id=i.id,
             name=i.name,
             city=i.city,
-            logo_url=i.logo_url,
+            logo_url=served_media(i.logo_url),
             verified=i.verified,
             rankings=[CountryRankingOut.model_validate(r) for r in c.rankings],
         )

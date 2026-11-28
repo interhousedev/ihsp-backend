@@ -278,6 +278,7 @@ class StaffSubmissionFileResponse(BaseModel):
 class StaffSubmissionRowResponse(BaseModel):
     """One student of the lesson and what they handed in."""
 
+    id: UUID | None
     student: PersonRefResponse
     group_name: str
     subgroup: int | None

@@ -6,6 +6,11 @@ from app.modules.lms.application.authoring.access_rules import (
     GetAccessRules,
     SetAccessRule,
 )
+from app.modules.lms.application.authoring.add_blocks_from_questions import (
+    AddBlocksFromQuestions,
+    QuestionBlocks,
+    UowStepCourses,
+)
 from app.modules.lms.application.authoring.add_course_staff import AddCourseStaff
 from app.modules.lms.application.authoring.append_block import AppendBlock
 from app.modules.lms.application.authoring.append_question import AppendQuestion
@@ -133,6 +138,7 @@ class AuthoringServices:
     get_step_diff: GetStepDiff
     get_pending_changes: GetPendingChanges
     publish_course: PublishCourse
+    question_blocks: QuestionBlocks
     list_versions: ListVersions
     get_version: GetVersion
     compare_versions: CompareVersions
@@ -260,6 +266,12 @@ def assemble_authoring(
         preview_html_widget=PreviewHtmlWidget(uow_factory, widget_links),
         upload_html_widget=UploadHtmlWidget(uow_factory, widget_store),
         ensure_preview_revision=EnsurePreviewRevision(uow_factory, clock),
+        question_blocks=QuestionBlocks(
+            AddBlocksFromQuestions(
+                UowStepCourses(uow_factory),
+                AppendBlock(get_step_draft, save_step_draft),
+            )
+        ),
         prune_revisions=PruneRevisions(uow_factory, clock),
         queries=LmsQueriesImpl(
             list_courses=ListCoursesForStaff(uow_factory, identity),

@@ -84,11 +84,12 @@ def caption_file_ids(content: dict[str, Any]) -> list[UUID]:
 
 
 def with_block_appended(
-    content: dict[str, Any], block: dict[str, Any]
+    content: dict[str, Any], block: dict[str, Any], position: int | None = None
 ) -> dict[str, Any]:
-    """Return a copy of the content with the block added at the end."""
+    """Return a copy of the content with the block added at the position or the end."""
     result = copy.deepcopy(content)
-    result.setdefault("blocks", []).append(strip_empty_ids(block))
+    blocks = result.setdefault("blocks", [])
+    blocks.insert(len(blocks) if position is None else position, strip_empty_ids(block))
     return result
 
 

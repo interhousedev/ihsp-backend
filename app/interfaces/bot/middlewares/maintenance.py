@@ -16,6 +16,7 @@ from app.interfaces.bot.routers.common.assistant.handlers.delete_chat import (
 from app.interfaces.bot.routers.common.feedback.callbacks import FeedbackStepCb
 from app.shared.contracts.callbacks import (
     AttActionCb,
+    ClubTransferCb,
     ExcuseCb,
     HomeworkDoneCb,
     HomeworkPromptCb,
@@ -34,6 +35,7 @@ WRITE_COMMANDS = frozenset({"new", "delete"})
 # Callbacks that always write.
 _ALWAYS: tuple[type[CallbackData], ...] = (
     ExcuseCb,
+    ClubTransferCb,
     McpScopeCb,
     HomeworkDoneCb,
     WorkOffDoneCb,

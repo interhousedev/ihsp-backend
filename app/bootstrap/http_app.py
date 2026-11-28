@@ -13,6 +13,7 @@ from app.interfaces.http.routing import (
     install_short_link_host,
     routers_for,
 )
+from app.interfaces.http.v1.admission.media import configure_served_media
 from app.settings import Settings
 from app.shared.logging import configure_logging
 from app.shared.observability import init_observability
@@ -85,6 +86,7 @@ def build_http_app(container: Container, *, process: str) -> FastAPI:
     if process in HOSTS_WITH_MCP:
         mounts, hooks = mcp_parts(container)
         hooks.append(publish_hook(container))
+    configure_served_media(container.settings)
     app = create_app(
         container,
         routers=routers_for(process, container.settings),

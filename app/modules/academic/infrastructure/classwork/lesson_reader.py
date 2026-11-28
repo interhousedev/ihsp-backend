@@ -167,6 +167,7 @@ class SqlLessonReader:
             submission = None
             if row.submission_id is not None:
                 submission = SubmissionRecord(
+                    id=row.submission_id,
                     lesson_id=lesson.id,
                     student_id=student_id,
                     file_ids=tuple(row.submission_file_ids),

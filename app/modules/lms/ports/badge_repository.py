@@ -3,9 +3,10 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Protocol
+from typing import Any, Protocol
 from uuid import UUID
 
+from app.modules.lms.domain.badge_model import Badge
 from app.modules.lms.domain.badges import BadgeDesign, BadgeRule, LearnerFacts
 
 
@@ -29,7 +30,7 @@ class StoredAward:
     id: UUID
     badge_id: UUID
     user_id: UUID
-    course_id: UUID
+    course_id: UUID | None
     awarded_at: datetime
     seen_at: datetime | None
 
@@ -95,7 +96,7 @@ class BadgeRepository(Protocol):
         ...
 
     async def award(
-        self, badge_id: UUID, user_id: UUID, course_id: UUID, at: datetime
+        self, badge_id: UUID, user_id: UUID, course_id: UUID | None, at: datetime
     ) -> bool:
         """Store an award once; return False when it already existed."""
         ...
@@ -113,4 +114,74 @@ class BadgeRepository(Protocol):
         today: date,
     ) -> LearnerFacts | None:
         """Return the learner facts of an enrolled learner, else None."""
+        ...
+
+
+class BadgeStore(Protocol):
+    """Badges as whole aggregates (course and platform), outside a learning unit."""
+
+    async def add(self, badge: Badge) -> None:
+        """Store a new badge."""
+        ...
+
+    async def get(self, id: UUID) -> Badge | None:
+        """Return one badge."""
+        ...
+
+    async def update(self, badge: Badge) -> None:
+        """Replace a stored badge."""
+        ...
+
+    async def count_for_course(self, course_id: UUID) -> int:
+        """Return how many badges a course has."""
+        ...
+
+
+class EnrolmentFacts(Protocol):
+    """Pages the learner facts of the enrolments of one course."""
+
+    async def total(self, course_id: UUID) -> int:
+        """Return the exact number of enrolments."""
+        ...
+
+    async def page(
+        self, course_id: UUID, cursor: int | None, limit: int
+    ) -> tuple[list[tuple[UUID, LearnerFacts]], int | None]:
+        """Return up to `limit` learners from `cursor` and the next cursor."""
+        ...
+
+
+class PlatformFactsReader(Protocol):
+    """Pages the platform-wide facts of every active user."""
+
+    async def page(
+        self, cursor: int | None, limit: int
+    ) -> tuple[list[tuple[UUID, Any]], int | None]:
+        """Return (user id, facts with level, coach_resolved, courses_completed)."""
+        ...
+
+
+class AwardStore(Protocol):
+    """Writes an award and its `lms.badge_awarded` event in one transaction."""
+
+    async def award(
+        self, badge_id: UUID, user_id: UUID, at: datetime, event: dict[str, Any]
+    ) -> bool:
+        """Return False and write nothing when the award exists."""
+        ...
+
+
+class BackfillQueue(Protocol):
+    """Schedules one batch of a badge backfill."""
+
+    async def enqueue(self, badge_id: UUID, cursor: int | None = None) -> None:
+        """Queue the batch starting at `cursor`."""
+        ...
+
+
+class BadgeCourseAccess(Protocol):
+    """Staff `edit` of one course."""
+
+    async def require_edit(self, actor: Any, course_id: UUID) -> None:  # noqa: ANN401
+        """Raise ForbiddenError unless the actor may edit the course."""
         ...

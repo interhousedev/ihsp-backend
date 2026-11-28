@@ -9,8 +9,10 @@ from app.modules.lms.infrastructure.orm.engagement import (
     XpEvent,
 )
 from app.modules.lms.infrastructure.orm.enrollment import Enrollment
+from app.modules.lms.infrastructure.orm.level import LevelMark
 from app.modules.lms.infrastructure.orm.step_state import StepState
 from app.modules.lms.infrastructure.orm.test_attempt import TestAttempt
+from app.modules.lms.infrastructure.orm.tutor import TutorSession, TutorTurn
 from app.shared.personal_data import (
     ParentLink,
     PersonalTable,
@@ -29,10 +31,15 @@ SPECS: tuple[PersonalTable, ...] = (
     PersonalTable(StepState, R, owner="user_id", note="course record"),
     PersonalTable(TestAttempt, R, owner="user_id", note="course record"),
     PersonalTable(AiReviewSession, R, owner="user_id", note="course record"),
+    PersonalTable(TutorSession, E, owner="user_id", note="tutor conversation"),
+    PersonalTable(
+        TutorTurn, E, parent=ParentLink(TutorSession, "session_id", "user_id")
+    ),
     PersonalTable(BadgeAward, E, owner="user_id", note="engagement"),
     PersonalTable(EngagementProfile, E, owner="user_id", note="engagement"),
     PersonalTable(ReviewItem, E, owner="user_id", note="engagement"),
     PersonalTable(XpEvent, E, owner="user_id", note="engagement"),
+    PersonalTable(LevelMark, E, owner="user_id", note="engagement"),
 )
 
 

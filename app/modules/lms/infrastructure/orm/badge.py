@@ -32,13 +32,22 @@ class Badge(IdMixin, TimestampMixin, Base):
             "shape IN ('circle', 'shield', 'hexagon', 'star')", name="shape"
         ),
         CheckConstraint("color ~ '^#[0-9a-f]{6}$'", name="color"),
+        CheckConstraint(
+            "(scope = 'course' AND course_id IS NOT NULL) "
+            "OR (scope = 'platform' AND course_id IS NULL)",
+            name="scope_course",
+        ),
         Index("ix_badges_course_id", "course_id"),
         {"schema": "lms"},
     )
 
-    course_id: Mapped[UUID] = mapped_column(
+    course_id: Mapped[UUID | None] = mapped_column(
         Uuid, ForeignKey("lms.courses.id", ondelete="CASCADE")
     )
+    scope: Mapped[str] = mapped_column(String(16), server_default=text("'course'"))
+    template_code: Mapped[str | None] = mapped_column(String(32))
+    template_params: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    version: Mapped[int] = mapped_column(Integer, server_default=text("1"))
     name: Mapped[dict[str, Any]] = mapped_column(JSONB)
     description: Mapped[dict[str, Any]] = mapped_column(
         JSONB, server_default=text("'{}'")
@@ -67,7 +76,7 @@ class BadgeAward(IdMixin, TimestampMixin, Base):
         Uuid, ForeignKey("lms.badges.id", ondelete="CASCADE")
     )
     user_id: Mapped[UUID] = mapped_column(Uuid)
-    course_id: Mapped[UUID] = mapped_column(
+    course_id: Mapped[UUID | None] = mapped_column(
         Uuid, ForeignKey("lms.courses.id", ondelete="CASCADE")
     )
     awarded_at: Mapped[datetime] = mapped_column(

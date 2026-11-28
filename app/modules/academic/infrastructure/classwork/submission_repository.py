@@ -16,6 +16,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 _COLUMNS = (
+    HomeworkSubmission.id,
     HomeworkSubmission.lesson_id,
     HomeworkSubmission.student_id,
     HomeworkSubmission.file_ids,
@@ -27,6 +28,7 @@ _COLUMNS = (
 
 def _record(row: Any) -> SubmissionRecord:
     return SubmissionRecord(
+        id=row.id,
         lesson_id=row.lesson_id,
         student_id=row.student_id,
         file_ids=tuple(row.file_ids),

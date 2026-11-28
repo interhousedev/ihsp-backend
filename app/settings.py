@@ -728,6 +728,36 @@ class KnowledgeSettings(BaseModel):
     """Hits `KnowledgeSearchPort.search` returns when the caller gives no limit."""
 
 
+DEV_ACTIVITIES_SECRET = "dev-activities-secret-change-me"
+DEV_ACTIVITIES_IP_SALT = "dev-activities-ip-salt-change-me"
+
+
+class ActivitiesSettings(BaseModel):
+    """Clubs, events and opportunities: signing secret and IP hashing salt."""
+
+    secret: SecretStr = SecretStr(DEV_ACTIVITIES_SECRET)
+    """Signs public club links and tokens. Left at the dev value, it is derived from the
+    service token, so production never signs with a published constant."""
+
+    ip_salt: SecretStr = SecretStr(DEV_ACTIVITIES_IP_SALT)
+    """Salt hashing visitor IPs for club analytics (derived like the secret)."""
+
+    turnstile_mode: Literal["real", "fake"] = "fake"
+    """`real` verifies the public club contact form with Cloudflare Turnstile; `fake`
+    accepts any non-blank token (dev and tests)."""
+
+    turnstile_site_key: str = ""
+    """Public Turnstile site key the form widget uses (shown to visitors)."""
+
+    turnstile_secret: SecretStr = SecretStr("")
+    """Turnstile secret key; required when `TURNSTILE_MODE=real`."""
+
+    turnstile_verify_url: str = (
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+    )
+    """Turnstile siteverify endpoint."""
+
+
 class IdentitySettings(BaseModel):
     """Identity module: account lifecycle."""
 
@@ -1266,6 +1296,9 @@ class LimitsSettings(BaseModel):
     nb_audio_per_day: int = 0
     """Audio overviews per day; 0 switches the counter off (the kind is not built)."""
 
+    media_jobs_per_week: int = 10
+    """Videos and voice-overs a teacher may start per week. -1 means no cap."""
+
     nb_slides_per_day: int = 6
     """Slide decks per day (also counts toward nb_artifacts_per_day).
     -1 means no cap."""
@@ -1471,6 +1504,7 @@ class Settings(BaseSettings):
     vectors: VectorsSettings = Field(default_factory=VectorsSettings)
     knowledge: KnowledgeSettings = Field(default_factory=KnowledgeSettings)
     identity: IdentitySettings = Field(default_factory=IdentitySettings)
+    activities: ActivitiesSettings = Field(default_factory=ActivitiesSettings)
     files: FilesSettings = Field(default_factory=FilesSettings)
     library: LibrarySettings = Field(default_factory=LibrarySettings)
     faces: FacesSettings = Field(default_factory=FacesSettings)

@@ -17,7 +17,9 @@ from tests.admission.unit.test_documents_flow import _entry
 
 import pytest
 
-LOGO = InstitutionBrand("Columbia", "https://cdn.example/c.png", "contain", 1.4)
+# A storage URL: the HTTP layer answers external logo URLs as null.
+OWN = "http://localhost:9000/ihsp-dev/admission/org-media/c.png"
+LOGO = InstitutionBrand("Columbia", OWN, "contain", 1.4)
 
 
 async def test_checklist_carries_the_logo_of_per_university_items() -> None:

@@ -5,6 +5,7 @@ from uuid import UUID
 from app.modules.lms.application.learning.attempt_finisher import AttemptFinisher
 from app.modules.lms.application.learning.attempt_presenter import (
     attempt_result,
+    attempt_view,
     number,
     review_allowed,
 )
@@ -37,9 +38,10 @@ async def review_view(
     test: TestBlock,
     *,
     with_review: bool,
+    mistakes: bool = False,
 ) -> LearningAttemptReviewView:
     """Return an attempt with its variant, answers and review fields."""
-    result = attempt_result(attempt, test, with_review=with_review)
+    result = attempt_result(attempt, test, with_review=with_review, mistakes=mistakes)
     users = await identity.get_users([attempt.user_id])
     user = users.get(attempt.user_id)
     person = (
@@ -54,6 +56,7 @@ async def review_view(
         user=person,
         variant=attempt.variant.to_json(),
         answers=attempt.answers,
+        questions=attempt_view(attempt, test).questions,
         revision_id=attempt.revision_id,
         override_score=(
             None if attempt.override_score is None else number(attempt.override_score)
@@ -108,4 +111,6 @@ class GetAttempt:
             await uow.commit()
         if problem is not None:
             raise problem
-        return await review_view(self.identity, attempt, test, with_review=show)
+        return await review_view(
+            self.identity, attempt, test, with_review=show, mistakes=True
+        )

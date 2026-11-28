@@ -45,6 +45,12 @@ def get(i18n: I18nContext, prefs: UserPreferences) -> Rows:
         ],
         [cb_button(i18n("bot-btn-subjects"), open_cb("subjects"))],
         [cb_button(toggle_text(i18n("bot-set-drops"), prefs.alerts_drops), drops)],
+        [
+            cb_button(
+                toggle_text(i18n("bot-set-absences"), prefs.notify_absences),
+                SettingsCb(key="absences", value=_flag(prefs.notify_absences)),
+            )
+        ],
         [cb_button(i18n("bot-btn-thresholds"), open_cb("thresholds"))],
         *(
             [

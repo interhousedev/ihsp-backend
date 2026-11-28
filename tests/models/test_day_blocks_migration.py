@@ -65,13 +65,12 @@ async def test_the_migration_keeps_blocks_and_retires_old_saturdays(
                 text("SELECT bells FROM academic.terms WHERE id = :id"),
                 {"id": term_id},
             )
-            days = dict(
-                (
-                    await conn.execute(
-                        text("SELECT id, weekday FROM academic.timetable_entries")
-                    )
-                ).all()
-            )
+            rows = (
+                await conn.execute(
+                    text("SELECT id, weekday FROM academic.timetable_entries")
+                )
+            ).all()
+        days = {row[0]: row[1] for row in rows}
         assert [(b["period"], b["weekdays"]) for b in stored] == [(1, [1, 2, 3, 4, 5])]
         assert stored[0]["start"] == "08:30"
         assert days == {monday: 1, saturday: 0}

@@ -42,6 +42,7 @@ class SubmissionRecord:
     comment: str | None
     submitted_at: dt.datetime
     updated_at: dt.datetime
+    id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)

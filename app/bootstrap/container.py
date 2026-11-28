@@ -25,6 +25,7 @@ if TYPE_CHECKING:
         McpScopeOverlayPort,
     )
     from app.modules.academic.wiring import AcademicModule
+    from app.modules.activities.wiring import ActivitiesServices
     from app.modules.admin.wiring import AdminServices
     from app.modules.admission.wiring import AdmissionServices
     from app.modules.ai.wiring import AiServices
@@ -44,9 +45,13 @@ if TYPE_CHECKING:
     from app.modules.legal.wiring import LegalServices
     from app.modules.library.wiring import LibraryServices
     from app.modules.links.wiring import LinksServices
+    from app.modules.lms.application.authoring.add_blocks_from_questions import (
+        QuestionBlocks,
+    )
     from app.modules.lms.wiring import LmsModule
     from app.modules.lms.wiring_lesson_ai import LessonAiServices
     from app.modules.mail.wiring import MailServices
+    from app.modules.media.wiring import MediaServices
     from app.modules.notebooks.wiring import NotebooksServices
     from app.modules.notify.wiring import NotifyServices
     from app.modules.onboarding.wiring import OnboardingServices
@@ -93,6 +98,7 @@ class Container:
     mail: "MailServices" = NOT_BUILT
     lms: "LmsModule" = NOT_BUILT
     notebooks: "NotebooksServices" = NOT_BUILT
+    media: "MediaServices" = NOT_BUILT
     library: "LibraryServices" = NOT_BUILT
     admission: "AdmissionServices" = NOT_BUILT
     certificates: "CertificatesServices" = NOT_BUILT
@@ -103,6 +109,7 @@ class Container:
     faces: "FacesServices" = NOT_BUILT
     onboarding: "OnboardingServices" = NOT_BUILT
     privacy: "PrivacyServices" = NOT_BUILT
+    activities: "ActivitiesServices" = NOT_BUILT
     posts: "PostsServices" = NOT_BUILT
     admin_tools: AdminToolBackend = NOT_BUILT
     llm: LlmGateway = NOT_BUILT
@@ -119,6 +126,7 @@ class Container:
     mcp_files_courses_tools: "McpFilesCoursesTools" = NOT_BUILT
     lms_ai_tools: "LmsAiTools | None" = None
     lms_lesson_ai: "LessonAiServices" = NOT_BUILT
+    lms_authoring: "QuestionBlocks" = NOT_BUILT
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
 
     async def close(self) -> None:

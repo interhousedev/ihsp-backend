@@ -5,6 +5,7 @@ from typing import Any, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AnyContext, ContainerDep
+from app.interfaces.http.v1.admission.media import served_media
 from app.modules.admission.application.outcomes import OutcomeSummary
 from app.modules.admission.domain.institution_brand import InstitutionBrand
 from app.modules.admission.domain.outcomes import (
@@ -120,7 +121,7 @@ class OutcomeTallyOut(BaseModel):
         return cls(
             institution_id=t.institution_id,
             institution_name=brand.name,
-            logo_url=brand.logo_url,
+            logo_url=served_media(brand.logo_url),
             logo_fit=brand.logo_fit,
             logo_zoom=brand.logo_zoom,
             cycle=t.cycle,

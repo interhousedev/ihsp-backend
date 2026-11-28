@@ -23,6 +23,7 @@ class PersonalTokenScope(StrEnum):
     ADMISSION_DOCS = "admission:docs"
     ADMISSION_DOCUMENTS = "admission:documents"
     ADMISSION_CATALOG = "admission:catalog"
+    ADMISSION_CATALOG_WRITE = "admission:catalog-write"
 
 
 # Admission scopes reach a student's application data: shorter tokens only.
@@ -36,9 +37,15 @@ ADMISSION_SCOPES = frozenset(
 )
 ADMISSION_MAX_EXPIRY_DAYS = 90
 
-# The catalog scope reads the public catalog and files proposals for review: never
+# The catalog scopes read the public catalog and file proposals for review, or
+# (write) push country facts and institutions straight into the catalog: never
 # student data, never mixed with another scope, staff owners only, short-lived.
-CATALOG_SCOPES = frozenset({PersonalTokenScope.ADMISSION_CATALOG.value})
+CATALOG_SCOPES = frozenset(
+    {
+        PersonalTokenScope.ADMISSION_CATALOG.value,
+        PersonalTokenScope.ADMISSION_CATALOG_WRITE.value,
+    }
+)
 CATALOG_MAX_EXPIRY_DAYS = 90
 
 

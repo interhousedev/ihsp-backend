@@ -2,5 +2,7 @@
   "lms-engage-review-item-not-found": "Takrorlash topshirigʼi topilmadi.",
   "lms-engage-quest-not-found": "Kursda bunday sinf topshirigʼi yoʼq.",
   "lms-engage-quest-dates-invalid": "Sinf topshirigʼi boshlanish sanasidan oldin tugamasligi va {max_days} kundan oshmasligi kerak.",
-  "lms-engage-section-locked": "Oldingi boʼlim {threshold}% oʼzlashtirilgach, bu boʼlim ochiladi."
+  "lms-engage-section-locked": "Oldingi boʼlim {threshold}% oʼzlashtirilgach, bu boʼlim ochiladi.",
+  "lms-engage-level-scheme-invalid": "Daraja sxemasida toʼgʼri egri chiziq, 1-darajadan boshlanib oshib boruvchi unvonlar va barcha tillardagi nomlar boʼlishi kerak ({field}).",
+  "lms-engage-level-scheme-not-found": "Bunday daraja sxemasi yoʼq."
 }

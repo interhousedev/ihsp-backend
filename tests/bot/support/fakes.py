@@ -748,6 +748,7 @@ def build_world() -> World:
             marks=SimpleNamespace(queries=marks),
             excuses=SimpleNamespace(decide_by_token=None),
         ),
+        activities=SimpleNamespace(ownership=None),
         links=SimpleNamespace(public=links),
         files=SimpleNamespace(public=files),
         mail=SimpleNamespace(public=mail),

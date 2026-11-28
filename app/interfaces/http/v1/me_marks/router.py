@@ -7,6 +7,9 @@ from app.interfaces.http.v1.me_marks.handlers.get_my_group import get_my_group
 from app.interfaces.http.v1.me_marks.handlers.get_my_group_progress import (
     get_my_group_progress,
 )
+from app.interfaces.http.v1.me_marks.handlers.get_my_group_rankings import (
+    get_my_group_rankings,
+)
 from app.interfaces.http.v1.me_marks.handlers.get_my_group_rating import (
     get_my_group_rating,
 )
@@ -25,6 +28,7 @@ from app.interfaces.http.v1.me_marks.planner_schemas import SubjectPlannerRespon
 from app.interfaces.http.v1.me_marks.schemas import (
     DayGradesResponse,
     GroupProgressResponse,
+    GroupRankingsResponse,
     GroupRatingRow,
     HonoursResponse,
     LessonResultRow,
@@ -97,6 +101,12 @@ router.add_api_route(
     get_my_group_rating,
     methods=["GET"],
     response_model=list[GroupRatingRow],
+)
+router.add_api_route(
+    "/group/rankings",
+    get_my_group_rankings,
+    methods=["GET"],
+    response_model=GroupRankingsResponse,
 )
 router.add_api_route(
     "/emis/rating-book",

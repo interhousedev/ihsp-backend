@@ -75,8 +75,10 @@ class InstitutionRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
         ),
         check_in("status", ("published", "provisional", "archived")),
         CheckConstraint(
-            "(logo_url IS NULL OR logo_url LIKE 'https://%')"
-            " AND (cover_url IS NULL OR cover_url LIKE 'https://%')",
+            "(logo_url IS NULL OR logo_url LIKE 'https://%'"
+            " OR logo_url LIKE 'http://localhost:%')"
+            " AND (cover_url IS NULL OR cover_url LIKE 'https://%'"
+            " OR cover_url LIKE 'http://localhost:%')",
             name="media_https",
         ),
         CheckConstraint("logo_zoom >= 0.5 AND logo_zoom <= 3", name="logo_zoom"),

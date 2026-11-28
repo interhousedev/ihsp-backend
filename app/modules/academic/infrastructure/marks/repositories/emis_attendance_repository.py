@@ -18,6 +18,13 @@ class SqlEmisAttendanceRepository:
         """Bind to the unit of work's session."""
         self.session = session
 
+    async def absent_dates(
+        self, student_id: UUID, subject_id: UUID, semester: int
+    ) -> list[dt.date] | None:
+        """Absent dates stored by the previous sync, or None if none were stored."""
+        row = await self.session.get(EmisAttendance, (student_id, subject_id, semester))
+        return None if row is None else row.absent_dates
+
     async def save(
         self,
         student_id: UUID,

@@ -6,6 +6,7 @@ from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.media import served_media
 from app.interfaces.http.v1.admission.routes_chooser import RankingOut, _description
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.interfaces.http.v1.admission.schemas_focuses import FocusOut, focuses_out
@@ -203,8 +204,8 @@ class MatchOut(BaseModel):
             name=i.name,
             city=i.city,
             country=i.country,
-            logo_url=i.logo_url,
-            cover_url=i.cover_url,
+            logo_url=served_media(i.logo_url),
+            cover_url=served_media(i.cover_url),
             institution_type=(
                 str(kind.value) if (kind := i.fact("institution_type")) else None
             ),

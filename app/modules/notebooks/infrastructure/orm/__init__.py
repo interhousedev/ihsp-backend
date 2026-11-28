@@ -24,6 +24,7 @@ from app.modules.notebooks.infrastructure.orm.passage import Passage
 from app.modules.notebooks.infrastructure.orm.presentation_plan import (
     PresentationPlan,
 )
+from app.modules.notebooks.infrastructure.orm.question_bank import QuestionBankRow
 from app.modules.notebooks.infrastructure.orm.share import (
     NotebookLinkedSetRow,
     NotebookShareLinkRow,
@@ -48,6 +49,7 @@ __all__ = [
     "Message",
     "Notebook",
     "Passage",
+    "QuestionBankRow",
     "PresentationPlan",
     "SharedArtifact",
     "SharedSummary",

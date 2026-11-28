@@ -1,6 +1,10 @@
 """Router of /v1/me/profile, /v1/me/timetable and /v1/staff/timetable."""
 
+from app.interfaces.http.v1.admin_schedule.day_blocks.schemas import (
+    DayBlockOccurrenceResponse,
+)
 from app.interfaces.http.v1.admin_schedule.shared_schemas import LessonItemResponse
+from app.interfaces.http.v1.me_schedule.handlers.get_day_blocks import get_day_blocks
 from app.interfaces.http.v1.me_schedule.handlers.get_profile import get_profile
 from app.interfaces.http.v1.me_schedule.handlers.get_staff_timetable import (
     get_staff_timetable,
@@ -25,6 +29,12 @@ router.add_api_route(
     get_timetable,
     methods=["GET"],
     response_model=list[StudentLessonItemResponse],
+)
+router.add_api_route(
+    "/v1/me/timetable/day-blocks",
+    get_day_blocks,
+    methods=["GET"],
+    response_model=list[DayBlockOccurrenceResponse],
 )
 router.add_api_route(
     "/v1/staff/timetable",

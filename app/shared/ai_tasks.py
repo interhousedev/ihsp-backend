@@ -80,6 +80,7 @@ class AiTask(StrEnum):
     LMS_AI_REVIEW = "lms_ai_review"
     LMS_TUTOR = "lms_tutor"
     LMS_VIDEO_CHECKS = "lms_video_checks"
+    LMS_BADGE_DRAFT = "lms_badge_draft"
     WEB_SEARCH = "web_search"
     DISCOVER = "discover"
     SUBJECT_TRANSLATE = "subject_translate"
@@ -425,6 +426,12 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
         "lms",
         "Pause-and-predict checks every 2-3 minutes of a video transcript, and "
         "recap flash cards, for the author to edit.",
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.LMS_BADGE_DRAFT: TaskSpec(
+        "lms",
+        "A teacher describes a badge in words; the model picks a template and "
+        "writes its names in uz, ru and en.",
         reasoning_effort=_NO_REASONING,
     ),
     AiTask.TEACHER_QUESTIONS: TaskSpec(
@@ -834,6 +841,7 @@ PIPELINE_OF: Final[dict[AiTask, Pipeline]] = {
     AiTask.LMS_AI_REVIEW: Pipeline.LMS,
     AiTask.LMS_TUTOR: Pipeline.LMS,
     AiTask.LMS_VIDEO_CHECKS: Pipeline.LMS,
+    AiTask.LMS_BADGE_DRAFT: Pipeline.LMS,
     AiTask.EMBEDDING: Pipeline.EMBEDDINGS,
     AiTask.WEB_SEARCH: Pipeline.WEB_SEARCH,
     AiTask.VOICE_TRANSCRIBE: Pipeline.VOICE,

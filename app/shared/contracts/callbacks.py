@@ -14,6 +14,13 @@ class ExcuseCb(CallbackData, prefix="ex"):
     d: str
 
 
+class ClubTransferCb(CallbackData, prefix="ct"):
+    """Answer a club ownership offer: `t` is the packed transfer id, `d` is a or d."""
+
+    t: str
+    d: str
+
+
 class McpScopeCb(CallbackData, prefix="ms"):
     """Decide an offer of MCP scopes: `t` is its 128-bit token, `d` is g or n."""
 

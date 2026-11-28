@@ -24,5 +24,8 @@
   "lms-learn-exam-not-found": "This step has no such exam.",
   "lms-learn-exam-module-closed": "This exam module is closed: it was submitted or its time is over.",
   "lms-tutor-disabled": "The lesson tutor is turned off for this course.",
-  "lms-tutor-daily-limit": "You have asked the tutor as many questions as allowed today. Try again tomorrow."
+  "lms-tutor-daily-limit": "You have asked the tutor as many questions as allowed today. Try again tomorrow.",
+  "lms-coach-hint-regression": "The hint level cannot go back. Please try again.",
+  "lms-coach-hint-locked": "Try the task yourself once first, then ask for the worked step.",
+  "lms-coach-session-closed": "This conversation is already closed."
 }

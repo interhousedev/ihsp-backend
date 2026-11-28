@@ -70,6 +70,9 @@ class OpportunityRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
     )
     archived: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
     created_by: Mapped[UUID | None] = mapped_column(Uuid)
+    audience: Mapped[list[str]] = mapped_column(
+        JSONB, server_default=text("'[\"admission\"]'::jsonb")
+    )
 
 
 class OpportunitySubmissionRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):

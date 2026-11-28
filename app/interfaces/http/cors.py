@@ -28,6 +28,8 @@ COOKIE_PREFIXES = ("/v1/oauth/token", "/v1/oauth/refresh", "/v1/oauth/logout")
 # Read by every app shell (maintenance banner, client config), so app and share
 # origins both pass.
 MAINTENANCE_PREFIXES = ("/v1/public/maintenance", "/v1/public/client-config")
+# The club directory is read and posted to from the landing (admission origin).
+CLUBS_PREFIXES = ("/v1/public/clubs",)
 PUBLIC_PREFIXES = ("/v1/public/",)
 APP_PREFIXES = ("/v1/",)
 
@@ -80,6 +82,17 @@ class PrefixCorsMiddleware:
                     allow_origins=[*app_origins, *share_origins],
                     allow_credentials=False,
                     allow_methods=["GET", "OPTIONS"],
+                    allow_headers=["*"],
+                    expose_headers=_EXPOSE,
+                ),
+            ),
+            (
+                CLUBS_PREFIXES,
+                CORSMiddleware(
+                    app,
+                    allow_origins=[*app_origins, *share_origins],
+                    allow_credentials=False,
+                    allow_methods=["GET", "POST", "OPTIONS"],
                     allow_headers=["*"],
                     expose_headers=_EXPOSE,
                 ),

@@ -9,6 +9,7 @@ from app.interfaces.http.v1.admission.deps import (
     ContainerDep,
     ensure_applicant,
 )
+from app.interfaces.http.v1.admission.media import served_media
 from app.modules.admission.application.deadlines import DeadlineInput, DeadlineItem
 from app.modules.admission.application.documents import DocumentView
 from app.modules.admission.application.transcripts import TranscriptView
@@ -171,7 +172,7 @@ class ChecklistOut(BaseModel):
         return cls(
             **data,
             institution_name=brand.name if brand else None,
-            logo_url=brand.logo_url if brand else None,
+            logo_url=served_media(brand.logo_url) if brand else None,
             logo_fit=brand.logo_fit if brand else "circle",
             logo_zoom=brand.logo_zoom if brand else 1.0,
             institution_website_url=brand.website_url if brand else None,
@@ -313,7 +314,7 @@ class DeadlineOut(BaseModel):
         keys = set(cls.model_fields) - _BRAND_FIELDS
         return cls(
             institution_name=brand.name,
-            logo_url=brand.logo_url,
+            logo_url=served_media(brand.logo_url),
             logo_fit=brand.logo_fit,
             logo_zoom=brand.logo_zoom,
             **{k: getattr(d, k) for k in keys},
@@ -346,7 +347,7 @@ class MilestoneOut(BaseModel):
             predicted=m.predicted,
             institution_id=i.institution_id,
             institution_name=i.brand.name,
-            logo_url=i.brand.logo_url,
+            logo_url=served_media(i.brand.logo_url),
             logo_fit=i.brand.logo_fit,
             logo_zoom=i.brand.logo_zoom,
         )

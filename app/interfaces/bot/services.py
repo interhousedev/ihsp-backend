@@ -53,6 +53,18 @@ class DecideExcuseByTokenCase(Protocol):
         ...
 
 
+class ClubTransfers(Protocol):
+    """The activities ownership service: the recipient's answer to an offer."""
+
+    async def accept(self, actor: Actor, transfer_id: UUID, /) -> object:
+        """Accept the offer as its recipient."""
+        ...
+
+    async def decline(self, actor: Actor, transfer_id: UUID, /) -> object:
+        """Decline the offer as its recipient."""
+        ...
+
+
 class ListLessonMarks(Protocol):
     """The classwork use case ``list_lesson_temporary_marks``."""
 
@@ -111,6 +123,7 @@ class BotServices:
     cancel_otp_reset: CancelOtpReset
     decide_scope_offer: DecideScopeOfferCase
     decide_excuse_by_token: DecideExcuseByTokenCase
+    club_transfers: ClubTransfers
     schedule: ScheduleQueries
     classwork_queries: ClassworkQueries
     classwork: ClassworkCommands
@@ -136,6 +149,7 @@ def services_from_container(container: Any) -> BotServices:
         cancel_otp_reset=container.identity.auth.cancel_otp_reset,
         decide_scope_offer=container.identity.auth.decide_scope_offer,
         decide_excuse_by_token=container.academic.excuses.decide_by_token,
+        club_transfers=container.activities.ownership,
         schedule=container.academic.schedule.queries,
         classwork_queries=container.academic.classwork.queries,
         classwork=container.academic.classwork.commands,

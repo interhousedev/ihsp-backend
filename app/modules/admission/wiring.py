@@ -24,6 +24,7 @@ from app.modules.admission.application.catalog_card import CatalogCardService
 from app.modules.admission.application.catalog_proposals import (
     CatalogProposalService,
 )
+from app.modules.admission.application.catalog_push import CatalogPushService
 from app.modules.admission.application.catalog_research import CatalogResearch
 from app.modules.admission.application.catalog_scorecard import (
     CatalogScorecardService,
@@ -130,6 +131,9 @@ from app.modules.admission.infrastructure.calendar_repository import (
     SqlCalendarStore,
 )
 from app.modules.admission.infrastructure.catalog_data import study_fields as _fields
+from app.modules.admission.infrastructure.catalog_push_writer import (
+    SqlInstitutionPushWriter,
+)
 from app.modules.admission.infrastructure.country_facts_repository import (
     SqlCountryFactsRepository,
 )
@@ -228,6 +232,7 @@ class AdmissionServices:
     mentoring: MentoringService
     catalog: CatalogService
     catalog_proposals: CatalogProposalService
+    catalog_push: CatalogPushService
     supp_prompts: SuppPromptService
     chooser: ListService
     budget: BudgetService
@@ -374,10 +379,16 @@ def build(
         async with uow_factory() as uow:
             return await uow.orgs.get(org_id) is not None
 
-    opportunities = OpportunityService(
-        uow_factory, access, deps.clock, lms_courses, deps.rate_limiter, org_exists
-    )
     mirror = media_mirror or build_media_mirror(deps.settings)
+    opportunities = OpportunityService(
+        uow_factory,
+        access,
+        deps.clock,
+        lms_courses,
+        deps.rate_limiter,
+        org_exists,
+        mirror=mirror,
+    )
     curators = CatalogProposalService(uow_factory, deps.clock)
     intake = OpportunityIntake(
         model, texts, web_search=web_search, profile_of=profile_of
@@ -628,7 +639,7 @@ def build(
             curators.can_review,
             deps.clock,
         ),
-        orgs=OrgService(uow_factory, opportunities, deps.clock),
+        orgs=OrgService(uow_factory, opportunities, deps.clock, mirror=mirror),
         opportunity_comments=OppCommentService(
             uow_factory, opportunities, deps.clock, identity
         ),
@@ -722,6 +733,13 @@ def build(
             SqlCountryFactsRepository(deps.sessionmaker),
             curators.can_review,
             _institutions_of(uow_factory),
+        ),
+        catalog_push=CatalogPushService(
+            uow_factory,
+            SqlCountryFactsRepository(deps.sessionmaker),
+            SqlInstitutionPushWriter(deps.sessionmaker, deps.clock, mirror),
+            curators.can_review,
+            deps.rate_limiter,
         ),
         project_ideas=ProjectIdeaService(
             SqlProjectRunRepository(deps.sessionmaker),

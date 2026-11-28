@@ -60,3 +60,8 @@ class StepRevision(IdMixin, TimestampMixin, Base):
     )
     label: Mapped[str | None] = mapped_column(String(255))
     created_by: Mapped[UUID] = mapped_column(Uuid)
+    # Teacher-written solution keys of the Coach; the revision they belong to is the
+    # only one whose sessions may read them.
+    solution_keys: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, server_default=text("'[]'")
+    )

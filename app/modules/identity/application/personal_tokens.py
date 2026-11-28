@@ -107,8 +107,7 @@ class CreatePersonalToken:
         if not scopes or not requested <= _SCOPES:
             reasons.append("scopes")
         elif CATALOG_SCOPES & requested and (
-            requested != CATALOG_SCOPES
-            or not any(role != Role.STUDENT for role in actor.roles)
+            len(requested) != 1 or not any(role != Role.STUDENT for role in actor.roles)
         ):
             # Catalog alone, and only for a staff account (never a student's).
             reasons.append("scopes")

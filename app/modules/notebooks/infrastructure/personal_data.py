@@ -8,6 +8,7 @@ from app.modules.notebooks.infrastructure.orm.default_material import (
 from app.modules.notebooks.infrastructure.orm.message import Message
 from app.modules.notebooks.infrastructure.orm.notebook import Notebook
 from app.modules.notebooks.infrastructure.orm.presentation_plan import PresentationPlan
+from app.modules.notebooks.infrastructure.orm.question_bank import QuestionBankRow
 from app.modules.notebooks.infrastructure.orm.share import NotebookShareRow
 from app.modules.notebooks.infrastructure.orm.source import Source
 from app.shared.personal_data import (
@@ -45,6 +46,7 @@ SPECS: tuple[PersonalTable, ...] = (
         Artifact, E, owner="owner_id", note="erased by notebooks.delete_owner"
     ),
     PersonalTable(Source, E, owner="owner_id", note="erased by notebooks.delete_owner"),
+    PersonalTable(QuestionBankRow, E, owner="owner_id", note="teacher question bank"),
     PersonalTable(
         Notebook, E, owner="owner_id", note="erased by notebooks.delete_owner"
     ),

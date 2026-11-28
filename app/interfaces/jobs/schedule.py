@@ -49,6 +49,7 @@ class CronJob:
 CRON_JOBS: tuple[CronJob, ...] = (
     *(CronJob("academic.sync_all", cron, {"slot": slot}) for slot, cron in SYNC_SLOTS),
     CronJob("academic.generate_lessons", "0 2 * * *"),
+    CronJob("media.deliver_pending", EVERY_10_MINUTES),
     CronJob("academic.lesson_reminders", EVERY_MINUTE),
     CronJob("academic.absence_digests", "*/15 12-20 * * 1-5"),
     CronJob("academic.temporary_mark_reminders", "*/15 12-20 * * 1-5"),
@@ -94,6 +95,11 @@ CRON_JOBS: tuple[CronJob, ...] = (
     CronJob("library.remind_queue", "30 7 * * *"),
     CronJob("faces.purge_old", "35 4 * * *"),
     CronJob("privacy.cleanup_exports", "25 * * * *"),
+    CronJob("activities.settle_announcements", EVERY_5_MINUTES),
+    CronJob("activities.mark_draft_no_shows", "*/15 * * * *"),
+    CronJob("activities.rate_events", "*/15 * * * *"),
+    CronJob("activities.expire_transfers", "20 * * * *"),
+    CronJob("activities.graduation_alerts", "0 9 * * 1"),
 )
 
 
