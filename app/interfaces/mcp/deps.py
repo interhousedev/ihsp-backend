@@ -35,6 +35,7 @@ from app.shared.contracts.mcp_calls import McpCallLog
 from app.shared.contracts.mcp_content import McpContentTools
 from app.shared.contracts.mcp_files_courses import McpFilesCoursesTools
 from app.shared.contracts.mcp_history import McpHistoryTools
+from app.shared.contracts.mcp_learning_record import McpLearningRecordTools
 from app.shared.contracts.mcp_teacher import McpTeacherTools
 from app.shared.contracts.teacher_ai import TeacherAiTools
 from app.shared.i18n.core import I18nCore
@@ -89,6 +90,10 @@ class McpDeps:
     admission: Any | None = None  # AdmissionServices, for /mcp/admission
     sniffer: Any | None = None  # ContentSniffer, for admission uploads
     personal_tokens: Any | None = None  # PersonalTokenVerifier
+    # The learning-record tools; None: the process has no LMS.
+    learning_tools: McpLearningRecordTools | None = None
+    # ActivitiesServices (clubs, events, media); None: the process has no clubs.
+    activities: Any | None = None
 
     def t(self, key: str, **params: Any) -> str:  # noqa: ANN401 - i18n params
         """Translate a message key into the language of tool errors."""
@@ -164,6 +169,8 @@ def deps_from_container(
         personal_tokens=getattr(
             getattr(container, "identity", None), "personal_token_verifier", None
         ),
+        learning_tools=getattr(container, "mcp_learning_tools", None),
+        activities=getattr(container, "activities", None),
     )
 
 

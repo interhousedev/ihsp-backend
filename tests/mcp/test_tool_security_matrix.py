@@ -5,6 +5,8 @@ from types import ModuleType, SimpleNamespace
 from typing import Any, cast
 
 from app.interfaces.mcp.admin.server import TOOL_MODULES as ADMIN_MODULES
+from app.interfaces.mcp.admission.tools import TOOL_MODULES as ADMISSION_MODULES
+from app.interfaces.mcp.admission.tools import staff as admission_staff
 from app.interfaces.mcp.constants import (
     SCOPES_BY_SERVER,
     SERVERS,
@@ -31,6 +33,10 @@ MODULES: dict[ServerName, tuple[ModuleType, ...]] = {
     "lms": LMS_MODULES,
     "admin": ADMIN_MODULES,
     "teacher": TEACHER_MODULES,
+    "admission": (
+        *ADMISSION_MODULES,
+        cast(ModuleType, SimpleNamespace(register=admission_staff.register_staff)),
+    ),
 }
 CANARY = "CANARY-text-from-the-client"
 ACTOR_PARAMETERS = {"user_id", "owner_id", "student_id", "actor_id", "issued_to"}
@@ -51,6 +57,7 @@ def _live_tools() -> list[tuple[ServerName, str]]:
         t=lambda key, **params: key,
         access_verifier=None,
         connector_verifier=None,
+        admission=None,
     )
     return [
         (server, name)

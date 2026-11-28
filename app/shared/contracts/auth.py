@@ -28,7 +28,7 @@ class ConnectorTokenVerifier(Protocol):
         self,
         token: str,
         *,
-        server: Literal["student", "lms", "admin", "teacher", "app"],
+        server: Literal["student", "lms", "admin", "teacher", "app", "admission"],
     ) -> Actor:
         """Return the actor with connector_id and scopes set."""
         ...

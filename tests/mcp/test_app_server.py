@@ -16,12 +16,13 @@ async def _names(world: World, roles: tuple[Role, ...]) -> set[str]:
         return {tool.name for tool in (await session.list_tools()).tools}
 
 
-def test_catalog_is_derived_from_the_three_sources() -> None:
+def test_catalog_is_derived_from_the_four_sources() -> None:
     """Scopes are `<source>:<scope>` and tools `<source>_<tool>`, nothing else."""
     assert {info.scope.split(":")[0] for info in SCOPE_CATALOG["app"]} == {
         "student",
         "teacher",
         "lms",
+        "admission",
     }
     for info in SCOPE_CATALOG["app"]:
         source = info.scope.split(":")[0]
@@ -30,6 +31,7 @@ def test_catalog_is_derived_from_the_three_sources() -> None:
         ALLOWED_ROLES_BY_SERVER["student"]
         | ALLOWED_ROLES_BY_SERVER["teacher"]
         | ALLOWED_ROLES_BY_SERVER["lms"]
+        | ALLOWED_ROLES_BY_SERVER["admission"]
     )
     assert Role.ADMIN in ALLOWED_ROLES_BY_SERVER["app"]
 

@@ -97,10 +97,19 @@ class McpAcademicToolsAdapter:
         lesson_id: UUID,
         file_ids: Sequence[UUID],
         comment: str | None,
+        text: str | None,
     ) -> dict[str, Any]:
-        """Hand in files for a lesson's homework."""
+        """Hand in text and/or files for a lesson's homework."""
         return await self._c.academic.classwork.submit_homework.execute(
-            lesson_id, actor, file_ids, comment
+            lesson_id, actor, file_ids, comment, text
+        )
+
+    async def homework_submission(
+        self, actor: Actor, lesson_id: UUID
+    ) -> dict[str, Any]:
+        """Return the student's own submission."""
+        return await self._c.academic.classwork.get_homework_submission.execute(
+            lesson_id, actor
         )
 
     async def withdraw_homework_submission(self, actor: Actor, lesson_id: UUID) -> None:

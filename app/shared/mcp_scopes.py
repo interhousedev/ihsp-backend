@@ -8,10 +8,11 @@ scopes of one server only. Administration is never offered: its connectors need 
 step-up at creation, and a button would bypass that.
 """
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from typing import Final, Literal
 
+from app.shared.actor import Role
 from app.shared.lms_scopes import (
     COURSES_DELETE,
     COURSES_READ,
@@ -19,17 +20,34 @@ from app.shared.lms_scopes import (
     MODULES_WRITE,
 )
 
-Server = Literal["student", "lms", "admin", "teacher", "app"]
-SourceServer = Literal["student", "lms", "teacher"]
+Server = Literal["student", "lms", "admin", "teacher", "app", "admission"]
+SourceServer = Literal["student", "lms", "teacher", "admission"]
 
 # The universal server "app" serves these servers' tools, each name and scope prefixed
 # by its source server (`teacher_get_journal`, `teacher:journal:read`).
-APP_SOURCES: Final[tuple[SourceServer, ...]] = ("student", "teacher", "lms")
+APP_SOURCES: Final[tuple[SourceServer, ...]] = (
+    "student",
+    "teacher",
+    "lms",
+    "admission",
+)
+
+# Admission: applicants (students) and admission staff share one server; each tool
+# and each scope says which family may use it.
+ADMISSION_APPLICANT_ROLES: Final = frozenset({Role.STUDENT})
+ADMISSION_STAFF_ROLES: Final = frozenset(
+    {Role.COUNSELOR, Role.MENTOR, Role.TRANSCRIPT_OFFICER, Role.ADMIN}
+)
+ADMISSION_ROLES: Final = ADMISSION_APPLICANT_ROLES | ADMISSION_STAFF_ROLES
 
 BASELINE: Final = "baseline"
 RELEASE_2026_11: Final = "2026-11-mcp-1"
 RELEASE_2026_12: Final = "2026-12-mcp-1"
 RELEASE_2026_12_2: Final = "2026-12-mcp-2"
+RELEASE_2026_12_3: Final = "2026-12-mcp-3"  # student: clubs
+RELEASE_2026_12_4: Final = "2026-12-mcp-4"  # student: learning record
+RELEASE_2026_12_5: Final = "2026-12-mcp-5"  # teacher: homework review
+RELEASE_2026_12_6: Final = "2026-12-mcp-6"  # admission: the whole server
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,6 +60,8 @@ class ScopeInfo:
     since: str = BASELINE
     widens: tuple[str, ...] = ()
     """Existing tools (of other scopes) that see more with this scope."""
+    roles: frozenset[Role] = frozenset()
+    """Roles that may hold this scope; empty means every role of the server."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,8 +80,12 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
             "schedule:read",
             ("get_schedule", "get_my_subjects", "get_subject_lessons", "find_feature"),
         ),
-        ScopeInfo("homework:read", ("get_homework",)),
-        ScopeInfo("marks:read", ("get_marks", "get_results", "get_gpa")),
+        ScopeInfo("homework:read", ("get_homework", "get_homework_submission")),
+        ScopeInfo(
+            "marks:read",
+            ("get_marks", "get_results", "get_gpa"),
+            widens=("get_learning_record",),
+        ),
         ScopeInfo("attendance:read", ("get_attendance",)),
         ScopeInfo("materials:read", ("get_lesson_materials", "get_lesson_detail")),
         ScopeInfo("files:read", ("list_files", "read_file", "search_files")),
@@ -161,6 +185,48 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
             write=True,
             since=RELEASE_2026_11,
         ),
+        ScopeInfo(
+            "clubs:read",
+            (
+                "list_my_clubs",
+                "list_club_events",
+                "get_club_event",
+                "list_club_announcements",
+                "list_event_media",
+            ),
+            since=RELEASE_2026_12_3,
+        ),
+        ScopeInfo(
+            "clubs:write",
+            (
+                "create_club_event",
+                "update_club_event",
+                "publish_club_event",
+                "upload_club_media",
+                "set_event_cover",
+                "add_event_media",
+                "send_club_announcement",
+                "cancel_club_event",
+                "cancel_club_announcement",
+                "delete_club_media",
+            ),
+            write=True,
+            since=RELEASE_2026_12_3,
+        ),
+        ScopeInfo(
+            "progress:read",
+            (
+                "get_learning_record",
+                "get_my_course_progress",
+                "list_my_attempts",
+                "get_my_attempt",
+                "list_my_ai_reviews",
+                "get_my_ai_review",
+                "list_my_certificates",
+                "list_my_badges",
+            ),
+            since=RELEASE_2026_12_4,
+        ),
     ),
     "lms": (
         ScopeInfo(
@@ -179,6 +245,7 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
                 "list_students",
                 "course_progress",
                 "get_attempt",
+                "list_ai_review_submissions",
             ),
         ),
         ScopeInfo(
@@ -258,8 +325,25 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
             "journal:read",
             ("get_journal", "get_group_attendance", "my_missing_attendance"),
         ),
-        ScopeInfo("homework:read", ("list_homework_submissions",)),
-        ScopeInfo("homework:write", ("set_homework", "clear_homework"), write=True),
+        ScopeInfo(
+            "homework:read",
+            (
+                "list_homework_lessons",
+                "list_homework_submissions",
+                "get_homework_submission",
+                "get_homework_preferences",
+            ),
+        ),
+        ScopeInfo(
+            "homework:write",
+            (
+                "set_homework",
+                "clear_homework",
+                "set_homework_settings",
+                "set_homework_preferences",
+            ),
+            write=True,
+        ),
         ScopeInfo("marks:read", ("list_temporary_marks", "get_student_record")),
         ScopeInfo(
             "marks:write",
@@ -290,6 +374,164 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
         ),
         ScopeInfo("files:write", ("upload_file",), write=True),
         ScopeInfo("notifications:read", ("list_notifications",)),
+        ScopeInfo(
+            "homework:review",
+            ("review_homework_submission", "clear_homework_review"),
+            write=True,
+            since=RELEASE_2026_12_5,
+        ),
+    ),
+    "admission": (
+        ScopeInfo(
+            "application:read",
+            (
+                "get_application",
+                "get_today",
+                "get_profile",
+                "list_activities",
+                "list_honor_suggestions",
+                "list_certificate_proofs",
+                "list_test_scores",
+                "list_tasks",
+                "get_readiness",
+                "list_checklist",
+                "get_school_grades",
+                "get_my_university_list",
+            ),
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_APPLICANT_ROLES,
+        ),
+        ScopeInfo(
+            "application:write",
+            (
+                "update_profile",
+                "add_activity",
+                "update_activity",
+                "delete_activity",
+                "add_test_score",
+                "update_test_score",
+                "delete_test_score",
+                "link_activity_opportunity",
+            ),
+            write=True,
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_APPLICANT_ROLES,
+        ),
+        ScopeInfo(
+            "documents:read",
+            ("list_documents", "read_document"),
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_APPLICANT_ROLES,
+        ),
+        ScopeInfo(
+            "documents:write",
+            ("upload_document", "add_certificate_proof"),
+            write=True,
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_APPLICANT_ROLES,
+        ),
+        ScopeInfo(
+            "plans:read",
+            ("get_goal_plan", "get_opportunity_plan"),
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_APPLICANT_ROLES,
+        ),
+        ScopeInfo(
+            "plans:write",
+            (
+                "add_milestone",
+                "update_milestone",
+                "delete_milestone",
+                "suggest_goal_plan",
+                "plan_opportunity",
+                "unplan_opportunity",
+                "generate_opportunity_plan",
+                "add_external_opportunity",
+                "update_external_opportunity",
+                "remove_external_opportunity",
+            ),
+            write=True,
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_APPLICANT_ROLES,
+        ),
+        ScopeInfo(
+            "catalog:read",
+            (
+                "search_universities",
+                "get_university",
+                "search_opportunities",
+                "get_opportunity",
+                "get_country",
+            ),
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_ROLES,
+        ),
+        ScopeInfo(
+            "consents:read",
+            ("list_consents",),
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_APPLICANT_ROLES,
+        ),
+        ScopeInfo(
+            "memory:read",
+            ("list_memory_notes",),
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_APPLICANT_ROLES,
+        ),
+        ScopeInfo(
+            "memory:write",
+            ("write_memory_note", "delete_memory_note"),
+            write=True,
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_APPLICANT_ROLES,
+        ),
+        ScopeInfo(
+            "calendar:read",
+            ("get_calendar", "export_calendar_ics", "get_calendar_feed"),
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_APPLICANT_ROLES,
+        ),
+        ScopeInfo(
+            "calendar:write",
+            ("create_calendar_feed", "replace_calendar_feed", "revoke_calendar_feed"),
+            write=True,
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_APPLICANT_ROLES,
+        ),
+        ScopeInfo(
+            "caseload:read",
+            ("list_caseload", "list_caseload_deadlines", "list_document_queue"),
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_STAFF_ROLES,
+        ),
+        ScopeInfo(
+            "students:read",
+            (
+                "get_student_application",
+                "get_student_readiness",
+                "list_student_reviews",
+                "get_student_review",
+                "list_student_documents",
+                "read_student_document",
+                "list_comments",
+            ),
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_STAFF_ROLES,
+        ),
+        ScopeInfo(
+            "students:write",
+            ("add_comment", "delete_comment", "assign_task"),
+            write=True,
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_STAFF_ROLES,
+        ),
+        ScopeInfo(
+            "documents:review",
+            ("review_document",),
+            write=True,
+            since=RELEASE_2026_12_6,
+            roles=ADMISSION_STAFF_ROLES,
+        ),
     ),
 }
 
@@ -331,6 +573,31 @@ RELEASES: Final[tuple[ScopeRelease, ...]] = (
         scopes=("group:read", "rating_book:read", "notifications:read"),
         summary_key="mcp-release-2026-12-mcp-2",
     ),
+    ScopeRelease(
+        id=RELEASE_2026_12_3,
+        server="student",
+        scopes=("clubs:read", "clubs:write"),
+        summary_key="mcp-release-2026-12-mcp-3",
+    ),
+    ScopeRelease(
+        id=RELEASE_2026_12_4,
+        server="student",
+        scopes=("progress:read",),
+        summary_key="mcp-release-2026-12-mcp-4",
+    ),
+    # Teacher and admission are not offerable: these records only date their scopes.
+    ScopeRelease(
+        id=RELEASE_2026_12_5,
+        server="teacher",
+        scopes=("homework:review",),
+        summary_key="mcp-release-2026-12-mcp-5",
+    ),
+    ScopeRelease(
+        id=RELEASE_2026_12_6,
+        server="admission",
+        scopes=tuple(info.scope for info in SCOPE_CATALOG["admission"]),
+        summary_key="mcp-release-2026-12-mcp-6",
+    ),
 )
 
 SCOPE_CATALOG["app"] = tuple(
@@ -340,12 +607,45 @@ SCOPE_CATALOG["app"] = tuple(
         write=info.write,
         since=info.since,
         widens=tuple(f"{source}_{tool}" for tool in info.widens),
+        roles=info.roles,
     )
     for source in APP_SOURCES
     for info in SCOPE_CATALOG[source]
 )
 
 OFFERABLE_SERVERS: Final[frozenset[Server]] = frozenset({"student", "lms"})
+
+# Old admission personal-token (`ihsp_pat_`) scopes and the server scopes they stand
+# for (same tools as before). A personal token never yields a staff scope.
+PAT_SCOPE_ALIASES: Final[Mapping[str, tuple[str, ...]]] = {
+    "admission:read": (
+        "application:read",
+        "plans:read",
+        "catalog:read",
+        "consents:read",
+        "memory:read",
+        "calendar:read",
+    ),
+    "admission:memory": ("memory:read", "memory:write"),
+    "admission:documents": ("documents:read",),
+    "admission:docs": ("documents:write",),
+}
+
+
+def pat_scopes(scopes: Collection[str]) -> frozenset[str]:
+    """Admission server scopes of old personal-token scopes; unknown ones drop."""
+    return frozenset(new for old in scopes for new in PAT_SCOPE_ALIASES.get(old, ()))
+
+
+def scopes_for_roles(server: str, roles: Collection[Role]) -> frozenset[str]:
+    """Scopes of a server that one of the roles may hold (per-scope role lists)."""
+    held = frozenset(roles)
+    return frozenset(
+        info.scope
+        for info in SCOPE_CATALOG[server]
+        if not info.roles or info.roles & held
+    )
+
 
 SCOPE_NAMES_BY_SERVER: Final[Mapping[str, tuple[str, ...]]] = {
     server: tuple(info.scope for info in infos)

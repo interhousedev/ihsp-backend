@@ -227,8 +227,13 @@ async def test_no_server_has_a_publish_tool_and_only_lms_deletes(
     names = [tool.name for tool in listed]
     forbidden = LMS_FORBIDDEN_VERBS if server == "lms" else FORBIDDEN_VERBS
     # The one student delete: own cards only, under its own scope (`flashcards:delete`).
+    allowed = {"delete_flashcards"}
+    if server == "student":
+        # 1.17: organizers asked to publish club events and manage club media from
+        # MCP; `clubs:write` guards these two and the services check the organizer.
+        allowed |= {"publish_club_event", "delete_club_media"}
     assert not [
-        name for name in names if forbidden.search(name) and name != "delete_flashcards"
+        name for name in names if forbidden.search(name) and name not in allowed
     ]
     assert ("create_course" in names) == (server == "lms")
 
@@ -353,8 +358,19 @@ TEACHER_SCOPES = {
     "schedule:read": {"get_today", "get_timetable", "get_lesson", "find_feature"},
     "groups:read": {"list_my_groups", "get_group_roster"},
     "journal:read": {"get_journal", "get_group_attendance", "my_missing_attendance"},
-    "homework:read": {"list_homework_submissions"},
-    "homework:write": {"set_homework", "clear_homework"},
+    "homework:read": {
+        "list_homework_lessons",
+        "list_homework_submissions",
+        "get_homework_submission",
+        "get_homework_preferences",
+    },
+    "homework:write": {
+        "set_homework",
+        "clear_homework",
+        "set_homework_settings",
+        "set_homework_preferences",
+    },
+    "homework:review": {"review_homework_submission", "clear_homework_review"},
     "marks:read": {"list_temporary_marks", "get_student_record"},
     "marks:write": {"set_temporary_mark", "delete_temporary_mark"},
     "files:write": {"upload_file"},
@@ -404,6 +420,10 @@ async def test_teacher_writes_are_the_marked_ones_and_deletes_destructive(
     assert _writers(listed) == {
         "set_homework",
         "clear_homework",
+        "set_homework_settings",
+        "set_homework_preferences",
+        "review_homework_submission",
+        "clear_homework_review",
         "set_temporary_mark",
         "delete_temporary_mark",
         "create_assessment",
@@ -415,4 +435,8 @@ async def test_teacher_writes_are_the_marked_ones_and_deletes_destructive(
         for t in listed
         if t.annotations is not None and t.annotations.destructiveHint
     }
-    assert destructive == {"clear_homework", "delete_temporary_mark"}
+    assert destructive == {
+        "clear_homework",
+        "delete_temporary_mark",
+        "clear_homework_review",
+    }

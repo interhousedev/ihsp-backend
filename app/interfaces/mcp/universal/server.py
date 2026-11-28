@@ -9,6 +9,8 @@ tools; search and describe show a caller only the tools of sources its roles all
 Administration and the librarian have no place here.
 """
 
+from app.interfaces.mcp.admission.tools import TOOL_MODULES as ADMISSION_MODULES
+from app.interfaces.mcp.admission.tools.staff import register_staff
 from app.interfaces.mcp.catalog import CatalogMcp, enable_catalog
 from app.interfaces.mcp.constants import APP_SOURCES, SourceServerName
 from app.interfaces.mcp.deps import McpDeps
@@ -37,6 +39,7 @@ MODULES = {
     "student": STUDENT_MODULES,
     "teacher": TEACHER_MODULES,
     "lms": LMS_MODULES,
+    "admission": ADMISSION_MODULES,
 }
 
 
@@ -59,6 +62,8 @@ def build_app_server(deps: McpDeps) -> FastMCP:
             module.register(kit)
         if source == "teacher":
             teacher_ai_tools.register(kit)
+        if source == "admission":
+            register_staff(kit)
         for name in kit.guard.registered:
             sources[name] = source
     enable_catalog(mcp, sources, PINNED)

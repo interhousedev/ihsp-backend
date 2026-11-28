@@ -14,6 +14,7 @@ from typing import Annotated, Any
 
 from app.interfaces.mcp.auth import IhspAccessToken
 from app.interfaces.mcp.constants import ALLOWED_ROLES_BY_SERVER, SourceServerName
+from app.shared.actor import Role
 
 from mcp.server.auth.middleware.auth_context import get_access_token
 from mcp.server.fastmcp import FastMCP
@@ -48,16 +49,22 @@ class CatalogMcp(FastMCP):
         super().__init__(*args, **kwargs)
         self.tool_sources: dict[str, SourceServerName] = {}
         self.pinned: frozenset[str] = frozenset()
+        self.tool_roles: dict[str, frozenset[Role]] = {}
+        """Tools given `roles` in `ToolKit.tool`: hidden from other roles."""
 
     def allowed(self, name: str) -> bool:
-        """True when a caller's roles allow the source server of tool `name`."""
+        """True when a caller's roles allow the source server and the tool itself."""
         source = self.tool_sources.get(name)
         if source is None:
             return False
         token = get_access_token()
         if not isinstance(token, IhspAccessToken):
             return False
-        return bool(token.actor.roles & ALLOWED_ROLES_BY_SERVER[source])
+        roles = token.actor.roles
+        if not roles & ALLOWED_ROLES_BY_SERVER[source]:
+            return False
+        only = self.tool_roles.get(name)
+        return only is None or bool(roles & only)
 
     def visible(self) -> list[RegisteredTool]:
         """The registered tools the caller's roles allow (meta tools excluded)."""

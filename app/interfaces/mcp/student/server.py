@@ -6,6 +6,8 @@ from app.interfaces.mcp.deps import McpDeps
 from app.interfaces.mcp.factory import finish_catalog, make_toolkit
 from app.interfaces.mcp.student.tools import (
     add_flashcards,
+    clubs_read,
+    clubs_write,
     create_flashcard_set,
     find_feature,
     get_attendance,
@@ -17,8 +19,11 @@ from app.interfaces.mcp.student.tools import (
     get_results,
     get_schedule,
     get_subject_lessons,
+    learning_record,
     list_files,
     list_flashcard_sets,
+    my_ai_reviews,
+    my_attempts,
     read_file,
     search_files,
     update_flashcard,
@@ -46,10 +51,15 @@ TOOL_MODULES = (
     create_flashcard_set,
     add_flashcards,
     update_flashcard,
+    learning_record,
+    my_attempts,
+    my_ai_reviews,
     *academic.TOOL_MODULES,
     *content.TOOL_MODULES,
     *files_courses.TOOL_MODULES,
     upload_file,
+    clubs_read,
+    clubs_write,
 )
 
 

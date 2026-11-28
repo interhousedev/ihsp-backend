@@ -56,6 +56,7 @@ _BUILDERS: dict[str, Callable[[McpDeps], FastMCP]] = {
     "admin": build_admin_server,
     "teacher": build_teacher_server,
     "app": build_app_server,
+    "admission": build_admission_server,
 }
 
 
@@ -66,7 +67,7 @@ def build_mcp_apps(
     admin_tools: AdminToolBackend | None = None,
     connector_courses: ConnectorCoursesPort | None = None,
 ) -> list[McpApp]:
-    """Build the five servers: `("/mcp/student", app, lifespan_cm)` and so on.
+    """Build every server: `("/mcp/student", app, lifespan_cm)` and so on.
 
     Call once per process: each lifespan context manager can be entered only once.
     """
@@ -86,10 +87,6 @@ def build_apps(deps: McpDeps) -> list[McpApp]:
         server = _BUILDERS[name](deps)
         app = server.streamable_http_app()  # creates server.session_manager
         apps.append((f"{MOUNT_PREFIX}/{name}", app, server.session_manager.run()))
-    if deps.admission is not None and deps.personal_tokens is not None:
-        admission = build_admission_server(deps)
-        app = admission.streamable_http_app()
-        apps.append((f"{MOUNT_PREFIX}/admission", app, admission.session_manager.run()))
     return apps
 
 

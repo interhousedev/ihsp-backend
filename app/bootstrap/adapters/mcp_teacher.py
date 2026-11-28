@@ -15,7 +15,12 @@ from app.modules.academic.application.assessments.inputs import (
 )
 from app.modules.academic.domain.assessments.edit import UNSET, AssessmentPatch
 from app.shared.actor import Actor
-from app.shared.contracts.mcp_teacher import GroupAttendanceView, McpTeacherTools
+from app.shared.contracts.mcp_teacher import (
+    GroupAttendanceView,
+    HomeworkBoardFilter,
+    HomeworkReviewAction,
+    McpTeacherTools,
+)
 
 if TYPE_CHECKING:
     from app.bootstrap.container import Container
@@ -97,11 +102,96 @@ class McpTeacherToolsAdapter:
         return list(await queries.missing_attendance(actor.user_id, start, end))
 
     async def set_homework(
-        self, actor: Actor, lesson_id: UUID, text: str, due_date: dt.date | None
+        self,
+        actor: Actor,
+        lesson_id: UUID,
+        text: str | None,
+        due_date: dt.date | None,
+        accept_submissions: bool | None,
     ) -> dict[str, Any]:
         """Set the homework of a lesson."""
         return await self._c.academic.classwork.staff_set_homework.execute(
-            lesson_id, actor, text, due_date
+            lesson_id, actor, text, due_date, accept_submissions
+        )
+
+    async def homework_board(
+        self,
+        actor: Actor,
+        subject_id: UUID,
+        audience_key: str,
+        date_from: dt.date | None,
+        date_to: dt.date | None,
+        only: HomeworkBoardFilter,
+    ) -> dict[str, Any]:
+        """Return the homework board of a journal."""
+        return await self._c.academic.classwork.homework_board.execute(
+            actor,
+            subject_id,
+            audience_key,
+            date_from=date_from,
+            date_to=date_to,
+            only=only,
+        )
+
+    async def set_homework_switches(
+        self,
+        actor: Actor,
+        lesson_id: UUID,
+        accept_submissions: bool | None,
+        notify: bool | None,
+        change_notify: bool,
+    ) -> dict[str, Any]:
+        """Change the per-lesson homework switches."""
+        return await self._c.academic.classwork.set_lesson_homework_switches.execute(
+            lesson_id,
+            actor,
+            accept_submissions=accept_submissions,
+            notify=notify,
+            change_notify=change_notify,
+        )
+
+    async def homework_preferences(self, actor: Actor) -> dict[str, Any]:
+        """Return the actor's own homework defaults."""
+        return await self._c.academic.classwork.get_homework_settings.execute(actor)
+
+    async def save_homework_preferences(
+        self,
+        actor: Actor,
+        accept_by_default: bool | None,
+        notify_on_submission: bool | None,
+    ) -> dict[str, Any]:
+        """Save the actor's own homework defaults."""
+        return await self._c.academic.classwork.save_homework_settings.execute(
+            actor,
+            accept_by_default=accept_by_default,
+            notify_on_submission=notify_on_submission,
+        )
+
+    async def homework_submission(
+        self, actor: Actor, submission_id: UUID
+    ) -> dict[str, Any]:
+        """Return one submission as the lesson's teacher sees it."""
+        return await self._c.academic.classwork.get_staff_homework_submission.execute(
+            submission_id, actor
+        )
+
+    async def review_homework_submission(
+        self,
+        actor: Actor,
+        submission_id: UUID,
+        action: HomeworkReviewAction,
+        grade: int | None,
+        comment: str | None,
+    ) -> dict[str, Any]:
+        """Grade or return a submission."""
+        return await self._c.academic.classwork.review_homework_submission.execute(
+            submission_id, actor, action=action, grade=grade, comment=comment
+        )
+
+    async def clear_homework_review(self, actor: Actor, submission_id: UUID) -> None:
+        """Put a submission back to pending."""
+        await self._c.academic.classwork.clear_homework_review.execute(
+            submission_id, actor
         )
 
     async def homework_submissions(

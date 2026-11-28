@@ -12,6 +12,8 @@ from uuid import UUID
 from app.shared.actor import Actor
 
 GroupAttendanceView = Literal["student", "subject", "day", "lesson"]
+HomeworkBoardFilter = Literal["all", "with_homework", "to_review"]
+HomeworkReviewAction = Literal["grade", "return"]
 
 
 class McpTeacherTools(Protocol):
@@ -71,9 +73,75 @@ class McpTeacherTools(Protocol):
         ...
 
     async def set_homework(
-        self, actor: Actor, lesson_id: UUID, text: str, due_date: date | None
+        self,
+        actor: Actor,
+        lesson_id: UUID,
+        text: str | None,
+        due_date: date | None,
+        accept_submissions: bool | None,
     ) -> dict[str, Any]:
-        """Set the homework of a lesson the actor teaches; return the lesson."""
+        """Set the homework of a lesson the actor teaches; return the lesson.
+
+        `text` None keeps an EMIS-only homework; `accept_submissions` None keeps
+        the switch (a new homework follows the teacher's default).
+        """
+        ...
+
+    async def homework_board(
+        self,
+        actor: Actor,
+        subject_id: UUID,
+        audience_key: str,
+        date_from: date | None,
+        date_to: date | None,
+        only: HomeworkBoardFilter,
+    ) -> dict[str, Any]:
+        """Lessons of a journal with topics, EMIS files, switches and counts."""
+        ...
+
+    async def set_homework_switches(
+        self,
+        actor: Actor,
+        lesson_id: UUID,
+        accept_submissions: bool | None,
+        notify: bool | None,
+        change_notify: bool,
+    ) -> dict[str, Any]:
+        """Change the per-lesson switches; `change_notify` with None resets notify."""
+        ...
+
+    async def homework_preferences(self, actor: Actor) -> dict[str, Any]:
+        """The teacher's own `{accept_by_default, notify_on_submission}`."""
+        ...
+
+    async def save_homework_preferences(
+        self,
+        actor: Actor,
+        accept_by_default: bool | None,
+        notify_on_submission: bool | None,
+    ) -> dict[str, Any]:
+        """Change the teacher's own defaults; None keeps a value."""
+        ...
+
+    async def homework_submission(
+        self, actor: Actor, submission_id: UUID
+    ) -> dict[str, Any]:
+        """One submission of a lesson the actor teaches, with download links."""
+        ...
+
+    async def review_homework_submission(
+        self,
+        actor: Actor,
+        submission_id: UUID,
+        action: HomeworkReviewAction,
+        grade: int | None,
+        comment: str | None,
+    ) -> dict[str, Any]:
+        """Grade (2..5) or return a submission; return the submission row."""
+        ...
+
+    async def clear_homework_review(self, actor: Actor, submission_id: UUID) -> None:
+        """Put a submission back to pending and drop its linked mark."""
         ...
 
     async def clear_homework(self, actor: Actor, lesson_id: UUID) -> dict[str, Any]:
