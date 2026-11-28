@@ -9,6 +9,9 @@ from app.modules.academic.application.classwork.ports.absence_digest_reader impo
 from app.modules.academic.application.classwork.ports.attendance_reports import (
     AttendanceReports,
 )
+from app.modules.academic.application.classwork.ports.homework_settings_repository import (  # noqa: E501
+    HomeworkSettingsRepository,
+)
 from app.modules.academic.application.classwork.ports.journal_reader import (
     JournalReader,
 )
@@ -72,6 +75,11 @@ class UnitOfWork(Protocol):
 
     def after_commit(self, hook: AfterCommit) -> None:
         """Run a hook after a successful commit."""
+        ...
+
+    @property
+    def homework_settings(self) -> HomeworkSettingsRepository:
+        """Teachers' homework defaults."""
         ...
 
 
@@ -143,6 +151,10 @@ class TodoUnitOfWork(ReaderUnitOfWork, Protocol):
     def submissions(self) -> SubmissionRepository:
         """Homework submissions."""
         ...
+
+
+class HomeworkUnitOfWork(TemporaryMarkUnitOfWork, TodoUnitOfWork, Protocol):
+    """Hand-in and review: students, lessons, submissions, marks and settings."""
 
 
 class ViewUnitOfWork(TemporaryMarkUnitOfWork, TodoUnitOfWork, Protocol):

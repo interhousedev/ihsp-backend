@@ -6,6 +6,10 @@ from uuid import UUID
 
 from app.modules.academic.application.classwork.lesson_items import subject_ref
 from app.modules.academic.application.classwork.people import PeopleDirectory, Person
+from app.modules.academic.application.classwork.resource_items import (
+    homework_refs,
+    student_resource_items,
+)
 from app.modules.academic.domain.classwork.homework_rules import (
     days_overdue,
     is_updated,
@@ -13,15 +17,17 @@ from app.modules.academic.domain.classwork.homework_rules import (
 from app.modules.academic.domain.classwork.records import HomeworkRecord
 from app.modules.academic.domain.classwork.submission_rules import submission_status
 from app.shared.clock import Clock, local_today
+from app.shared.contracts.links import LinksApi
 
 
 class HomeworkItemBuilder:
-    """Resolves teachers and builds the to-do items."""
+    """Resolves teachers and EMIS homework files and builds the to-do items."""
 
-    def __init__(self, people: PeopleDirectory, clock: Clock) -> None:
-        """Store the people directory and the clock that tells what is overdue."""
+    def __init__(self, people: PeopleDirectory, clock: Clock, links: LinksApi) -> None:
+        """Store the people directory, the clock and the lesson-resource lookup."""
         self.people = people
         self.clock = clock
+        self.links = links
 
     async def build_many(
         self,
@@ -41,6 +47,14 @@ class HomeworkItemBuilder:
                 for record in records
                 if record.lesson.teacher_id is not None
             )
+        emis_lessons = [
+            record.lesson.id
+            for record in records
+            if record.lesson.emis_homework_url is not None
+        ]
+        resources = (
+            await self.links.resources_for_lessons(emis_lessons) if emis_lessons else {}
+        )
         items = []
         for record in records:
             lesson, todo, submission = record.lesson, record.todo, record.submission
@@ -52,6 +66,12 @@ class HomeworkItemBuilder:
                     "subject": subject_ref(lesson, locale),
                     "teacher": None if teacher is None else teacher.to_json(),
                     "text": lesson.homework_text or "",
+                    "source": lesson.homework_source,
+                    "emis_files": student_resource_items(
+                        homework_refs(resources.get(lesson.id, []))
+                    ),
+                    "topic": lesson.emis_topic_description,
+                    "accepts_submissions": lesson.homework_accept_submissions,
                     "due_date": (
                         lesson.homework_due_date.isoformat()
                         if lesson.homework_due_date
@@ -79,6 +99,8 @@ class HomeworkItemBuilder:
                             ),
                             "file_count": len(submission.file_ids),
                             "submitted_at": submission.submitted_at.isoformat(),
+                            "review_status": submission.review_status,
+                            "grade": submission.grade,
                         }
                     ),
                 }

@@ -138,6 +138,12 @@ class Lesson(IdMixin, TimestampMixin, Base):
     homework_updated_at: Mapped[dt.datetime | None] = mapped_column(
         DateTime(timezone=True)
     )
+    emis_homework_url: Mapped[str | None] = mapped_column(Text)
+    emis_topic_description: Mapped[str | None] = mapped_column(Text)
+    homework_accept_submissions: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("false")
+    )
+    homework_notify: Mapped[bool | None] = mapped_column(Boolean)
     attendance_roster: Mapped[list[UUID] | None] = mapped_column(ARRAY(Uuid))
     attendance_absent: Mapped[list[UUID] | None] = mapped_column(ARRAY(Uuid))
     attendance_late: Mapped[list[UUID] | None] = mapped_column(ARRAY(Uuid))

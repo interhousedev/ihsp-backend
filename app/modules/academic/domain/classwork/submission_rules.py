@@ -7,13 +7,16 @@ from uuid import UUID
 
 from app.modules.academic.domain.classwork.errors import (
     SubmissionCommentTooLongError,
+    SubmissionEmptyError,
     SubmissionFilesError,
+    SubmissionTextTooLongError,
 )
 from app.shared.clock import to_local
 from app.shared.contracts.files import FileRef
 
 MAX_FILES = 10
 COMMENT_MAX = 2000
+TEXT_MAX = 10000
 READY = "ready"
 
 SubmissionStatus = Literal["submitted", "late", "missing"]
@@ -27,15 +30,33 @@ def clean_comment(value: str | None) -> str | None:
     return text or None
 
 
+def clean_text(value: str | None) -> str | None:
+    """Trim the answer text; empty clears it, more than 10000 characters fails."""
+    text = (value or "").strip()
+    if len(text) > TEXT_MAX:
+        raise SubmissionTextTooLongError(params={"max": TEXT_MAX})
+    return text or None
+
+
+def ensure_content(file_ids: Sequence[UUID], text: str | None) -> None:
+    """A submission has a text or at least one file.
+
+    Raises:
+        SubmissionEmptyError: Neither is there.
+    """
+    if not file_ids and text is None:
+        raise SubmissionEmptyError()
+
+
 def check_submission_files(
     file_ids: Sequence[UUID], found: dict[UUID, FileRef], owner_id: UUID
 ) -> None:
-    """1..10 distinct files, each existing, the student's own and ready.
+    """0..10 distinct files, each existing, the student's own and ready.
 
     Raises:
         SubmissionFilesError: The first rule that breaks.
     """
-    if not file_ids or len(file_ids) > MAX_FILES or len(set(file_ids)) != len(file_ids):
+    if len(file_ids) > MAX_FILES or len(set(file_ids)) != len(file_ids):
         raise SubmissionFilesError(params={"reason": "count", "max": MAX_FILES})
     for file_id in file_ids:
         ref = found.get(file_id)

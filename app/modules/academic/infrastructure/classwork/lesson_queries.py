@@ -58,6 +58,10 @@ def lesson_select() -> sa.Select[Any]:
             row.attendance_source,
             row.kind,
             row.emis_topic,
+            row.emis_homework_url,
+            row.emis_topic_description,
+            row.homework_accept_submissions,
+            row.homework_notify,
         )
         .select_from(row)
         .join(Subject, Subject.id == row.subject_id)
@@ -119,6 +123,10 @@ def _to_lesson(row: Any, names_by_id: dict[UUID, str]) -> Lesson:
         attendance_source=row.attendance_source,
         kind=cast(LessonKind, row.kind),
         topic_source=topic_source_of(row.topic, row.emis_topic),
+        emis_homework_url=row.emis_homework_url,
+        emis_topic_description=row.emis_topic_description,
+        homework_accept_submissions=bool(row.homework_accept_submissions),
+        homework_notify=row.homework_notify,
     )
 
 

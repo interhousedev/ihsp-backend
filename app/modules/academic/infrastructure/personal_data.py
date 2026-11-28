@@ -12,6 +12,9 @@ from app.modules.academic.infrastructure.orm.mark import Mark
 from app.modules.academic.infrastructure.orm.result import Result
 from app.modules.academic.infrastructure.orm.student import Student
 from app.modules.academic.infrastructure.orm.student_sync_job import StudentSyncJob
+from app.modules.academic.infrastructure.orm.teacher_homework_settings import (
+    TeacherHomeworkSettings,
+)
 from app.modules.academic.infrastructure.orm.temporary_mark import TemporaryMark
 from app.modules.academic.infrastructure.orm.timetable_entry import TimetableEntry
 from app.modules.academic.infrastructure.orm.work_off import WorkOff, WorkOffTemplate
@@ -37,6 +40,9 @@ SPECS: tuple[PersonalTable, ...] = (
     PersonalTable(Mark, R, owner="student_id", note="school record"),
     PersonalTable(Result, R, owner="student_id", note="school record"),
     PersonalTable(TemporaryMark, R, owner="student_id", note="school record"),
+    PersonalTable(
+        TeacherHomeworkSettings, R, owner="teacher_id", note="teacher preferences"
+    ),
     PersonalTable(WorkOff, R, owner="student_id", note="school record"),
     PersonalTable(WorkOffTemplate, R, owner="teacher_id", note="school record"),
     PersonalTable(Student, R, owner="user_id", note="school roster"),

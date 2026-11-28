@@ -85,6 +85,12 @@ class LessonRow:
     emis_topic: str | None = None
     attendance_late: tuple[UUID, ...] | None = None
     excused: bool = False
+    emis_homework_url: str | None = None
+
+    @property
+    def has_homework(self) -> bool:
+        """True when the teacher wrote homework or EMIS linked a homework file."""
+        return self.homework_text is not None or self.emis_homework_url is not None
 
 
 @dataclass(frozen=True, slots=True)

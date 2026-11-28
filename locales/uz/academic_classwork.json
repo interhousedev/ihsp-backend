@@ -38,5 +38,12 @@
   "academic-temporary-mark-student-not-in-lesson": "Bu o'quvchi dars ro'yxatida yo'q.",
   "homework-submission-not-found": "Siz bu dars bo'yicha hali hech narsa topshirmagansiz.",
   "homework-submission-files-invalid": "Fayllarni topshirib bo'lmaydi: o'zingiz yuklagan 1 tadan {max} tagacha fayl biriktiring.",
-  "homework-submission-comment-too-long": "Izoh {max} ta belgidan oshmasligi kerak."
+  "homework-submission-comment-too-long": "Izoh {max} ta belgidan oshmasligi kerak.",
+  "homework-submission-text-too-long": "Javob {max} ta belgidan oshmasligi kerak.",
+  "homework-submission-empty": "Javob yozing yoki kamida bitta fayl biriktiring.",
+  "homework-submissions-closed": "Oʻqituvchi bu vazifani ilova orqali qabul qilmaydi.",
+  "homework-submission-already-graded": "Ish allaqachon baholangan, uni oʻzgartirib boʻlmaydi.",
+  "homework-review-comment-required": "Ishni qayta ishlashga qaytarish uchun izoh yozing.",
+  "homework-review-comment-too-long": "Izoh {max} ta belgidan oshmasligi kerak.",
+  "homework-review-grade-invalid": "{min} dan {max} gacha baho tanlang."
 }

@@ -230,24 +230,54 @@ class SqlLessonRepository:
         self,
         lesson_id: UUID,
         *,
-        text: str,
+        text: str | None,
         due_date: dt.date | None,
         due_auto: bool,
         by: UUID,
         at: dt.datetime,
         mark_updated: bool,
+        accept_submissions: bool | None = None,
     ) -> None:
-        """Save the homework; ``mark_updated`` sets the "updated" badge time."""
+        """Save the homework; ``mark_updated`` sets the "updated" badge time.
+
+        ``text`` None keeps the text (EMIS-only homework); ``accept_submissions``
+        None keeps the switch.
+        """
         values: dict[str, Any] = {
-            "homework_text": text,
             "homework_due_date": due_date,
             "homework_due_auto": due_auto,
             "homework_by": by,
             "homework_at": at,
             "updated_at": at,
         }
+        if text is not None:
+            values["homework_text"] = text
+        if accept_submissions is not None:
+            values["homework_accept_submissions"] = accept_submissions
         if mark_updated:
             values["homework_updated_at"] = at
+        await self.session.execute(
+            sa.update(LessonRow).where(LessonRow.id == lesson_id).values(**values)
+        )
+
+    async def set_homework_switches(
+        self,
+        lesson_id: UUID,
+        *,
+        accept_submissions: bool | None,
+        notify: bool | None,
+        change_notify: bool,
+        at: dt.datetime,
+    ) -> None:
+        """Set the submissions switch and/or the notification override.
+
+        ``notify`` None with ``change_notify`` clears the override (follow the teacher).
+        """
+        values: dict[str, Any] = {"updated_at": at}
+        if accept_submissions is not None:
+            values["homework_accept_submissions"] = accept_submissions
+        if change_notify:
+            values["homework_notify"] = notify
         await self.session.execute(
             sa.update(LessonRow).where(LessonRow.id == lesson_id).values(**values)
         )
@@ -312,7 +342,10 @@ class SqlLessonRepository:
         stmt = lesson_select().where(
             LessonRow.subject_id == subject_id,
             LessonRow.status == "scheduled",
-            LessonRow.homework_text.is_not(None),
+            sa.or_(
+                LessonRow.homework_text.is_not(None),
+                LessonRow.emis_homework_url.is_not(None),
+            ),
             LessonRow.homework_due_auto.is_(True),
             LessonRow.date < before,
             LessonRow.date >= before - dt.timedelta(days=lookback_days),

@@ -281,6 +281,8 @@ def lesson_to_entity(row: LessonRow, *, has_content: bool = False) -> Lesson:
         kind=cast(Any, row.kind),
         emis_class_id=row.emis_class_id,
         emis_topic=row.emis_topic,
+        emis_homework_url=row.emis_homework_url,
+        emis_topic_description=row.emis_topic_description,
     )
 
 
@@ -304,6 +306,8 @@ def lesson_apply(row: LessonRow, lesson: Lesson) -> None:
     row.kind = lesson.kind
     row.emis_class_id = lesson.emis_class_id
     row.emis_topic = lesson.emis_topic
+    row.emis_homework_url = lesson.emis_homework_url
+    row.emis_topic_description = lesson.emis_topic_description
 
 
 def lesson_new_row(lesson: Lesson) -> LessonRow:

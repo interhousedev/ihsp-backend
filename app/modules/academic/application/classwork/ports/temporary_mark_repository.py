@@ -34,6 +34,14 @@ class TemporaryMarkRepository(Protocol):
         """Delete one mark; False when there was none."""
         ...
 
+    async def get(self, lesson_id: UUID, student_id: UUID) -> TemporaryMark | None:
+        """The student's temporary mark on the lesson, or None."""
+        ...
+
+    async def delete_by_id(self, mark_id: UUID) -> bool:
+        """Delete the mark with this id; False when it is gone already."""
+        ...
+
     async def pending(self, teacher_id: UUID | None) -> list[TemporaryMark]:
         """Marks not yet in EMIS on lessons of the teacher (None: every teacher)."""
         ...

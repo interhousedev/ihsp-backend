@@ -39,10 +39,19 @@ from app.modules.academic.application.classwork.group_attendance import GroupAtt
 from app.modules.academic.application.classwork.group_attendance_csv import (
     GroupAttendanceCsv,
 )
+from app.modules.academic.application.classwork.homework_board import HomeworkBoard
 from app.modules.academic.application.classwork.homework_items import (
     HomeworkItemBuilder,
 )
 from app.modules.academic.application.classwork.homework_list import HomeworkList
+from app.modules.academic.application.classwork.homework_notices import (
+    HomeworkNotices,
+)
+from app.modules.academic.application.classwork.homework_settings import (
+    GetHomeworkSettings,
+    SaveHomeworkSettings,
+    SetLessonHomeworkSwitches,
+)
 from app.modules.academic.application.classwork.journal_csv import JournalCsv
 from app.modules.academic.application.classwork.journal_options import JournalOptions
 from app.modules.academic.application.classwork.lesson_items import LessonItemBuilder
@@ -82,6 +91,11 @@ from app.modules.academic.application.classwork.recompute_due_dates import (
     RecomputeDueDates,
 )
 from app.modules.academic.application.classwork.report_format import ReportFormatter
+from app.modules.academic.application.classwork.review_homework_submission import (
+    ClearHomeworkReview,
+    GetStaffHomeworkSubmission,
+    ReviewHomeworkSubmission,
+)
 from app.modules.academic.application.classwork.roster_loader import RosterLoader
 from app.modules.academic.application.classwork.send_absence_digests import (
     SendAbsenceDigests,
@@ -185,6 +199,13 @@ class ClassworkServices:
     withdraw_homework_submission: WithdrawHomeworkSubmission
     get_homework_submission: GetHomeworkSubmission
     list_homework_submissions: ListHomeworkSubmissions
+    get_staff_homework_submission: GetStaffHomeworkSubmission
+    review_homework_submission: ReviewHomeworkSubmission
+    clear_homework_review: ClearHomeworkReview
+    get_homework_settings: GetHomeworkSettings
+    save_homework_settings: SaveHomeworkSettings
+    set_lesson_homework_switches: SetLessonHomeworkSwitches
+    homework_board: HomeworkBoard
     file_usage: SqlSubmissionFileUsage
     student_today: StudentToday
     student_lesson: StudentLesson
@@ -246,9 +267,10 @@ def build_classwork(
 
     people = PeopleDirectory(identity)
     lesson_items = LessonItemBuilder(people)
-    homework_items = HomeworkItemBuilder(people, clock)
+    homework_items = HomeworkItemBuilder(people, clock, links)
     roster_loader = RosterLoader(people)
-    submission_views = SubmissionViewBuilder(files)
+    submission_views = SubmissionViewBuilder(files, people)
+    homework_notices = HomeworkNotices(people)
     sheets = AttendanceSheetBuilder(people, excuse_coverage)
     study_days = StudyDays(schedule)
     formatter = ReportFormatter(people)
@@ -317,12 +339,27 @@ def build_classwork(
         homework_list=homework_list,
         set_homework_done=set_homework_done,
         set_homework_note=SetHomeworkNote(uow_factory, clock, people, homework_items),
-        submit_homework=SubmitHomework(uow_factory, clock, files, submission_views),
+        submit_homework=SubmitHomework(
+            uow_factory, clock, files, submission_views, homework_notices
+        ),
         withdraw_homework_submission=WithdrawHomeworkSubmission(uow_factory),
         get_homework_submission=GetHomeworkSubmission(uow_factory, submission_views),
         list_homework_submissions=ListHomeworkSubmissions(
             uow_factory, roster_loader, submission_views
         ),
+        get_staff_homework_submission=GetStaffHomeworkSubmission(
+            uow_factory, submission_views
+        ),
+        review_homework_submission=ReviewHomeworkSubmission(
+            uow_factory, clock, submission_views, homework_notices
+        ),
+        clear_homework_review=ClearHomeworkReview(uow_factory),
+        get_homework_settings=GetHomeworkSettings(uow_factory),
+        save_homework_settings=SaveHomeworkSettings(uow_factory, clock),
+        set_lesson_homework_switches=SetLessonHomeworkSwitches(
+            uow_factory, clock, staff_lesson
+        ),
+        homework_board=HomeworkBoard(uow_factory, clock, people, roster_loader, links),
         student_today=StudentToday(
             uow_factory,
             clock,

@@ -58,6 +58,16 @@ def file_item(ref: ResourceRef) -> dict[str, Any] | None:
     }
 
 
+def homework_refs(refs: Sequence[ResourceRef]) -> list[ResourceRef]:
+    """The visible homework files of a lesson: what EMIS marked as homework."""
+    return [
+        ref
+        for ref in refs
+        if not ref.hidden
+        and (ref.role == "homework" or ref.material_kind == "homework")
+    ]
+
+
 def student_resource_items(refs: Sequence[ResourceRef]) -> list[dict[str, Any]]:
     """Items as students see them: first names of authors only."""
     return [resource_item(ref, None) for ref in refs]

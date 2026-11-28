@@ -101,6 +101,19 @@ class SqlTemporaryMarkRepository:
         )
         return (await self.session.execute(stmt)).first() is not None
 
+    async def get(self, lesson_id: UUID, student_id: UUID) -> TemporaryMark | None:
+        """The student's temporary mark on the lesson, or None."""
+        stmt = sa.select(Row).where(
+            Row.lesson_id == lesson_id, Row.student_id == student_id
+        )
+        row = (await self.session.scalars(stmt)).first()
+        return None if row is None else temporary_mark_of(row)
+
+    async def delete_by_id(self, mark_id: UUID) -> bool:
+        """Delete the mark with this id; False when it is gone already."""
+        stmt = sa.delete(Row).where(Row.id == mark_id).returning(Row.id)
+        return (await self.session.execute(stmt)).first() is not None
+
     async def pending(self, teacher_id: UUID | None) -> list[TemporaryMark]:
         """Marks not yet in EMIS on lessons of the teacher (None: every teacher)."""
         stmt = (

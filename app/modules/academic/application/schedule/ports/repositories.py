@@ -354,3 +354,11 @@ class LessonRepository(Protocol):
         Returns the ids of lessons deleted or cancelled.
         """
         ...
+
+    async def apply_homework_accept_default(self, lesson_ids: Collection[UUID]) -> None:
+        """Set ``homework_accept_submissions`` from each lesson teacher's default.
+
+        Used when EMIS homework first appears on a lesson; lessons that already
+        hold teacher text keep their switch. No settings row means False.
+        """
+        ...

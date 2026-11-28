@@ -5,6 +5,7 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.academic.application.classwork.lookup import require_lesson
+from app.modules.academic.application.classwork.people import Person
 from app.modules.academic.application.classwork.ports.unit_of_work import (
     AttendanceUnitOfWork,
 )
@@ -14,7 +15,6 @@ from app.modules.academic.application.classwork.submission_views import (
 )
 from app.modules.academic.domain.classwork.attendance_rules import ensure_lesson_staff
 from app.modules.academic.domain.classwork.errors import HomeworkNotFoundError
-from app.modules.academic.domain.classwork.submission_rules import submission_status
 from app.shared.actor import Actor
 
 
@@ -48,39 +48,41 @@ class ListHomeworkSubmissions:
             stored = await uow.submissions.for_lesson(lesson_id)
             records = {s.student_id: s for s in stored}
         files = await self.views.teacher_files(list(records.values()))
+        reviewers = await self.views.people.people(
+            r.reviewed_by for r in records.values() if r.reviewed_by
+        )
         students = [*roster.expected] + [
             s for s in roster.unassigned if s.user_id in records
         ]
         rows = []
-        counts = {"submitted": 0, "late": 0, "missing": 0}
+        counts = {
+            "submitted": 0,
+            "late": 0,
+            "missing": 0,
+            "to_review": 0,
+            "graded": 0,
+            "returned": 0,
+        }
         for student in students:
             record = records.get(student.user_id)
-            status = submission_status(
-                record.submitted_at if record else None, lesson.homework_due_date
+            row = self.views.teacher_row(
+                student=Person(student.user_id, student.first_name, student.last_name),
+                group_name=student.group_name,
+                subgroup=student.subgroup,
+                record=record,
+                due=lesson.homework_due_date,
+                files=files,
+                reviewers=reviewers,
             )
-            counts[status] += 1
-            rows.append(
-                {
-                    "id": str(record.id) if record and record.id else None,
-                    "student": {
-                        "id": str(student.user_id),
-                        "first_name": student.first_name,
-                        "last_name": student.last_name,
-                    },
-                    "group_name": student.group_name,
-                    "subgroup": student.subgroup,
-                    "status": status,
-                    "files": (
-                        [files[i] for i in record.file_ids if i in files]
-                        if record
-                        else []
-                    ),
-                    "comment": record.comment if record else None,
-                    "submitted_at": (
-                        record.submitted_at.isoformat() if record else None
-                    ),
-                }
-            )
+            counts[row["status"]] += 1
+            if record is not None:
+                if record.review_status == "pending":
+                    counts["to_review"] += 1
+                elif record.review_status == "graded":
+                    counts["graded"] += 1
+                else:
+                    counts["returned"] += 1
+            rows.append(row)
         return {
             "lesson_id": str(lesson_id),
             "counts": {**counts, "total": len(rows)},

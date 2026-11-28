@@ -128,6 +128,16 @@ class SqlLessonReader:
                 HomeworkSubmission.comment.label("submission_comment"),
                 HomeworkSubmission.submitted_at.label("submission_submitted_at"),
                 HomeworkSubmission.updated_at.label("submission_updated_at"),
+                HomeworkSubmission.text.label("submission_text"),
+                HomeworkSubmission.review_status.label("submission_review_status"),
+                HomeworkSubmission.grade.label("submission_grade"),
+                HomeworkSubmission.teacher_comment.label("submission_teacher_comment"),
+                HomeworkSubmission.previous_comment.label(
+                    "submission_previous_comment"
+                ),
+                HomeworkSubmission.reviewed_by.label("submission_reviewed_by"),
+                HomeworkSubmission.reviewed_at.label("submission_reviewed_at"),
+                HomeworkSubmission.notified_at.label("submission_notified_at"),
             )
             .outerjoin(
                 HomeworkTodo,
@@ -146,7 +156,10 @@ class SqlLessonReader:
             .where(
                 overlaps(LessonRow.audience, keys),
                 LessonRow.status == "scheduled",
-                LessonRow.homework_text.is_not(None),
+                sa.or_(
+                    LessonRow.homework_text.is_not(None),
+                    LessonRow.emis_homework_url.is_not(None),
+                ),
                 LessonRow.date >= since,
             )
             .order_by(LessonRow.date, LessonRow.period)
@@ -174,6 +187,14 @@ class SqlLessonReader:
                     comment=row.submission_comment,
                     submitted_at=row.submission_submitted_at,
                     updated_at=row.submission_updated_at,
+                    text=row.submission_text,
+                    review_status=row.submission_review_status,
+                    grade=row.submission_grade,
+                    teacher_comment=row.submission_teacher_comment,
+                    previous_comment=row.submission_previous_comment,
+                    reviewed_by=row.submission_reviewed_by,
+                    reviewed_at=row.submission_reviewed_at,
+                    notified_at=row.submission_notified_at,
                 )
             records.append(
                 HomeworkRecord(lesson=lesson, todo=todo, submission=submission)

@@ -8,6 +8,9 @@ from app.modules.academic.application.classwork.ports.unit_of_work import (
 )
 from app.modules.academic.application.classwork.student_context import require_student
 from app.modules.academic.domain.classwork.errors import SubmissionNotFoundError
+from app.modules.academic.domain.classwork.review_rules import (
+    ensure_student_may_change,
+)
 from app.shared.actor import Actor
 
 
@@ -22,6 +25,9 @@ class WithdrawHomeworkSubmission:
         """Remove the submission or raise a not-found error."""
         async with self.uow_factory() as uow:
             student = await require_student(uow, actor.user_id)
-            if not await uow.submissions.delete(student.user_id, lesson_id):
+            existing = await uow.submissions.get(student.user_id, lesson_id)
+            if existing is None:
                 raise SubmissionNotFoundError(params={"lesson_id": str(lesson_id)})
+            ensure_student_may_change(existing.review_status)
+            await uow.submissions.delete(student.user_id, lesson_id)
             await uow.commit()

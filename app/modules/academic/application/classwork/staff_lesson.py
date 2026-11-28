@@ -14,11 +14,13 @@ from app.modules.academic.application.classwork.ports.unit_of_work import (
     AttendanceUnitOfWork,
 )
 from app.modules.academic.application.classwork.resource_items import (
+    homework_refs,
     staff_resource_items,
 )
 from app.modules.academic.application.classwork.roster_loader import RosterLoader
 from app.modules.academic.domain import audience as audience_keys
 from app.modules.academic.domain.classwork.errors import NotLessonTeacherError
+from app.modules.academic.domain.classwork.review_rules import notify_effective
 from app.shared.actor import Actor, Role
 from app.shared.clock import Clock, local_today
 from app.shared.contracts.academic import ScheduleQueries
@@ -67,6 +69,11 @@ class StaffLesson:
             roster = await self.roster_loader.load(uow, lesson)
             work_offs = await uow.work_offs.for_lesson(lesson_id)
             submitted = len(await uow.submissions.for_lesson(lesson_id))
+            teacher_notify = (
+                await uow.homework_settings.get(lesson.teacher_id)
+                if lesson.teacher_id
+                else None
+            )
         sheet = await self.sheets.build(
             lesson,
             roster,
@@ -86,13 +93,28 @@ class StaffLesson:
             ),
             "homework": (
                 {
-                    "text": lesson.homework_text,
+                    "text": lesson.homework_text or "",
+                    "source": lesson.homework_source,
                     "due_date": (
                         lesson.homework_due_date.isoformat()
                         if lesson.homework_due_date
                         else None
                     ),
                     "due_auto": lesson.homework_due_auto,
+                    "accept_submissions": lesson.homework_accept_submissions,
+                    "notify": lesson.homework_notify,
+                    "notify_effective": notify_effective(
+                        lesson.homework_notify,
+                        (
+                            teacher_notify.notify_on_submission
+                            if teacher_notify
+                            else True
+                        ),
+                    ),
+                    "emis_files": await staff_resource_items(
+                        homework_refs(refs), self.people
+                    ),
+                    "emis_topic_description": lesson.emis_topic_description,
                     "submissions": {
                         "submitted": submitted,
                         "total": len(roster.expected),
