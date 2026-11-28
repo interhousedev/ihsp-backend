@@ -100,6 +100,7 @@ CRON_JOBS: tuple[CronJob, ...] = (
     CronJob("activities.rate_events", "*/15 * * * *"),
     CronJob("activities.expire_transfers", "20 * * * *"),
     CronJob("activities.graduation_alerts", "0 9 * * 1"),
+    CronJob("activities.media.purge", "40 * * * *"),
 )
 
 

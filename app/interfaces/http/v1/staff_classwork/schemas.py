@@ -6,9 +6,11 @@ from uuid import UUID
 
 from app.interfaces.http.v1.me_classwork.schemas import (
     ExcuseRefResponse,
+    HomeworkSource,
     LessonItemResponse,
     PersonRefResponse,
     ResourceItemResponse,
+    ReviewStatus,
     SubjectRefResponse,
 )
 
@@ -88,11 +90,21 @@ class SubmissionCountsShortResponse(BaseModel):
 
 
 class StaffHomeworkResponse(BaseModel):
-    """Homework of a lesson as the teacher sees it."""
+    """Homework of a lesson as the teacher sees it.
+
+    ``text`` is empty for homework that only EMIS gave; ``notify`` None follows the
+    teacher's own setting, ``notify_effective`` is the value in force.
+    """
 
     text: str
+    source: HomeworkSource
     due_date: dt.date | None
     due_auto: bool
+    accept_submissions: bool
+    notify: bool | None
+    notify_effective: bool
+    emis_files: list[ResourceItemResponse]
+    emis_topic_description: str | None
     submissions: SubmissionCountsShortResponse | None = None
 
 
@@ -209,10 +221,15 @@ class CuratorStudentResponse(BaseModel):
 
 
 class SetHomeworkBody(BaseModel):
-    """Body of ``PUT /v1/staff/lessons/{id}/homework``."""
+    """Body of ``PUT /v1/staff/lessons/{id}/homework``.
 
-    text: str
+    ``text`` may be omitted when the lesson has EMIS homework; then only the due
+    date and the switch change. ``accept_submissions`` omitted keeps the switch.
+    """
+
+    text: str | None = None
     due_date: dt.date | None = None
+    accept_submissions: bool | None = None
 
 
 class SetTopicBody(BaseModel):
@@ -276,7 +293,7 @@ class StaffSubmissionFileResponse(BaseModel):
 
 
 class StaffSubmissionRowResponse(BaseModel):
-    """One student of the lesson and what they handed in."""
+    """One student of the lesson, what they handed in and the review."""
 
     id: UUID | None
     student: PersonRefResponse
@@ -286,6 +303,13 @@ class StaffSubmissionRowResponse(BaseModel):
     files: list[StaffSubmissionFileResponse]
     comment: str | None
     submitted_at: dt.datetime | None
+    text: str | None
+    review_status: ReviewStatus
+    grade: int | None
+    teacher_comment: str | None
+    previous_comment: str | None
+    reviewed_at: dt.datetime | None
+    reviewer: PersonRefResponse | None
 
 
 class SubmissionCountsResponse(BaseModel):
@@ -294,6 +318,9 @@ class SubmissionCountsResponse(BaseModel):
     submitted: int
     late: int
     missing: int
+    to_review: int
+    graded: int
+    returned: int
     total: int
 
 
@@ -303,3 +330,84 @@ class HomeworkSubmissionsResponse(BaseModel):
     lesson_id: UUID
     counts: SubmissionCountsResponse
     students: list[StaffSubmissionRowResponse]
+
+
+class ReviewBody(BaseModel):
+    """Body of ``PUT /v1/staff/homework/submissions/{submission_id}/review``.
+
+    ``grade`` (2..5) is required for ``grade``, ``comment`` for ``return``.
+    """
+
+    action: Literal["grade", "return"]
+    grade: int | None = None
+    comment: str | None = None
+
+
+class HomeworkSettingsResponse(BaseModel):
+    """The teacher's own homework settings."""
+
+    accept_by_default: bool
+    notify_on_submission: bool
+
+
+class HomeworkSettingsBody(BaseModel):
+    """Body of ``PUT /v1/staff/homework/settings``; an omitted field is kept."""
+
+    accept_by_default: bool | None = None
+    notify_on_submission: bool | None = None
+
+
+class LessonHomeworkSwitchesBody(BaseModel):
+    """Body of ``PATCH /v1/staff/lessons/{id}/homework/settings``.
+
+    An omitted field is kept; ``notify: null`` follows the teacher's setting again.
+    """
+
+    accept_submissions: bool | None = None
+    notify: bool | None = None
+
+
+class BoardHomeworkResponse(BaseModel):
+    """Homework of a board lesson."""
+
+    text: str
+    due_date: dt.date | None
+    due_auto: bool
+    source: HomeworkSource
+
+
+class BoardCountsResponse(BaseModel):
+    """Submission counts of a board lesson; ``total`` is the expected roster."""
+
+    submitted: int
+    late: int
+    missing: int
+    to_review: int
+    graded: int
+    total: int
+
+
+class BoardLessonResponse(BaseModel):
+    """A lesson of the homework board."""
+
+    lesson_id: UUID
+    date: dt.date
+    period: int
+    topic: str | None
+    emis_topic_description: str | None
+    emis_files: list[ResourceItemResponse]
+    homework: BoardHomeworkResponse | None
+    accept_submissions: bool
+    notify: bool | None
+    notify_effective: bool
+    counts: BoardCountsResponse | None
+
+
+class StaffHomeworkBoardResponse(BaseModel):
+    """``StaffHomeworkBoard``: the lessons of one journal option, newest first."""
+
+    subject: SubjectRefResponse
+    audience_key: str
+    label: str
+    lessons: list[BoardLessonResponse]
+    settings: HomeworkSettingsResponse

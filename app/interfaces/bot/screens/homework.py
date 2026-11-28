@@ -20,7 +20,12 @@ def _line(lesson: LessonRef, i18n: I18nContext, today: date) -> str:
     key = "bot-homework-item-overdue" if overdue else "bot-homework-item"
     shown = due or lesson.date
     head = i18n(key, subject=escape(lesson.subject_name), due=fmt_date(shown))
-    return f"{head}\n{escape(shorten(lesson.homework_text or '', TEXT_LIMIT))}"
+    text = (lesson.homework_text or "").strip()
+    if text:
+        body = escape(shorten(text, TEXT_LIMIT))
+    else:  # EMIS-only homework: the file is on the lesson page
+        body = i18n("notify-homework-emis-file")
+    return f"{head}\n{body}"
 
 
 def build_homework(

@@ -88,21 +88,36 @@ class ResourceItemResponse(BaseModel):
     source: Literal["user", "emis"] = "user"
 
 
+HomeworkSource = Literal["teacher", "emis", "both"]
+ReviewStatus = Literal["pending", "returned", "graded"]
+
+
 class SubmissionSummaryResponse(BaseModel):
-    """What the student handed in for a homework item."""
+    """What the student handed in for a homework item and how it was reviewed."""
 
     status: Literal["submitted", "late"]
     file_count: int
     submitted_at: dt.datetime
+    review_status: ReviewStatus
+    grade: int | None
 
 
 class HomeworkItemResponse(BaseModel):
-    """``HomeworkItem``; ``days_overdue`` is 0 unless the open item is past due."""
+    """``HomeworkItem``; ``days_overdue`` is 0 unless the open item is past due.
+
+    ``text`` is empty for homework that only EMIS gave (``source`` ``emis``) and on a
+    lesson page without homework (``source`` None);
+    ``emis_files`` are the EMIS homework files and ``topic`` the EMIS topic text.
+    """
 
     lesson_id: UUID
     subject: SubjectRefResponse
     teacher: PersonRefResponse | None
     text: str
+    source: HomeworkSource | None
+    emis_files: list[ResourceItemResponse]
+    topic: str | None
+    accepts_submissions: bool
     due_date: dt.date | None
     given_on: dt.date
     days_overdue: int
@@ -230,20 +245,31 @@ class SubmissionFileResponse(BaseModel):
 
 
 class HomeworkSubmissionResponse(BaseModel):
-    """``HomeworkSubmission``: the student's own submission."""
+    """``HomeworkSubmission``: the student's own submission and its review."""
 
     lesson_id: UUID
     status: Literal["submitted", "late"]
     files: list[SubmissionFileResponse]
     comment: str | None
     submitted_at: dt.datetime
+    text: str | None
+    review_status: ReviewStatus
+    grade: int | None
+    teacher_comment: str | None
+    previous_comment: str | None
+    reviewed_at: dt.datetime | None
+    reviewer: PersonRefResponse | None
 
 
 class HomeworkSubmissionBody(BaseModel):
-    """Body of ``PUT /v1/me/homework/{lesson_id}/submission``."""
+    """Body of ``PUT /v1/me/homework/{lesson_id}/submission``.
 
-    file_ids: list[UUID] = Field(min_length=1, max_length=10)
+    A text answer, files or both; an empty submission is refused with 422.
+    """
+
+    file_ids: list[UUID] = Field(default_factory=list, max_length=10)
     comment: str | None = None
+    text: str | None = None
 
 
 class MyWorkOffResponse(BaseModel):

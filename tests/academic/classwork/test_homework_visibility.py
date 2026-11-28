@@ -362,8 +362,14 @@ async def test_the_staff_portal_still_shows_what_the_teacher_added(
     page = (await client.get(f"/v1/staff/lessons/{given}")).json()
     assert page["homework"] == {
         "text": "Late task",
+        "source": "teacher",
         "due_date": MONDAY_BEFORE.isoformat(),
         "due_auto": True,
+        "accept_submissions": False,
+        "notify": None,
+        "notify_effective": True,
+        "emis_files": [],
+        "emis_topic_description": None,
         "submissions": {"submitted": 0, "total": 3},
     }
     assert page["lesson"]["has_homework"] is True

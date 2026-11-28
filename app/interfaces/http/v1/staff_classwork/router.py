@@ -12,20 +12,35 @@ from app.interfaces.http.v1.staff_classwork.handlers.download_journal_csv import
 from app.interfaces.http.v1.staff_classwork.handlers.get_group_attendance import (
     get_group_attendance,
 )
+from app.interfaces.http.v1.staff_classwork.handlers.get_homework_board import (
+    get_homework_board,
+)
 from app.interfaces.http.v1.staff_classwork.handlers.get_journal import get_journal
 from app.interfaces.http.v1.staff_classwork.handlers.get_journal_options import (
     get_journal_options,
 )
 from app.interfaces.http.v1.staff_classwork.handlers.get_lesson import get_lesson
 from app.interfaces.http.v1.staff_classwork.handlers.get_today import get_today
+from app.interfaces.http.v1.staff_classwork.handlers.homework_preferences import (
+    get_homework_settings,
+    save_homework_settings,
+)
 from app.interfaces.http.v1.staff_classwork.handlers.list_group_students import (
     list_group_students,
 )
 from app.interfaces.http.v1.staff_classwork.handlers.list_homework_submissions import (  # noqa: E501
     list_homework_submissions,
 )
+from app.interfaces.http.v1.staff_classwork.handlers.review_submission import (
+    clear_homework_review,
+    get_homework_submission,
+    review_homework_submission,
+)
 from app.interfaces.http.v1.staff_classwork.handlers.set_excuse import set_excuse
 from app.interfaces.http.v1.staff_classwork.handlers.set_homework import set_homework
+from app.interfaces.http.v1.staff_classwork.handlers.set_homework_settings import (
+    set_homework_settings,
+)
 from app.interfaces.http.v1.staff_classwork.handlers.set_topic import set_topic
 from app.interfaces.http.v1.staff_classwork.handlers.submit_attendance import (
     submit_attendance,
@@ -45,6 +60,27 @@ router.add_api_route(
     "/lessons/{lesson_id}/homework/submissions",
     list_homework_submissions,
     methods=["GET"],
+)
+router.add_api_route(
+    "/lessons/{id}/homework/settings", set_homework_settings, methods=["PATCH"]
+)
+router.add_api_route("/homework", get_homework_board, methods=["GET"])
+router.add_api_route("/homework/settings", get_homework_settings, methods=["GET"])
+router.add_api_route("/homework/settings", save_homework_settings, methods=["PUT"])
+router.add_api_route(
+    "/homework/submissions/{submission_id}", get_homework_submission, methods=["GET"]
+)
+router.add_api_route(
+    "/homework/submissions/{submission_id}/review",
+    review_homework_submission,
+    methods=["PUT"],
+)
+router.add_api_route(
+    "/homework/submissions/{submission_id}/review",
+    clear_homework_review,
+    methods=["DELETE"],
+    status_code=204,
+    response_class=Response,
 )
 router.add_api_route("/lessons/{id}/topic", set_topic, methods=["PUT"])
 router.add_api_route("/lessons/{id}/attendance", submit_attendance, methods=["PUT"])
