@@ -74,6 +74,15 @@ class ReasonIn(BaseModel):
     reason: str = Field(min_length=1, max_length=1000)
 
 
+class AdminClubCreateIn(BaseModel):
+    """A club created already approved, for the named owner."""
+
+    name: str = Field(min_length=1, max_length=120)
+    slug: str = Field(min_length=1, max_length=60)
+    description: str = Field(default="", max_length=4000)
+    owner_user_id: UUID
+
+
 class ForceTransferIn(BaseModel):
     """The new owner."""
 

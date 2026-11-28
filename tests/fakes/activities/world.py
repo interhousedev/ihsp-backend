@@ -435,7 +435,7 @@ class UsersFake:
         self.final_year: set[UUID] = set()
 
     async def display_name(self, user_id: UUID) -> str:
-        return self.names[user_id]
+        return self.names.get(user_id, "")
 
     async def age(self, user_id: UUID) -> int | None:
         return self.ages.get(user_id)

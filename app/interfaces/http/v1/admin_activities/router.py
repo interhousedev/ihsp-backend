@@ -8,6 +8,7 @@ from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_container, require_roles
 from app.interfaces.http.v1.activities.clubs import club_logo_url
 from app.interfaces.http.v1.admin_activities.schemas import (
+    AdminClubCreateIn,
     AdminClubListOut,
     AdminClubOut,
     AnalyticsOut,
@@ -65,6 +66,16 @@ async def list_clubs(
             for r in rows
         ],
         total=total,
+    )
+
+
+@router.post("/clubs", status_code=status.HTTP_201_CREATED)
+async def create_club(
+    body: AdminClubCreateIn, container: ContainerDep, actor: Superuser
+) -> Club:
+    """Create an approved club owned by the given person."""
+    return await container.activities.clubs.create_active(
+        actor, body.name, body.slug, body.description, body.owner_user_id
     )
 
 

@@ -16,6 +16,7 @@ __all__ = [
     "ClubCapability",
     "ClubInvalidError",
     "ClubKind",
+    "ClubSlugTakenError",
     "ClubStateError",
     "ClubStatus",
     "Declaration",
@@ -62,6 +63,10 @@ class ClubCapability(StrEnum):
 
 class ClubInvalidError(Invalid):
     """A club field is invalid."""
+
+
+class ClubSlugTakenError(Conflict):
+    """Another club already uses this slug."""
 
 
 class ClubStateError(Conflict):

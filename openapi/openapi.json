@@ -646,6 +646,41 @@
         "title": "AddStaffBody",
         "type": "object"
       },
+      "AdminClubCreateIn": {
+        "description": "A club created already approved, for the named owner.",
+        "properties": {
+          "description": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_user_id": {
+            "format": "uuid",
+            "title": "Owner User Id",
+            "type": "string"
+          },
+          "slug": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "slug",
+          "owner_user_id"
+        ],
+        "title": "AdminClubCreateIn",
+        "type": "object"
+      },
       "AdminClubListOut": {
         "description": "A page of clubs.",
         "properties": {
@@ -97163,6 +97198,46 @@
           }
         },
         "summary": "List Clubs",
+        "tags": [
+          "admin-activities"
+        ]
+      },
+      "post": {
+        "description": "Create an approved club owned by the given person.",
+        "operationId": "create_club_v1_admin_activities_clubs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminClubCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Club"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Club",
         "tags": [
           "admin-activities"
         ]

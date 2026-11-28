@@ -51,3 +51,32 @@ async def test_list_and_resume_denied_for_student(
     c = await make_client(student)
     assert (await c.get(f"{ADMIN}/clubs")).status_code == 403
     assert (await c.post(f"{ADMIN}/clubs/{cid}:resume")).status_code == 403
+
+
+async def test_su_creates_active_club_for_owner(
+    make_client: MakeClient, student: Actor, su: Actor
+) -> None:
+    s = await make_client(su)
+    body = {
+        "name": "Robotics",
+        "slug": "robotics",
+        "description": "d",
+        "owner_user_id": str(student.user_id),
+    }
+    r = await s.post(f"{ADMIN}/clubs", json=body)
+    assert r.status_code == 201
+    assert r.json()["status"] == "active"
+    assert r.json()["owner_id"] == str(student.user_id)
+    mine = await (await make_client(student)).get("/v1/activities/clubs/mine")
+    assert any(c["slug"] == "robotics" for c in mine.json()["items"])
+    dup = await s.post(f"{ADMIN}/clubs", json=body)
+    assert dup.status_code == 409
+    assert dup.json()["type"] == "activities/club-slug-taken"
+    ghost = {
+        **body,
+        "slug": "ghost",
+        "owner_user_id": "0" * 8 + "-0000-0000-0000-" + "0" * 12,
+    }
+    assert (await s.post(f"{ADMIN}/clubs", json=ghost)).status_code == 404
+    c = await make_client(student)
+    assert (await c.post(f"{ADMIN}/clubs", json=body)).status_code == 403

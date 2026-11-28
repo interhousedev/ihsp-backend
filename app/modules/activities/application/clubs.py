@@ -19,6 +19,7 @@ from app.modules.activities.domain.club import (
     ClubCapability,
     ClubInvalidError,
     ClubKind,
+    ClubSlugTakenError,
     ClubStatus,
     Declaration,
     JoinPolicy,
@@ -98,15 +99,40 @@ class ClubService:
         self, actor: Actor, name: str, slug: str, description: str = "", **kw: Any
     ) -> Club:
         """A draft club; the creator becomes its owner."""
+        return await self._create(actor.user_id, name, slug, description, **kw)
+
+    async def create_active(
+        self,
+        actor: Actor,
+        name: str,
+        slug: str,
+        description: str,
+        owner_user_id: UUID,
+    ) -> Club:
+        """SU creates an already approved club for the given owner."""
+        if Role.SU not in actor.roles:
+            raise PermissionDeniedError()
+        if not await self._p.users.display_name(owner_user_id):
+            raise ActivitiesNotFoundError()
+        club = await self._create(owner_user_id, name, slug, description)
+        club.submit()
+        club.review(True, None, by_su=True)
+        await self._p.clubs.save(club)
+        await self._p.audit.record(actor.user_id, "activities.club.create", club.id)
+        return club
+
+    async def _create(
+        self, owner_id: UUID, name: str, slug: str, description: str, **kw: Any
+    ) -> Club:
         p = self._p
         if not name.strip():
             raise ClubInvalidError(params={"field": "name"})
         if await p.clubs.get_by_slug(slug) is not None:
-            raise ClubInvalidError(params={"field": "slug"})
+            raise ClubSlugTakenError()
         extra = set(kw) - _EDITABLE
         if extra:
             raise ClubInvalidError(params={"field": sorted(extra)[0]})
-        club = Club(uuid7(), slug, ClubKind.CLUB, name.strip(), actor.user_id)
+        club = Club(uuid7(), slug, ClubKind.CLUB, name.strip(), owner_id)
         club.description = description
         _apply(club, kw)
         club.validate()
@@ -115,7 +141,7 @@ class ClubService:
         await p.members.save(
             Membership(
                 club.id,
-                actor.user_id,
+                owner_id,
                 MemberRole.OWNER,
                 MemberStatus.ACTIVE,
                 0,
