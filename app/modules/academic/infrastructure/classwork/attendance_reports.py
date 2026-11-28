@@ -292,6 +292,7 @@ class SqlAttendanceReports:
         if student_id is not None:
             extra += " AND x.student_id = :student"
             binds.append(sa.bindparam("student", student_id, type_=sa.Uuid))
+        # nosemgrep: avoid-sqlalchemy-text -- constant fragments, values are bound
         stmt = sa.text(_EMIS_DATES.format(extra=extra)).bindparams(*binds)
         return [
             EmisAbsentDate(

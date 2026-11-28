@@ -200,7 +200,11 @@ def pass_files(data: WalletPass, signer: ApplePassSigner) -> dict[str, bytes]:
 
 def manifest(files: dict[str, bytes]) -> bytes:
     """Return manifest.json: the SHA-1 of every file."""
-    digests = {name: hashlib.sha1(body).hexdigest() for name, body in files.items()}
+    # The pass format mandates SHA-1 digests; the signature is the control.
+    digests = {
+        name: hashlib.sha1(body, usedforsecurity=False).hexdigest()
+        for name, body in files.items()
+    }
     return json.dumps(digests, sort_keys=True).encode()
 
 
