@@ -14,6 +14,7 @@ from app.modules.academic.domain.marks.read_models import (
     MarkRow,
     SubjectInfo,
 )
+from app.shared.actor import Role
 from app.shared.contracts.identity import IdentityDirectory, UserRef, peer_photo_ids
 from app.shared.lesson_kind import topic_source_of
 
@@ -135,6 +136,7 @@ async def build_context(
     user_ids: Collection[UUID] = (),
     lessons: Iterable[LessonRow] = (),
     photos_for: UUID | None = None,
+    viewer_roles: Collection[Role] = (),
 ) -> ViewContext:
     """Load the subjects, people and group names a response needs.
 
@@ -152,7 +154,7 @@ async def build_context(
         users=users,
         group_names=await reader.group_names(lesson_group_ids(rows)) if rows else {},
         photos=(
-            await identity.photo_urls(peer_photo_ids(photos_for, users))
+            await identity.photo_urls(peer_photo_ids(photos_for, users, viewer_roles))
             if photos_for is not None and users
             else {}
         ),

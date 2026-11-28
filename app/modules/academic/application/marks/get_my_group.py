@@ -86,7 +86,7 @@ class GetMyGroup:
     accounts are left out, and a blocked head student is null. Unassigned
     roles are null; a head student who has left the group is null too. Photo links
     live ten minutes and are not given for blocked or inactive accounts, nor for
-    students who chose to hide their photo from classmates (except to themselves).
+    students who chose to hide their photo from the public (except to themselves).
 
     The tops rank classmates by current-term GPA and attendance; `ranks` gives the
     group's place among the groups of its course and of the lyceum. Other groups
@@ -124,7 +124,7 @@ class GetMyGroup:
         if head_id not in member_ids:
             head_id = None
 
-        visible = peer_photo_ids(actor.user_id, users)
+        visible = peer_photo_ids(actor.user_id, users, actor.roles)
         photos = await self._identity.photo_urls(
             visible, ttl_seconds=PHOTO_URL_TTL_SECONDS
         )

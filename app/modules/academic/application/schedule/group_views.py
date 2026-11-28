@@ -49,6 +49,7 @@ def _item(
         slug=group.slug,
         current_semester=group.current_semester,
         status=group.status,
+        hidden=group.hidden,
         students_count=len(active),
         subgroups_assigned=sum(1 for s in active if s.subgroup is not None),
         unregistered_count=sum(
@@ -90,6 +91,7 @@ async def build_group_detail(
         slug=item.slug,
         current_semester=item.current_semester,
         status=item.status,
+        hidden=item.hidden,
         students_count=item.students_count,
         subgroups_assigned=item.subgroups_assigned,
         unregistered_count=item.unregistered_count,

@@ -6,6 +6,7 @@ from app.shared.db.base import Base, IdMixin, TimestampMixin
 
 from sqlalchemy import (
     ARRAY,
+    Boolean,
     Enum,
     Index,
     Integer,
@@ -59,3 +60,4 @@ class Group(IdMixin, TimestampMixin, Base):
         ),
         server_default=text("'active'"),
     )
+    hidden: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))

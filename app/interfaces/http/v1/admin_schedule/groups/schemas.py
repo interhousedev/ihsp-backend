@@ -35,6 +35,12 @@ class GroupPatchBody(BaseModel):
     current_semester: int | None = Field(default=None, ge=1, le=12)
 
 
+class GroupHiddenBody(BaseModel):
+    """Body of PUT /v1/admin/groups/{id}/hidden."""
+
+    hidden: bool
+
+
 class SubgroupAssignmentBody(BaseModel):
     """One student and the subgroup to set (null clears it)."""
 
@@ -56,6 +62,7 @@ class GroupItemResponse(ApiModel):
     slug: str
     current_semester: int | None
     status: Literal["active", "archived"]
+    hidden: bool
     students_count: int
     subgroups_assigned: int
     unregistered_count: int

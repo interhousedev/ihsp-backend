@@ -29,6 +29,7 @@ class Group:
     curator_id: UUID | None = None
     head_student_id: UUID | None = None
     status: GroupStatus = "active"
+    hidden: bool = False
 
 
 def clean_group_name(raw: str) -> tuple[str, str]:

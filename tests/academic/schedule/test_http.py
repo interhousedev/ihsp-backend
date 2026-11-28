@@ -163,6 +163,7 @@ async def test_group_routes(env: Env, api: Api) -> None:
         "slug": "2tn2",
         "current_semester": 3,
         "status": "active",
+        "hidden": False,
         "students_count": 0,
         "subgroups_assigned": 0,
         "unregistered_count": 0,

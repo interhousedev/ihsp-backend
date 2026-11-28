@@ -39,6 +39,7 @@ class UpdateGroup:
         status: str | None = None,
         name: str | None = None,
         current_semester: int | None = None,
+        hidden: bool | None = None,
     ) -> GroupDetailData:
         """Apply the fields that were sent; None clears curator or head student."""
         async with self.uow_factory() as uow:
@@ -53,6 +54,16 @@ class UpdateGroup:
                 await self._set_curator(uow, actor, group, curator_id)
             if not isinstance(head_student_id, Unset):
                 await self._set_head(uow, actor, group, head_student_id)
+            if hidden is not None and hidden != group.hidden:
+                group.hidden = hidden
+                uow.audit(
+                    AuditDraft(
+                        type="group.hidden_set" if hidden else "group.hidden_unset",
+                        user_id=None,
+                        actor_id=actor.user_id,
+                        metadata={"group_id": str(group.id)},
+                    )
+                )
             if status is not None and status != group.status:
                 await self._set_status(uow, group, status)
             await uow.groups.save(group)

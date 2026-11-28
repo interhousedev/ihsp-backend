@@ -85,12 +85,14 @@ class GroupRepository(Protocol):
         """Delete the group: detach its students and drop its timetable audience."""
         ...
 
-    async def list_all(self, status: str | None = None) -> list[Group]:
-        """Return groups ordered by name, optionally of one status."""
+    async def list_all(
+        self, status: str | None = None, *, include_hidden: bool = False
+    ) -> list[Group]:
+        """Return groups by name, optionally of one status; hidden on request."""
         ...
 
     async def curated_by(self, teacher_id: UUID) -> list[Group]:
-        """Return the active groups a teacher curates."""
+        """Return the active, visible groups a teacher curates."""
         ...
 
 

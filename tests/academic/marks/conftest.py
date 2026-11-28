@@ -176,6 +176,14 @@ def _resource(lesson_id: UUID, title: str, hidden: bool) -> ResourceRef:
     )
 
 
+class _NoCertificates:
+    """A certificate roster without entries."""
+
+    async def for_students(self, student_ids: object) -> dict[object, list[object]]:
+        """Return no entries."""
+        return {}
+
+
 @pytest_asyncio.fixture
 async def services(
     env: Env,
@@ -251,4 +259,5 @@ async def services(
         material_resync=env.timetables,
         sync_all_students=None,  # type: ignore[arg-type]  # not used by marks tests
         sync_jobs=MemoryStudentSyncJobs(),
+        certificates=_NoCertificates(),
     )

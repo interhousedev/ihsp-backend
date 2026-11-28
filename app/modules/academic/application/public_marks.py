@@ -102,6 +102,14 @@ class MarksQueriesImpl:
             )
             return await self._refs(uow.reader, user_id, rows)
 
+    async def marks_for_subjects(
+        self, user_id: UUID, subject_ids: Sequence[UUID], limit: int
+    ) -> list[MarkRef]:
+        """Return the newest marks of these subjects together, newest first."""
+        async with self._uow_factory() as uow:
+            rows = await uow.reader.marks_in_subjects(user_id, subject_ids, limit)
+            return await self._refs(uow.reader, user_id, rows)
+
     async def new_marks_since(
         self, user_id: UUID, since: dt.datetime | None, limit: int = 20
     ) -> list[MarkRef]:

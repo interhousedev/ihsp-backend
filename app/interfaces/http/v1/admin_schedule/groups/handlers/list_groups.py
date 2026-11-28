@@ -12,7 +12,10 @@ async def list_groups(
     container: ContainerDep,
     actor: AdminActor,
     status: Annotated[Literal["active", "archived"] | None, Query()] = None,
+    include_hidden: Annotated[bool, Query()] = False,
 ) -> list[GroupItemResponse]:
-    """List groups with student and subgroup counts."""
-    groups = await container.academic.schedule.list_groups.execute(status)
+    """List groups with student and subgroup counts; hidden ones on request."""
+    groups = await container.academic.schedule.list_groups.execute(
+        status, include_hidden=include_hidden
+    )
     return [GroupItemResponse.model_validate(group) for group in groups]

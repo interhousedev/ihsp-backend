@@ -101,18 +101,26 @@ class SqlGroupRepository:
         await self.session.execute(delete(GroupRow).where(GroupRow.id == group_id))
         await self.session.flush()
 
-    async def list_all(self, status: str | None = None) -> list[Group]:
-        """Return groups ordered by name, optionally of one status."""
+    async def list_all(
+        self, status: str | None = None, *, include_hidden: bool = False
+    ) -> list[Group]:
+        """Return groups by name, optionally of one status; hidden ones on request."""
         stmt = select(GroupRow).order_by(GroupRow.name)
+        if not include_hidden:
+            stmt = stmt.where(GroupRow.hidden.is_(False))
         if status is not None:
             stmt = stmt.where(GroupRow.status == status)
         return [group_to_entity(row) for row in await self.session.scalars(stmt)]
 
     async def curated_by(self, teacher_id: UUID) -> list[Group]:
-        """Return the active groups a teacher curates."""
+        """Return the active, visible groups a teacher curates."""
         stmt = (
             select(GroupRow)
-            .where(GroupRow.curator_id == teacher_id, GroupRow.status == "active")
+            .where(
+                GroupRow.curator_id == teacher_id,
+                GroupRow.status == "active",
+                GroupRow.hidden.is_(False),
+            )
             .order_by(GroupRow.name)
         )
         return [group_to_entity(row) for row in await self.session.scalars(stmt)]

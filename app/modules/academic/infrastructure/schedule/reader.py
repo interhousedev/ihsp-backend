@@ -108,7 +108,7 @@ class SqlScheduleReader:
         stmt = (
             select(StudentRow.user_id)
             .join(GroupRow, GroupRow.id == StudentRow.group_id)
-            .where(StudentRow.status == "active")
+            .where(StudentRow.status == "active", GroupRow.hidden.is_(False))
         )
         if group_ids:
             stmt = stmt.where(StudentRow.group_id.in_(list(group_ids)))
@@ -120,7 +120,9 @@ class SqlScheduleReader:
     async def curated_group_ids(self, teacher_id: UUID) -> list[UUID]:
         """Return the active groups the teacher curates."""
         stmt = select(GroupRow.id).where(
-            GroupRow.curator_id == teacher_id, GroupRow.status == "active"
+            GroupRow.curator_id == teacher_id,
+            GroupRow.status == "active",
+            GroupRow.hidden.is_(False),
         )
         async with self.sessionmaker() as session:
             return list(await session.scalars(stmt))
