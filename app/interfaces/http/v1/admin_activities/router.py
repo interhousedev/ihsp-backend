@@ -1,25 +1,37 @@
 """Administration of clubs, analytics and the one opportunities catalog."""
 
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_container, require_roles
 from app.interfaces.http.v1.activities.clubs import club_logo_url
+from app.interfaces.http.v1.activities.schemas_media import (
+    BlockOut,
+    MediaOut,
+    ReportOut,
+    UsageOut,
+)
 from app.interfaces.http.v1.admin_activities.schemas import (
     AdminClubCreateIn,
     AdminClubListOut,
     AdminClubOut,
     AnalyticsOut,
     ArchiveIn,
+    BlockIn,
+    BlockListOut,
     CapabilitiesIn,
     ForceTransferIn,
+    HideIn,
+    MediaLimitsIn,
     OpportunityIn,
     OpportunityListOut,
     OpportunityOut,
     ReasonIn,
     ReviewIn,
+    ReviewItemOut,
+    ReviewListOut,
     TransferredOut,
 )
 from app.modules.activities.domain.club import Club, ClubCapability, ClubStatus
@@ -200,3 +212,138 @@ async def delete_opportunity(
     """Delete an unused entry."""
     await container.activities.opportunities.delete(actor, opportunity_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/media")
+async def media_queue(
+    container: ContainerDep,
+    actor: Moderator,
+    state: Annotated[Literal["reported", "hidden"], Query()] = "reported",
+    club_id: UUID | None = None,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> ReviewListOut:
+    """Club media awaiting review: reported or hidden items with their reports."""
+    page = await container.activities.media.review_queue(
+        actor, state=state, club_id=club_id, limit=limit, offset=offset
+    )
+    return ReviewListOut(
+        items=[
+            ReviewItemOut(
+                media=MediaOut.of(v),
+                reports=[ReportOut.of(r) for r in page.reports.get(v.media.id, [])],
+            )
+            for v in page.items
+        ],
+        total=page.total,
+    )
+
+
+@router.post("/media/{media_id}:hide")
+async def hide_media(
+    media_id: UUID, body: HideIn, container: ContainerDep, actor: Moderator
+) -> MediaOut:
+    """Hide an item from everyone but moderators."""
+    return MediaOut.of(
+        await container.activities.media.set_hidden(
+            actor, media_id, True, body.reason or None
+        )
+    )
+
+
+@router.post("/media/{media_id}:restore")
+async def restore_media(
+    media_id: UUID, container: ContainerDep, actor: Moderator
+) -> MediaOut:
+    """Show a hidden item again."""
+    return MediaOut.of(
+        await container.activities.media.set_hidden(actor, media_id, False)
+    )
+
+
+@router.delete("/media/{media_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def purge_media(
+    media_id: UUID, container: ContainerDep, actor: Moderator
+) -> Response:
+    """Remove an item and its files now."""
+    await container.activities.media.purge_now(actor, media_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/media-reports/{report_id}:dismiss")
+async def dismiss_report(
+    report_id: UUID, container: ContainerDep, actor: Moderator
+) -> MediaOut:
+    """Close a report as unfounded; the item returns when no report stays open."""
+    return MediaOut.of(
+        await container.activities.media.resolve_report(actor, report_id, upheld=False)
+    )
+
+
+@router.post("/media-reports/{report_id}:uphold")
+async def uphold_report(
+    report_id: UUID, container: ContainerDep, actor: Moderator
+) -> MediaOut:
+    """Agree with a report; the item stays hidden."""
+    return MediaOut.of(
+        await container.activities.media.resolve_report(actor, report_id, upheld=True)
+    )
+
+
+@router.get("/media-blocks")
+async def list_media_blocks(
+    container: ContainerDep, actor: Moderator, club_id: UUID | None = None
+) -> BlockListOut:
+    """Upload blocks of a club, or the global ones."""
+    rows = await container.activities.media.list_blocks(actor, club_id)
+    return BlockListOut(items=[BlockOut.of(b) for b in rows])
+
+
+@router.post("/media-blocks", status_code=status.HTTP_201_CREATED)
+async def block_uploader(
+    body: BlockIn, container: ContainerDep, actor: Moderator
+) -> BlockOut:
+    """Bar a user from uploading club media."""
+    block = await container.activities.media.block_uploader(
+        actor, body.user_id, club_id=body.club_id, reason=body.reason
+    )
+    return BlockOut.of(block)
+
+
+@router.delete("/media-blocks/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def unblock_uploader(
+    user_id: UUID,
+    container: ContainerDep,
+    actor: Moderator,
+    club_id: UUID | None = None,
+) -> Response:
+    """Lift an upload block."""
+    await container.activities.media.unblock_uploader(actor, user_id, club_id=club_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/clubs/{club_id}/media-limits")
+async def get_media_limits(
+    club_id: UUID, container: ContainerDep, actor: Moderator
+) -> UsageOut:
+    """Storage use, limits in force and the club's overrides."""
+    return UsageOut.of(await container.activities.media.usage(actor, club_id))
+
+
+@router.put("/clubs/{club_id}/media-limits")
+async def set_media_limits(
+    club_id: UUID, body: MediaLimitsIn, container: ContainerDep, actor: Moderator
+) -> UsageOut:
+    """Replace the club's overrides; a null field falls back to the default."""
+    usage = await container.activities.media.set_club_limits(
+        actor, club_id, **body.model_dump()
+    )
+    return UsageOut.of(usage)
+
+
+@router.delete("/clubs/{club_id}/media-limits")
+async def clear_media_limits(
+    club_id: UUID, container: ContainerDep, actor: Moderator
+) -> UsageOut:
+    """Drop every override of the club."""
+    return UsageOut.of(await container.activities.media.set_club_limits(actor, club_id))

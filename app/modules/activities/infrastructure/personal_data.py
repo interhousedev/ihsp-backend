@@ -23,6 +23,13 @@ SPECS: tuple[PersonalTable, ...] = (
     PersonalTable(t.ApplicationRow, E, owner="user_id", note="team application"),
     PersonalTable(t.SeatRow, E, owner="user_id", note="team seat"),
     PersonalTable(t.ConsentEventRow, E, owner="user_id", note="consent history"),
+    PersonalTable(t.MediaRow, N, owner="uploaded_by", note="media stays with the club"),
+    PersonalTable(
+        t.MediaRow, N, owner="hidden_by", export=False, note="moderator id cleared"
+    ),
+    PersonalTable(t.MediaReportRow, E, owner="reporter_id", note="media report"),
+    PersonalTable(t.MediaBlockRow, E, owner="user_id", note="media upload block"),
+    PersonalTable(t.AlbumRow, N, owner="created_by", note="album stays with the club"),
     PersonalTable(t.ClubRow, N, owner="owner_id", note="club stays, owner cleared"),
 )
 

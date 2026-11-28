@@ -4,6 +4,11 @@ import dataclasses
 from typing import Any, Literal
 from uuid import UUID
 
+from app.interfaces.http.v1.activities.schemas_media import (
+    BlockOut,
+    MediaOut,
+    ReportOut,
+)
 from app.interfaces.http.v1.admission.schemas_opportunities import OpportunityFields
 from app.modules.activities.ports.gateways import CatalogEntry
 
@@ -150,3 +155,45 @@ class TransferredOut(BaseModel):
     """Ownership was handed over."""
 
     status: str = "transferred"
+
+
+class ReviewItemOut(BaseModel):
+    """An item in the moderation queue with its reports."""
+
+    media: MediaOut
+    reports: list[ReportOut]
+
+
+class ReviewListOut(BaseModel):
+    """A page of the moderation queue."""
+
+    items: list[ReviewItemOut]
+    total: int
+
+
+class HideIn(BaseModel):
+    """Why a moderator hides an item."""
+
+    reason: str = Field(default="", max_length=500)
+
+
+class BlockIn(BaseModel):
+    """Bar a user from uploading club media (club_id null = every club)."""
+
+    user_id: UUID
+    club_id: UUID | None = None
+    reason: str = Field(default="", max_length=500)
+
+
+class BlockListOut(BaseModel):
+    """Upload blocks."""
+
+    items: list[BlockOut]
+
+
+class MediaLimitsIn(BaseModel):
+    """Per-club media limits in bytes; null keeps the settings default."""
+
+    photo_max_bytes: int | None = Field(default=None, ge=1)
+    video_max_bytes: int | None = Field(default=None, ge=1)
+    quota_bytes: int | None = Field(default=None, ge=1)

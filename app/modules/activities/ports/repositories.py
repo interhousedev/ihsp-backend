@@ -17,6 +17,15 @@ from app.modules.activities.domain.draft import (
     DraftSignup,
 )
 from app.modules.activities.domain.event import Event, Rsvp
+from app.modules.activities.domain.media import (
+    Album,
+    ClubMediaOverrides,
+    Media,
+    MediaBlock,
+    MediaKind,
+    MediaReport,
+    MediaStatus,
+)
 from app.modules.activities.domain.membership import Membership
 from app.modules.activities.domain.ownership import OwnershipTransfer
 from app.modules.activities.domain.planner import PlannerItem
@@ -302,3 +311,131 @@ class CourseLinkRepository(Protocol):
 
     async def list_for_course(self, course_id: UUID) -> list[ClubCourseLink]:
         """Pending and active links of a course."""
+
+
+class AlbumRepository(Protocol):
+    """Albums (folders of club media)."""
+
+    async def add(self, album: Album) -> None:
+        """Insert."""
+
+    async def save(self, album: Album) -> None:
+        """Persist changes (soft delete included)."""
+
+    async def get(self, album_id: UUID) -> Album | None:
+        """One album, deleted or not."""
+
+    async def get_by_source_ref(self, source_ref: str) -> Album | None:
+        """The album an import already created."""
+
+    async def root_for_event(self, event_id: UUID) -> Album | None:
+        """The live root album of an event."""
+
+    async def list_children(
+        self, club_id: UUID, parent_id: UUID | None
+    ) -> builtins.list[Album]:
+        """Live albums under a parent (None = top level), newest event date first."""
+
+    async def item_counts(
+        self, album_ids: builtins.list[UUID]
+    ) -> dict[UUID, tuple[int, int]]:
+        """``(ready items, live folders)`` per album."""
+
+
+class MediaRepository(Protocol):
+    """Media items, reports, upload blocks and per-club limit overrides."""
+
+    async def add(self, media: Media) -> None:
+        """Insert."""
+
+    async def save(self, media: Media) -> None:
+        """Persist changes."""
+
+    async def remove(self, media_id: UUID) -> None:
+        """Delete the row for good (a failed upload)."""
+
+    async def get(self, media_id: UUID) -> Media | None:
+        """One item, any status."""
+
+    async def get_many(self, media_ids: builtins.list[UUID]) -> builtins.list[Media]:
+        """Items by id (unknown ids are absent)."""
+
+    async def get_by_source_ref(self, source_ref: str) -> Media | None:
+        """The item an import already created."""
+
+    async def find_duplicate(self, album_id: UUID, sha256: str) -> Media | None:
+        """A non-deleted item of the album with the same content."""
+
+    async def list_album(
+        self,
+        album_id: UUID,
+        *,
+        statuses: frozenset[MediaStatus],
+        kind: MediaKind | None,
+        after: tuple[int, UUID] | None,
+        limit: int,
+    ) -> builtins.list[Media]:
+        """Items ordered by ``(position, id)``, after the cursor."""
+
+    async def list_for_announcement(
+        self, announcement_id: UUID
+    ) -> builtins.list[Media]:
+        """Photos of an announcement ordered by position."""
+
+    async def count_album(self, album_id: UUID) -> int:
+        """Items of an album that are not deleted or failed."""
+
+    async def next_position(self, album_id: UUID) -> int:
+        """One past the highest position in the album."""
+
+    async def used_bytes(self, club_id: UUID) -> int:
+        """Sum of ``byte_size`` of the club's items that are not deleted."""
+
+    async def used_bytes_locked(self, club_id: UUID) -> int:
+        """``used_bytes`` holding the club's quota lock until the transaction ends."""
+
+    async def item_count(self, club_id: UUID) -> int:
+        """The club's items that are not deleted."""
+
+    async def add_report(self, report: MediaReport) -> None:
+        """Insert."""
+
+    async def get_report(self, report_id: UUID) -> MediaReport | None:
+        """One report."""
+
+    async def save_report(self, report: MediaReport) -> None:
+        """Persist changes."""
+
+    async def reports_for(self, media_id: UUID) -> builtins.list[MediaReport]:
+        """All reports of an item, oldest first."""
+
+    async def list_for_review(
+        self, state: str, club_id: UUID | None, limit: int, offset: int
+    ) -> tuple[builtins.list[Media], int]:
+        """``state``: ``reported`` (open reports), ``hidden``; items and the total."""
+
+    async def list_deleted_before(self, cutoff: datetime) -> builtins.list[Media]:
+        """Soft-deleted items older than the cutoff whose files still exist."""
+
+    async def list_stale(
+        self, usage_staged: bool, status: MediaStatus, cutoff: datetime
+    ) -> builtins.list[Media]:
+        """Items in ``status`` (staged ones when asked) created before the cutoff."""
+
+    async def add_block(self, block: MediaBlock) -> None:
+        """Bar a user; repeating for the same scope is a no-op."""
+
+    async def remove_block(self, user_id: UUID, club_id: UUID | None) -> None:
+        """Lift a block."""
+
+    async def is_blocked(self, user_id: UUID, club_id: UUID) -> bool:
+        """Barred in this club or everywhere."""
+
+    async def list_blocks(self, club_id: UUID | None) -> builtins.list[MediaBlock]:
+        """Blocks of a club (None = the global ones)."""
+
+    async def overrides(self, club_id: UUID) -> ClubMediaOverrides:
+        """Limit overrides of the club; all ``None`` when unset."""
+
+    async def set_overrides(self, club_id: UUID, value: ClubMediaOverrides) -> None:
+        """Replace the club's overrides; ``None`` fields clear them."""

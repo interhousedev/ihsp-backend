@@ -1,6 +1,7 @@
 """ORM models of the activities schema."""
 
 from app.modules.activities.infrastructure.orm.tables import (
+    AlbumRow,
     AnnouncementRow,
     ApplicationRow,
     ClubCourseRow,
@@ -13,6 +14,9 @@ from app.modules.activities.infrastructure.orm.tables import (
     DraftSignupRow,
     EventReportRow,
     EventRow,
+    MediaBlockRow,
+    MediaReportRow,
+    MediaRow,
     MembershipRow,
     PlannerRow,
     PointsOptOutRow,
@@ -49,6 +53,7 @@ class Base:
 
 
 __all__ = [
+    "AlbumRow",
     "AnnouncementRow",
     "ApplicationRow",
     "Base",
@@ -62,6 +67,9 @@ __all__ = [
     "DraftSignupRow",
     "EventReportRow",
     "EventRow",
+    "MediaBlockRow",
+    "MediaReportRow",
+    "MediaRow",
     "MembershipRow",
     "PlannerRow",
     "PointsOptOutRow",

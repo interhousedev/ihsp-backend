@@ -48,5 +48,20 @@
   "activities-report-state": "Faqat tugagan tadbir hisobotini eʼlon qilish mumkin.",
   "activities-role-full": "Bu roldagi barcha oʻrinlar band.",
   "activities-round-closed": "Bu bosqich endi yozilishni qabul qilmaydi.",
-  "activities-transfer": "Klubni topshirishni davom ettirib boʻlmaydi."
+  "activities-transfer": "Klubni topshirishni davom ettirib boʻlmaydi.",
+  "activities-media-state": "Faylning hozirgi holatida bu mumkin emas.",
+  "activities-media-not-ready": "Rasm hali qayta ishlanmoqda. Birozdan soʻng urinib koʻring.",
+  "activities-media-quota-exceeded": "Klubning media uchun joyi tugadi.",
+  "activities-media-duplicate": "Bu fayl albomda allaqachon bor.",
+  "activities-media-upload-mismatch": "Yuklangan fayl eʼlon qilinganiga mos emas. Qaytadan yuklang.",
+  "activities-media-already-reported": "Siz bu fayl haqida allaqachon xabar bergansiz.",
+  "activities-album-exists": "Bu tadbirning albomi allaqachon bor.",
+  "activities-album-depth": "Albomlarni bunchalik chuqur joylashtirib boʻlmaydi.",
+  "activities-media-consent-required": "Suratdagi odamlar yuklashga rozi ekanini tasdiqlang.",
+  "activities-media-kind": "Bu turdagi faylni bu yerda ishlatib boʻlmaydi.",
+  "activities-media-upload-blocked": "Sizga klub media fayllarini yuklash taqiqlangan.",
+  "activities-media-too-large": "Fayl juda katta.",
+  "activities-media-type-not-allowed": "Faqat JPG, PNG, WebP rasmlar va MP4, WebM, MOV videolar qabul qilinadi.",
+  "activities-media-rate-limited": "Yuklashlar juda koʻp. Keyinroq urinib koʻring.",
+  "activities-invalid-media-url": "Havola yaroqsiz."
 }

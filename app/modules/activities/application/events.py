@@ -14,6 +14,7 @@ from app.modules.activities.application.common import (
     permissions,
     require,
 )
+from app.modules.activities.application.media import MediaService
 from app.modules.activities.domain.access import Permission
 from app.modules.activities.domain.checkin_token import (
     InvalidCheckInTokenError,
@@ -26,12 +27,14 @@ from app.modules.activities.domain.course_link import CourseLinkDeniedError
 from app.modules.activities.domain.errors import ActivitiesNotFoundError
 from app.modules.activities.domain.event import (
     Event,
+    EventStateError,
     EventStatus,
     Rsvp,
     RsvpPolicy,
     check_in,
     promote_waitlist,
 )
+from app.modules.activities.domain.media import Media
 from app.modules.activities.domain.reminders import (
     plan_reminders,
     rating_request_time,
@@ -172,6 +175,60 @@ class EventService:
         event.schedule()
         await self._p.events.save(event)
         await self._plan(event)
+        return event
+
+    async def update(
+        self,
+        actor: Actor,
+        event_id: UUID,
+        *,
+        title: Any = None,
+        description: Any = None,
+        location: str | None = None,
+        capacity: int | None = None,
+        rsvp_policy: str | None = None,
+    ) -> Event:
+        """Edit the texts, capacity and RSVP policy (the time stays on reschedule)."""
+        event = await self._managed(actor, event_id)
+        if event.status not in (EventStatus.DRAFT, EventStatus.SCHEDULED):
+            raise EventStateError(params={"status": str(event.status)})
+        if title is not None:
+            event.title = title
+        if description is not None:
+            event.description = description
+        if location is not None:
+            event.location = location
+        if capacity is not None:
+            event.capacity = capacity
+        if rsvp_policy is not None:
+            event.rsvp_policy = RsvpPolicy(rsvp_policy)
+        event.validate()
+        await self._p.events.save(event)
+        return event
+
+    async def set_cover(
+        self, actor: Actor, event_id: UUID, media_id: UUID | None
+    ) -> Event:
+        """Use a staged ready photo as the cover; ``None`` removes it."""
+        p = self._p
+        event = await self._managed(actor, event_id)
+        now = p.clock.now()
+        new: Media | None = None
+        if media_id is not None and media_id != event.cover_media_id:
+            (new,) = await MediaService(p).stage_for(actor, event.club_id, [media_id])
+            new.attach_as_cover(event.id)
+            new.updated_at = now
+        if media_id == event.cover_media_id:
+            return event
+        old = await p.media.get(event.cover_media_id) if event.cover_media_id else None
+        if old is not None:
+            old.soft_delete(now)
+            old.updated_at = now
+            await p.media.save(old)
+        if new is not None:
+            await p.media.save(new)
+        event.cover_media_id = new.id if new else None
+        await p.events.save(event)
         return event
 
     async def reschedule(

@@ -6,17 +6,23 @@ from app.modules.activities.ports.gateways import (
     AuditLog,
     Captcha,
     ContactRelay,
+    MediaConfig,
+    MediaKicker,
+    MediaProcessor,
+    MediaStore,
     Notifier,
     OpportunityCatalog,
     RateLimiter,
     UserDirectory,
 )
 from app.modules.activities.ports.repositories import (
+    AlbumRepository,
     AnnouncementRepository,
     ClubRepository,
     CourseLinkRepository,
     DraftRepository,
     EventRepository,
+    MediaRepository,
     MembershipRepository,
     PlannerRepository,
     PointsRepository,
@@ -54,3 +60,9 @@ class Ports:
     clock: Clock
     secret: str
     ip_salt: str
+    albums: AlbumRepository
+    media: MediaRepository
+    media_store: MediaStore
+    media_processor: MediaProcessor
+    media_kicker: MediaKicker
+    media_config: MediaConfig

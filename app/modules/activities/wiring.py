@@ -11,6 +11,7 @@ from app.modules.activities.application.drafts import DraftService
 from app.modules.activities.application.events import EventService
 from app.modules.activities.application.forms import FormsService
 from app.modules.activities.application.leaderboard import LeaderboardService
+from app.modules.activities.application.media import MediaService
 from app.modules.activities.application.memberships import MembershipService
 from app.modules.activities.application.opportunities import OpportunitiesService
 from app.modules.activities.application.ownership import OwnershipService
@@ -40,6 +41,7 @@ class ActivitiesServices:
     planner: PlannerService
     club_courses: ClubCourseService
     opportunities: OpportunitiesService
+    media: MediaService
 
 
 def build(deps: Ports, overrides: dict[str, Any] | None = None) -> ActivitiesServices:
@@ -60,5 +62,6 @@ def build(deps: Ports, overrides: dict[str, Any] | None = None) -> ActivitiesSer
         planner=PlannerService(deps),
         club_courses=ClubCourseService(deps),
         opportunities=OpportunitiesService(deps),
+        media=MediaService(deps),
     )
     return replace(services, **overrides) if overrides else services

@@ -48,5 +48,20 @@
   "activities-report-state": "Only the report of a finished event can be published.",
   "activities-role-full": "All places for this role are taken.",
   "activities-round-closed": "This round no longer takes signups.",
-  "activities-transfer": "The club transfer cannot go on."
+  "activities-transfer": "The club transfer cannot go on.",
+  "activities-media-state": "The media item's state does not allow this.",
+  "activities-media-not-ready": "The photo is still being processed. Try again in a moment.",
+  "activities-media-quota-exceeded": "The club has used up its media storage.",
+  "activities-media-duplicate": "This file is already in the album.",
+  "activities-media-upload-mismatch": "The uploaded file does not match what was announced. Upload it again.",
+  "activities-media-already-reported": "You have already reported this item.",
+  "activities-album-exists": "This event already has an album.",
+  "activities-album-depth": "Albums cannot be nested this deep.",
+  "activities-media-consent-required": "Confirm that the people shown agreed to the upload.",
+  "activities-media-kind": "This kind of file cannot be used here.",
+  "activities-media-upload-blocked": "You are not allowed to upload club media.",
+  "activities-media-too-large": "The file is too large.",
+  "activities-media-type-not-allowed": "Only JPG, PNG, WebP photos and MP4, WebM, MOV videos are accepted.",
+  "activities-media-rate-limited": "Too many uploads. Try again later.",
+  "activities-invalid-media-url": "The link is not valid."
 }

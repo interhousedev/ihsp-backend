@@ -86,6 +86,23 @@ class AnnouncementIn(BaseModel):
     text: str = Field(min_length=1, max_length=4000)
     audience: str = "members"
     scheduled_at: datetime | None = None
+    media_ids: list[UUID] = Field(default_factory=list, max_length=10)
+
+
+class EventPatch(BaseModel):
+    """Editable event fields; times change through `:reschedule`."""
+
+    title: Any = None
+    description: Any = None
+    location: str | None = Field(default=None, max_length=300)
+    capacity: int | None = Field(default=None, ge=1)
+    rsvp_policy: str | None = None
+
+
+class CoverIn(BaseModel):
+    """The event's preview image (a staged, ready photo), or null to remove it."""
+
+    media_id: UUID | None
 
 
 class PlannerIn(BaseModel):
@@ -147,6 +164,24 @@ async def finish_event(
 ) -> Event:
     """Close the event."""
     return await container.activities.events.finish(actor, event_id)
+
+
+@router.patch("/events/{event_id}")
+async def update_event(
+    event_id: UUID, body: EventPatch, container: ContainerDep, actor: ActorDep
+) -> Event:
+    """Edit the event's text, place, capacity or RSVP policy."""
+    return await container.activities.events.update(
+        actor, event_id, **body.model_dump(exclude_unset=True)
+    )
+
+
+@router.put("/events/{event_id}/cover")
+async def set_event_cover(
+    event_id: UUID, body: CoverIn, container: ContainerDep, actor: ActorDep
+) -> Event:
+    """Set, replace or remove the event's preview image."""
+    return await container.activities.events.set_cover(actor, event_id, body.media_id)
 
 
 @router.post("/events/{event_id}:reschedule")
@@ -296,7 +331,12 @@ async def send_announcement(
 ) -> Announcement:
     """Send or schedule an announcement."""
     return await container.activities.announcements.send(
-        actor, club_id, body.text, body.audience, body.scheduled_at
+        actor,
+        club_id,
+        body.text,
+        body.audience,
+        body.scheduled_at,
+        media_ids=body.media_ids,
     )
 
 

@@ -1,0 +1,9 @@
+[
+{"_id":"f1","file_name":"a1.jpg","event_id":"0190a000-0000-7000-8000-0000000000e1","author_id":"111","type":"IMAGE","original_name":"IMG_1.jpg","is_showed":true,"is_banned":false},
+{"_id":"f2","file_name":"a2.mp4","event_id":"0190a000-0000-7000-8000-0000000000e1","author_id":"111","type":"VIDEO","original_name":null,"is_showed":true,"is_banned":false},
+{"_id":"f3","file_name":"a3.jpg","event_id":"0190a000-0000-7000-8000-0000000000e1","author_id":"111","type":"IMAGE","is_showed":false,"is_banned":false},
+{"_id":"f4","file_name":"a4.jpg","event_id":"0190a000-0000-7000-8000-0000000000e1","author_id":"222","type":"IMAGE","is_showed":true,"is_banned":true},
+{"_id":"f5","file_name":"a5.pdf","event_id":"0190a000-0000-7000-8000-0000000000e1","author_id":"222","type":"FILE","is_showed":true,"is_banned":false},
+{"_id":"f6","file_name":"a6.jpg","event_id":"nope","author_id":"222","type":"IMAGE","is_showed":true,"is_banned":false},
+{"_id":"f7","file_name":"b1.png","event_id":"0190a000-0000-7000-8000-0000000000e2","author_id":"222","type":"IMAGE","is_showed":true,"is_banned":false}
+]

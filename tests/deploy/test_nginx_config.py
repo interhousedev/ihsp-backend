@@ -216,6 +216,20 @@ def test_login_oauth_registration_and_webhook_are_rate_limited() -> None:
         assert "log_format ihsp" in template and '"$request"' not in template
 
 
+def test_club_media_is_not_proxy_cached() -> None:
+    """Signed media URLs re-check the item on each open; no shared cache serves them."""
+    for name in ("route-api.inc", "route-mcp.inc", "route-id.inc", "route-static.inc"):
+        route = _route(name)
+        assert "proxy_cache" not in route, name
+        assert "/v1/activities/media" not in route, name
+    for mode in ("prod", "local"):
+        template = (MATERIALS_DIR / "nginx" / mode / "default.conf.template").read_text(
+            encoding="utf-8"
+        )
+        assert "proxy_cache" not in template
+        assert "club_media" not in template
+
+
 def test_port_80_redirects_known_hosts_only() -> None:
     template = (MATERIALS_DIR / "nginx" / "prod" / "default.conf.template").read_text()
     default, named = template.split("listen 80;", 1)

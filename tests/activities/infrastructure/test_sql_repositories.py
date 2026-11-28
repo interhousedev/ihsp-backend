@@ -101,3 +101,17 @@ async def test_catalog_audience_lock_version_and_delete(
     assert await catalog.in_use(oid) is False
     await catalog.delete(oid)
     assert await catalog.get(oid) is None
+
+
+async def test_media_quota_lock_reads_club_usage(db_session: AsyncSession) -> None:
+    from app.modules.activities.infrastructure.repositories.media_sql import (
+        SqlMediaRepository,
+    )
+
+    club = Club(
+        new_id(), f"quota-{uuid4().hex[:8]}", ClubKind.CLUB, {"en": "Q"}, new_id()
+    )
+    await SqlClubRepository(db_session).add(club)
+    media = SqlMediaRepository(db_session)
+    assert await media.used_bytes_locked(club.id) == 0
+    assert await media.used_bytes_locked(new_id()) == 0
