@@ -165,11 +165,17 @@ class LmsDraftCommandsImpl:
         }
 
     async def add_block(
-        self, actor: Actor, step_id: UUID, block: dict[str, Any], *, via_mcp: bool
+        self,
+        actor: Actor,
+        step_id: UUID,
+        block: dict[str, Any],
+        *,
+        via_mcp: bool,
+        position: int | None = None,
     ) -> dict[str, Any]:
-        """Append a block to a draft step."""
+        """Add a block to a draft step: at the end, or at `position`."""
         return await self._append_block.execute(
-            actor, step_id, block, via=_via(via_mcp)
+            actor, step_id, block, via=_via(via_mcp), position=position
         )
 
     async def add_question(

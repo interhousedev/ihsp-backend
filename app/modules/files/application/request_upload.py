@@ -7,6 +7,7 @@ from app.modules.files.application.file_views import FileView, FileViewBuilder
 from app.modules.files.domain.errors import QuotaExceededError, TypeNotAllowedError
 from app.modules.files.domain.policy import (
     CAPTION_PURPOSES,
+    CLUB_PURPOSES,
     LIBRARY_PURPOSES,
     PRESIGN_PUT_SECONDS,
     VIDEO_PURPOSES,
@@ -14,6 +15,7 @@ from app.modules.files.domain.policy import (
     check_checksum,
     check_declared,
     check_purpose_extension,
+    check_scope_purpose,
     check_size,
     check_upload_role,
     key_extension,
@@ -125,6 +127,58 @@ class RequestUpload:
             term_id=term_id,
         )
         await self._reserve(file, self._limits.quota_for_actor(scope, actor))
+        return UploadTicket(view=await self._views.build_one(file), upload=upload)
+
+    async def execute_for_owner(
+        self,
+        *,
+        owner_id: UUID,
+        scope: FileScope,
+        purpose: FilePurpose,
+        name: str,
+        size: int,
+        content_type: str,
+        sha256_b64: str,
+        max_bytes: int,
+    ) -> UploadTicket:
+        """Reserve a club file for ``owner_id``: no actor, no per-actor quota.
+
+        The activities module has authorised the upload and keeps the club quota;
+        only ``CLUB_PURPOSES`` are accepted here.
+        """
+        if purpose not in CLUB_PURPOSES:
+            raise TypeNotAllowedError(params={"purpose": purpose.value})
+        check_scope_purpose(scope, purpose)
+        clean = normalize_name(name)
+        check_purpose_extension(purpose, clean)
+        _, signed_type = check_declared(clean, content_type)
+        check_size(size, max_bytes)
+        checksum = check_checksum(sha256_b64)
+        now = self._clock.now()
+        file_id = new_id()
+        key = key_for(scope, month_label(now), file_id, key_extension(clean))
+        upload = await self._storage.presign_put(
+            key,
+            content_type=signed_type,
+            content_length=size,
+            sha256_b64=checksum,
+            expires=PRESIGN_PUT_SECONDS,
+        )
+        file = StoredFile(
+            id=file_id,
+            owner_id=owner_id,
+            scope=scope,
+            purpose=purpose,
+            key=key,
+            name=clean,
+            content_type=signed_type,
+            byte_size=size,
+            checksum=checksum,
+            status=FileStatus.PENDING,
+            created_at=now,
+            updated_at=now,
+        )
+        await self._reserve(file, None)
         return UploadTicket(view=await self._views.build_one(file), upload=upload)
 
     async def _term_for(self, scope: FileScope) -> UUID | None:

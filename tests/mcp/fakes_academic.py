@@ -47,9 +47,23 @@ class FakeAcademicTools:
         lesson_id: UUID,
         file_ids: Sequence[UUID],
         comment: str | None,
+        text: str | None = None,
     ) -> dict[str, Any]:
-        self.calls.append(("submit_homework", actor, lesson_id, file_ids, comment))
+        self.calls.append(
+            ("submit_homework", actor, lesson_id, file_ids, comment, text)
+        )
         return {"lesson_id": str(lesson_id), "status": "submitted"}
+
+    async def homework_submission(
+        self, actor: Actor, lesson_id: UUID
+    ) -> dict[str, Any]:
+        self.calls.append(("homework_submission", actor, lesson_id))
+        return {
+            "lesson_id": str(lesson_id),
+            "text": "my answer",
+            "teacher_comment": "Well done",
+            "grade": 5,
+        }
 
     async def withdraw_homework_submission(self, actor: Actor, lesson_id: UUID) -> None:
         self.calls.append(("withdraw_homework_submission", actor, lesson_id))

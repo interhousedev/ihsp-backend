@@ -1,6 +1,6 @@
 """Notify contracts (provider: notify module; consumers: bot and composition)."""
 
-from collections.abc import Awaitable, Callable, Collection
+from collections.abc import Awaitable, Callable, Collection, Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 from uuid import UUID
@@ -92,6 +92,22 @@ class TelegramSender(Protocol):
         """Send a document and return its message id."""
         ...
 
+    async def send_photo(
+        self,
+        chat_id: int,
+        photo: "PhotoRef",
+        caption_html: str | None = None,
+        buttons: list[list[dict[str, Any]]] | None = None,
+    ) -> "SentPhoto":
+        """Send one photo (a cached ``file_id`` may replace the upload)."""
+        ...
+
+    async def send_media_group(
+        self, chat_id: int, photos: "Sequence[PhotoRef]"
+    ) -> "list[SentPhoto]":
+        """Send 2 to 10 photos as one album (no caption, no buttons)."""
+        ...
+
     async def delete_message(self, chat_id: int, message_id: int) -> None:
         """Delete a message."""
         ...
@@ -119,12 +135,30 @@ class BotSenders(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class PhotoRef:
+    """A photo to send; ``cache_key`` names the content for Telegram file_id reuse."""
+
+    name: str
+    data: bytes
+    cache_key: str
+
+
+@dataclass(frozen=True, slots=True)
+class SentPhoto:
+    """Result of sending a photo: the message and the file_id Telegram assigned."""
+
+    message_id: int
+    file_id: str
+
+
+@dataclass(frozen=True, slots=True)
 class RenderedMessage:
     """A Telegram message to send."""
 
     text_html: str
     buttons: list[list[dict[str, Any]]] | None = None
     documents: tuple[tuple[str, bytes], ...] = ()
+    photos: tuple[PhotoRef, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

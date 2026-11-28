@@ -9,8 +9,14 @@ from app.modules.academic.application.classwork.ports.unit_of_work import (
     LessonUnitOfWork,
 )
 from app.modules.academic.domain.classwork.attendance_rules import ensure_lesson_staff
-from app.modules.academic.domain.classwork.errors import HomeworkCancelledLessonError
-from app.modules.academic.domain.classwork.homework_rules import clean_homework_text
+from app.modules.academic.domain.classwork.errors import (
+    HomeworkCancelledLessonError,
+    HomeworkTextError,
+)
+from app.modules.academic.domain.classwork.homework_rules import (
+    HOMEWORK_TEXT_MAX,
+    clean_homework_text,
+)
 from app.modules.academic.domain.classwork.lesson import Lesson
 from app.shared.actor import Actor
 from app.shared.clock import Clock
@@ -30,16 +36,33 @@ class SetHomework:
         self,
         lesson_id: UUID,
         actor: Actor,
-        text: str,
+        text: str | None,
         due_date: dt.date | None,
+        accept_submissions: bool | None = None,
     ) -> Lesson:
-        """Save the homework and return the updated lesson."""
-        clean = clean_homework_text(text)
+        """Save the homework and return the updated lesson.
+
+        ``text`` None keeps the stored text; it is allowed only when the lesson has
+        homework already (EMIS homework, to change the due date or the switch).
+        ``accept_submissions`` None keeps the switch, except when the homework first
+        appears: then the teacher's "accept by default" setting decides.
+
+        Raises:
+            HomeworkTextError: The text is empty or too long, or missing while the
+                lesson has no homework.
+        """
+        clean = None if text is None else clean_homework_text(text)
         async with self.uow_factory() as uow:
             lesson = await require_lesson(uow, lesson_id)
             ensure_lesson_staff(lesson, actor)
             if not lesson.scheduled:
                 raise HomeworkCancelledLessonError(params={"lesson_id": str(lesson_id)})
+            if clean is None and not lesson.has_homework:
+                raise HomeworkTextError(params={"max": HOMEWORK_TEXT_MAX})
+            accept = accept_submissions
+            if accept is None and not lesson.has_homework:
+                owner = lesson.teacher_id or actor.user_id
+                accept = (await uow.homework_settings.get(owner)).accept_by_default
             due = due_date
             if due is None:
                 due = await uow.lessons.next_lesson_date(
@@ -54,7 +77,12 @@ class SetHomework:
                 due_auto=due_date is None,
                 by=actor.user_id,
                 at=self.clock.now(),
-                mark_updated=lesson.has_homework and lesson.homework_text != clean,
+                mark_updated=(
+                    lesson.has_homework
+                    and clean is not None
+                    and lesson.homework_text != clean
+                ),
+                accept_submissions=accept,
             )
             await uow.commit()
             return await require_lesson(uow, lesson_id)

@@ -62,6 +62,7 @@ _LESSON_COLUMNS = (
     Lesson.attendance_late,
     Lesson.kind,
     Lesson.emis_topic,
+    Lesson.emis_homework_url,
 )
 
 
@@ -95,6 +96,7 @@ def _lesson_row(r: Any) -> LessonRow:
         kind=r.kind,
         emis_topic=r.emis_topic,
         excused=r.excused,
+        emis_homework_url=r.emis_homework_url,
     )
 
 

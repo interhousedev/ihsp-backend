@@ -18,6 +18,7 @@ from app.modules.identity.domain.scopes import (
     scope_names,
 )
 from app.shared.actor import Actor
+from app.shared.mcp_scopes import scopes_for_roles
 
 AuthMode = Literal["oauth_dcr", "oauth_client", "static_token"]
 Availability = Literal["available", "limited", "plan_gated"]
@@ -138,14 +139,14 @@ class GetMcpSetup:
             server=server,
             server_url=self._server_url(server),
             facts=facts,
-            oauth=self._oauth(service, server),
+            oauth=self._oauth(service, server, actor),
             token_route=TOKEN_ROUTE if "static_token" in facts.auth_modes else None,
         )
 
     def _server_url(self, server: Server) -> str:
         return f"{self.endpoints.mcp_base.rstrip('/')}/{server}"
 
-    def _oauth(self, service: Service, server: Server) -> OAuthSettings:
+    def _oauth(self, service: Service, server: Server, actor: Actor) -> OAuthSettings:
         base = self.endpoints.issuer.rstrip("/")
         url = self._server_url(server)
         origin, _, path = url.partition("://")[2].partition("/")
@@ -165,7 +166,11 @@ class GetMcpSetup:
             ),
             resource=url,
             audience=AUDIENCE_BY_SERVER[server],
-            scopes=sorted(scope_names(server)),
+            scopes=sorted(
+                scopes_for_roles(server, actor.roles)
+                if server == "admission"
+                else scope_names(server)
+            ),
             client_scopes=client_scope(),
             code_challenge_method="S256",
             grant_types=["authorization_code", "refresh_token"],

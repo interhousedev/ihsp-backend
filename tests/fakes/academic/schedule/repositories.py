@@ -669,3 +669,13 @@ class FakeLessonRepository:
             else:
                 del self.store.lessons[lesson.id]
         return affected
+
+    async def apply_homework_accept_default(self, lesson_ids: Collection[UUID]) -> None:
+        """Copy the teacher's accept default onto each lesson (no teacher text here)."""
+        for lesson_id in lesson_ids:
+            lesson = self.store.lessons.get(lesson_id)
+            if lesson is None:
+                continue
+            defaults = self.store.homework_accept_defaults
+            default = defaults.get(lesson.teacher_id) if lesson.teacher_id else None
+            self.store.homework_accept[lesson_id] = bool(default)

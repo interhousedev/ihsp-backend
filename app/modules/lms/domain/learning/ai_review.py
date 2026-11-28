@@ -79,7 +79,7 @@ to four improvements and a short summary. For images add one note per image in \
 "message" is a short friendly line shown above the result.
 """
 
-_LABELS: Final[dict[str, dict[str, str]]] = {
+LABELS: Final[dict[str, dict[str, str]]] = {
     "en": {
         "criterion": "Criterion",
         "score": "Score",
@@ -430,7 +430,7 @@ def openui_of(
     image_names: Iterable[str] = (),
 ) -> str | None:
     """The OpenUI source of a question round or a review; None for a chat reply."""
-    labels = _LABELS.get(locale, _LABELS["en"])
+    labels = LABELS.get(locale, LABELS["en"])
     if answer.kind == "chat":
         return None
     if answer.kind == "question":

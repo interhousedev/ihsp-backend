@@ -8,12 +8,14 @@ from app.modules.academic.domain.classwork.errors import (
     LessonNotFoundError,
     NotLessonTeacherError,
     SubmissionCommentTooLongError,
+    SubmissionEmptyError,
     SubmissionFilesError,
     SubmissionNotFoundError,
 )
 from app.modules.academic.domain.classwork.submission_rules import (
     check_submission_files,
     clean_comment,
+    ensure_content,
     submission_status,
 )
 from app.shared.contracts.files import FileRef
@@ -56,8 +58,8 @@ def test_rules_refuse_foreign_or_not_ready(status: str, owned: bool) -> None:
 
 def test_rules_refuse_missing_and_bad_counts() -> None:
     owner = uuid4()
-    with pytest.raises(SubmissionFilesError):
-        check_submission_files([], {}, owner)
+    with pytest.raises(SubmissionEmptyError):
+        ensure_content([], None)
     with pytest.raises(SubmissionFilesError):
         check_submission_files([uuid4()], {}, owner)
     ids = [uuid4() for _ in range(11)]
@@ -90,6 +92,7 @@ async def _lesson(env: Env, due: dt.date | None = MONDAY) -> UUID:
         homework_text="read",
         homework_due_date=due,
         homework_due_auto=False,
+        homework_accept_submissions=True,
     )
 
 

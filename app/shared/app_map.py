@@ -285,6 +285,28 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "vaqtinchalik временные оценки temporary marks baho",
     ),
     _d(
+        "staff-homework",
+        "staff",
+        "/homework/",
+        _TE,
+        ("Uy vazifalari", "Домашние задания", "Homework"),
+        "uy vazifa vazifalar домашнее задание задания homework assignments emis "
+        "topshirish сдача submissions",
+    ),
+    _d(
+        "staff-homework-review",
+        "staff",
+        "/homework/?only=to_review",
+        _TE,
+        (
+            "Uy vazifalarini tekshirish",
+            "Проверка домашних заданий",
+            "Homework review",
+        ),
+        "tekshirish baholash izoh qaytarish проверка оценить комментарий вернуть "
+        "review grade comment return submissions homework",
+    ),
+    _d(
         "staff-students",
         "staff",
         "/students/",
@@ -1556,6 +1578,32 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "opportunities bookmarks favorites",
     ),
     _d(
+        "admission-plan-personal",
+        "admission",
+        "/plan/",
+        _ST,
+        (
+            "Oʻzim topgan imkoniyatlar",
+            "Мои находки",
+            "Your own finds",
+        ),
+        "oʻzim topgan shaxsiy imkoniyat свои находки личные возможности own "
+        "finds personal opportunities external add",
+    ),
+    _d(
+        "admission-calendar-export",
+        "admission",
+        "/deadlines/",
+        _ST,
+        (
+            "Taqvimga qoʻshish (.ics)",
+            "Добавить в календарь (.ics)",
+            "Add to calendar (.ics)",
+        ),
+        "taqvim kalendar eksport ics календарь экспорт ics google apple outlook "
+        "calendar export subscribe",
+    ),
+    _d(
         "admission-career-field",
         "admission",
         "/career/?tab=field",
@@ -1649,7 +1697,8 @@ APP_MAP: Final[tuple[Destination, ...]] = (
             "Помощник по поступлению",
             "Admission assistant",
         ),
-        "yordamchi AI suhbat помощник ИИ чат assistant ai chat help",
+        "yordamchi AI suhbat помощник ИИ чат assistant ai chat help mcp "
+        "ulagich коннектор connector claude chatgpt",
     ),
     _d(
         "admission-trajectories",
@@ -1798,6 +1847,32 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "tahlil analitika аналитика активностей analytics statistics statistika",
     ),
     _d(
+        "admin-activities-media",
+        "admin",
+        "/activities/media/",
+        {Role.ADMIN, Role.ACTIVITIES_ADMIN},
+        (
+            "Klub media moderatsiyasi",
+            "Модерация медиа клубов",
+            "Club media moderation",
+        ),
+        "media moderatsiya shikoyat yashirish rasm video медиа модерация жалобы "
+        "скрыть фото видео moderation reports hide photos videos albums",
+    ),
+    _d(
+        "admin-activities-club-limits",
+        "admin",
+        "/activities/clubs/",
+        {Role.ADMIN, Role.ACTIVITIES_ADMIN},
+        (
+            "Klub media limitlari",
+            "Лимиты медиа клубов",
+            "Club media limits",
+        ),
+        "limit kvota xotira hajm лимит квота хранилище размер limit quota "
+        "storage size photo video",
+    ),
+    _d(
         "admin-lms-levels",
         "admin",
         "/lms-levels/",
@@ -1832,6 +1907,19 @@ APP_MAP: Final[tuple[Destination, ...]] = (
             "Clubs",
         ),
         "klub klublar клуб клубы clubs volunteers volontyorlar волонтёры",
+    ),
+    _d(
+        "student-club-album",
+        "sp",
+        "/activities/album/",
+        _ST,
+        (
+            "Klub albomi",
+            "Альбом клуба",
+            "Club album",
+        ),
+        "albom rasm video foto galereya альбом фото видео галерея album photos "
+        "videos gallery",
     ),
 )
 

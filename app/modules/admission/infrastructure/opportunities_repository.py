@@ -13,11 +13,16 @@ from app.modules.admission.domain.opportunities import (
     PlanEntry,
     TaxonomyNode,
 )
+from app.modules.admission.domain.personal_entries import (
+    PersonalEntry,
+    PlanDuplicateError,
+)
 from app.modules.admission.infrastructure.orm.item_opportunity import (
     ItemOpportunityLinkRow,
 )
 from app.modules.admission.infrastructure.orm.opportunities import (
     OpportunityAiPlanRow,
+    OpportunityPersonalEntryRow,
     OpportunityPlanEntryRow,
     OpportunityRow,
     OpportunitySubmissionRow,
@@ -27,6 +32,7 @@ from app.shared.ids import new_id
 
 from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -80,6 +86,47 @@ def _entry(r: OpportunityPlanEntryRow) -> PlanEntry:
         note=r.note,
         created_at=r.created_at,
     )
+
+
+def _personal(r: OpportunityPersonalEntryRow) -> PersonalEntry:
+    return PersonalEntry(
+        id=r.id,
+        student_id=r.student_id,
+        kind=r.kind,  # type: ignore[arg-type]
+        title=r.title,
+        provider=r.provider,
+        url=r.url,
+        summary=r.summary,
+        registration_deadline=r.registration_deadline,
+        starts_on=r.starts_on,
+        ends_on=r.ends_on,
+        planned_grade=r.planned_grade,
+        planned_term=r.planned_term,
+        note=r.note,
+        origin=r.origin,  # type: ignore[arg-type]
+        dedup_key=r.dedup_key,
+        created_at=r.created_at,
+        updated_at=r.updated_at,
+        submission_id=r.submission_id,
+        lock_version=r.lock_version,
+    )
+
+
+def _personal_values(e: PersonalEntry) -> dict[str, Any]:
+    return {
+        "kind": e.kind,
+        "title": e.title,
+        "provider": e.provider,
+        "url": e.url,
+        "summary": e.summary,
+        "registration_deadline": e.registration_deadline,
+        "starts_on": e.starts_on,
+        "ends_on": e.ends_on,
+        "planned_grade": e.planned_grade,
+        "planned_term": e.planned_term,
+        "note": e.note,
+        "dedup_key": e.dedup_key,
+    }
 
 
 class SqlOpportunityRepository:
@@ -337,6 +384,100 @@ class SqlOpportunityRepository:
         result = await self._s.execute(
             delete(tbl)
             .where(tbl.student_id == student_id, tbl.opportunity_id == opportunity_id)
+            .returning(tbl.id)
+        )
+        return result.scalar_one_or_none() is not None
+
+    async def personal_entries(self, student_id: UUID) -> list[PersonalEntry]:
+        """A student's own finds, oldest first."""
+        tbl = OpportunityPersonalEntryRow
+        q = (
+            select(tbl)
+            .where(tbl.student_id == student_id)
+            .order_by(tbl.created_at, tbl.id)
+        )
+        return [_personal(r) for r in await self._s.scalars(q)]
+
+    async def get_personal(
+        self, student_id: UUID, entry_id: UUID
+    ) -> PersonalEntry | None:
+        """One find of this student; another student's id is None."""
+        tbl = OpportunityPersonalEntryRow
+        row = await self._s.scalar(
+            select(tbl).where(tbl.id == entry_id, tbl.student_id == student_id)
+        )
+        return _personal(row) if row else None
+
+    async def personal_by_key(
+        self, student_id: UUID, dedup_key: str
+    ) -> PersonalEntry | None:
+        """The student's find with this dedup key."""
+        tbl = OpportunityPersonalEntryRow
+        row = await self._s.scalar(
+            select(tbl).where(tbl.student_id == student_id, tbl.dedup_key == dedup_key)
+        )
+        return _personal(row) if row else None
+
+    async def personal_by_submission(self, submission_id: UUID) -> list[PersonalEntry]:
+        """Finds that were proposed through this submission."""
+        tbl = OpportunityPersonalEntryRow
+        rows = await self._s.scalars(
+            select(tbl).where(tbl.submission_id == submission_id).order_by(tbl.id)
+        )
+        return [_personal(r) for r in rows]
+
+    async def add_personal(self, entry: PersonalEntry) -> PersonalEntry:
+        """Insert a find; `PlanDuplicateError` when its dedup key is taken."""
+        row = OpportunityPersonalEntryRow(
+            id=entry.id,
+            student_id=entry.student_id,
+            origin=entry.origin,
+            submission_id=entry.submission_id,
+            **_personal_values(entry),
+        )
+        try:
+            async with self._s.begin_nested():
+                self._s.add(row)
+                await self._s.flush()
+        except IntegrityError:
+            raise PlanDuplicateError() from None
+        await self._s.refresh(row)
+        return _personal(row)
+
+    async def save_personal(
+        self, entry: PersonalEntry, *, expected_lock: int
+    ) -> PersonalEntry:
+        """Update a find; conflict if the lock moved, `PlanDuplicateError` on a key."""
+        tbl = OpportunityPersonalEntryRow
+        stmt = (
+            update(tbl)
+            .where(
+                tbl.id == entry.id,
+                tbl.student_id == entry.student_id,
+                tbl.lock_version == expected_lock,
+            )
+            .values(**_personal_values(entry), lock_version=expected_lock + 1)
+            .returning(tbl)
+        )
+        try:
+            async with self._s.begin_nested():
+                row = (
+                    await self._s.execute(
+                        stmt, execution_options={"populate_existing": True}
+                    )
+                ).scalar_one_or_none()
+        except IntegrityError:
+            raise PlanDuplicateError() from None
+        if row is None:
+            raise AdmissionConflictError()
+        return _personal(row)
+
+    async def delete_personal(self, student_id: UUID, entry_id: UUID) -> bool:
+        """Remove a find of this student; return whether it existed."""
+        tbl = OpportunityPersonalEntryRow
+        result = await self._s.execute(
+            delete(tbl)
+            .where(tbl.id == entry_id, tbl.student_id == student_id)
             .returning(tbl.id)
         )
         return result.scalar_one_or_none() is not None

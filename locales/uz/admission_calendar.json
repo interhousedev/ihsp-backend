@@ -30,5 +30,13 @@
   "calendar-exam-day-sat": "SAT imtihon kuni",
   "calendar-exam-day-act": "ACT imtihon kuni",
   "calendar-test-registration": "Testga roʼyxatdan oʼtish muddati",
-  "calendar-test-day": "Test kuni"
+  "calendar-test-day": "Test kuni",
+  "calendar-source-personal": "Mening topilmalarim",
+  "calendar-source-milestone": "Maqsadlar rejasi",
+  "calendar-personal-unverified": "Oʻquvchi qoʻshgan. Maktab tekshirmagan.",
+  "calendar-feed-exists": "Sizda kalendar havolasi allaqachon bor. Yangisini olish uchun uni almashtiring; eski havola ishlamay qoladi.",
+  "calendar-personal-registration": "Roʻyxatdan oʻtish muddati",
+  "calendar-personal-start": "Boshlanishi",
+  "calendar-personal-end": "Tugashi",
+  "calendar-milestone": "Maqsadlar rejasi bosqichi"
 }

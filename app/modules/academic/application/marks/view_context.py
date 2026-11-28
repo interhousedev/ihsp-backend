@@ -104,7 +104,7 @@ class ViewContext:
             "topic": row.topic,
             "kind": row.kind,
             "topic_source": topic_source_of(row.topic, row.emis_topic),
-            "has_homework": bool(row.homework_text),
+            "has_homework": row.has_homework,
             "attendance_submitted": row.attendance_roster is not None,
         }
 

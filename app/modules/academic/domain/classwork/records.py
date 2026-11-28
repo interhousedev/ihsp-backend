@@ -34,7 +34,7 @@ class TodoRecord:
 
 @dataclass(frozen=True, slots=True)
 class SubmissionRecord:
-    """The files a student handed in for a lesson's homework."""
+    """What a student handed in for a lesson's homework, with its review."""
 
     lesson_id: UUID
     student_id: UUID
@@ -43,6 +43,25 @@ class SubmissionRecord:
     submitted_at: dt.datetime
     updated_at: dt.datetime
     id: UUID | None = None
+    text: str | None = None
+    review_status: Literal["pending", "returned", "graded"] = "pending"
+    grade: int | None = None
+    teacher_comment: str | None = None
+    previous_comment: str | None = None
+    reviewed_by: UUID | None = None
+    reviewed_at: dt.datetime | None = None
+    notified_at: dt.datetime | None = None
+    # The temporary mark a grade made (DECISIONS #5); None after a return.
+    temporary_mark_id: UUID | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class TeacherHomeworkSettings:
+    """A teacher's homework defaults."""
+
+    teacher_id: UUID
+    accept_by_default: bool = False
+    notify_on_submission: bool = True
 
 
 @dataclass(frozen=True, slots=True)

@@ -11,11 +11,18 @@ from uuid import UUID
 from app.modules.activities.domain.errors import PermissionDeniedError
 from app.modules.activities.domain.team import TeamSeat
 from app.modules.activities.ports.bundle import Ports
-from app.modules.activities.ports.gateways import CatalogEntry
+from app.modules.activities.ports.gateways import CatalogEntry, MediaConfig
 from app.modules.activities.wiring import ActivitiesServices, build
 from app.shared.actor import Actor, Role
 from app.shared.base_error import RateLimitedError
 from app.shared.notifications import NotificationType
+from tests.fakes.activities.media import (
+    AlbumsFake,
+    MediaFake,
+    MediaKickerFake,
+    MediaProcessorFake,
+    MediaStoreFake,
+)
 from tests.fakes.clock import FixedClock
 
 from uuid_utils.compat import uuid7
@@ -570,6 +577,9 @@ class ActivitiesWorld:
         self.catalog = CatalogFake()
         self.admission = AdmissionFake(self.catalog)
         self.team = TeamFake()
+        self.media_store = MediaStoreFake()
+        self.media_processor = MediaProcessorFake()
+        self.media_kicker = MediaKickerFake()
         ports = Ports(
             clubs=ClubsFake(),  # type: ignore[arg-type]
             members=MembersFake(),  # type: ignore[arg-type]
@@ -593,6 +603,12 @@ class ActivitiesWorld:
             clock=self.clock,
             secret="test-secret",
             ip_salt="test-salt",
+            albums=AlbumsFake(),  # type: ignore[arg-type]
+            media=MediaFake(),  # type: ignore[arg-type]
+            media_store=self.media_store,
+            media_processor=self.media_processor,
+            media_kicker=self.media_kicker,
+            media_config=MediaConfig(quota_bytes=1000, photo_max_bytes=500),
         )
         self.ports = ports
         self.services: ActivitiesServices = build(ports)

@@ -68,8 +68,15 @@ class McpAcademicTools(Protocol):
         lesson_id: UUID,
         file_ids: Sequence[UUID],
         comment: str | None,
+        text: str | None,
     ) -> dict[str, Any]:
-        """Hand in ready files the student owns for a lesson's homework."""
+        """Hand in text and/or ready files the student owns for a lesson's homework."""
+        ...
+
+    async def homework_submission(
+        self, actor: Actor, lesson_id: UUID
+    ) -> dict[str, Any]:
+        """The student's own submission with its grade and teacher comment."""
         ...
 
     async def withdraw_homework_submission(self, actor: Actor, lesson_id: UUID) -> None:

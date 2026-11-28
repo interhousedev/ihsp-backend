@@ -106,10 +106,10 @@ async def test_slashless_endpoint_redirects_to_the_endpoint(world: World) -> Non
     assert response.headers["location"].endswith("/mcp/student/")
 
 
-async def test_build_mcp_apps_returns_the_five_servers_with_lifespans(
+async def test_build_mcp_apps_returns_the_six_servers_with_lifespans(
     world: World,
 ) -> None:
-    """Produces: ("/mcp/student", app, lifespan_cm), lms, admin."""
+    """Produces: ("/mcp/student", app, lifespan_cm), lms, admin, ..., admission."""
     container = SimpleNamespace(
         settings=world.settings,
         clock=world.clock,
@@ -146,6 +146,7 @@ async def test_build_mcp_apps_returns_the_five_servers_with_lifespans(
         "/mcp/admin",
         "/mcp/teacher",
         "/mcp/app",
+        "/mcp/admission",
     ]
     for _, app, lifespan in apps:
         assert callable(app)

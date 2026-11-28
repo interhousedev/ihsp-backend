@@ -46,6 +46,9 @@ class ScheduleStore:
     audits: list[AuditDraft] = field(default_factory=list)
     locks: list[UUID] = field(default_factory=list)
     calendar_tokens: dict[UUID, str] = field(default_factory=dict)
+    # Teacher id -> accept_by_default; lesson id -> homework_accept_submissions.
+    homework_accept_defaults: dict[UUID, bool] = field(default_factory=dict)
+    homework_accept: dict[UUID, bool] = field(default_factory=dict)
 
     TABLES = (
         "terms",
@@ -58,6 +61,7 @@ class ScheduleStore:
         "entries",
         "lessons",
         "calendar_tokens",
+        "homework_accept",
     )
 
     def snapshot(self) -> dict[str, Any]:

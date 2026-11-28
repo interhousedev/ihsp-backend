@@ -47,7 +47,8 @@ def register(kit: ToolKit) -> None:
         "Week 1", "steps": [{"title": "Intro", "blocks": [{"type": "text",
         "markdown": "Hello"}]}]}]. A lesson video uploaded over HTTP (POST
         /v1/files with purpose `lms_video`) goes in as {"type": "video_file",
-        "file_id": "..."}. Check the result with get_course.
+        "file_id": "..."}. list_block_types shows every block type. Check the
+        result with get_course.
         """
         actor = current_actor()
         await ensure_course(kit, actor, course_id)

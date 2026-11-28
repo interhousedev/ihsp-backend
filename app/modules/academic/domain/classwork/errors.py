@@ -208,3 +208,52 @@ class SubmissionCommentTooLongError(ValidationFailedError):
 
     code = "homework/submission-comment-too-long"
     message_key = "homework-submission-comment-too-long"
+
+
+class SubmissionTextTooLongError(ValidationFailedError):
+    """A submission text is longer than 10000 characters."""
+
+    code = "homework/submission-text-too-long"
+    message_key = "homework-submission-text-too-long"
+
+
+class SubmissionEmptyError(ValidationFailedError):
+    """A submission needs a text or at least one file."""
+
+    code = "homework/submission-empty"
+    message_key = "homework-submission-empty"
+
+
+class HomeworkSubmissionsClosedError(ConflictError):
+    """The teacher does not accept this homework through the app."""
+
+    code = "homework/submissions-closed"
+    message_key = "homework-submissions-closed"
+
+
+class SubmissionAlreadyGradedError(ConflictError):
+    """A graded submission cannot be replaced or withdrawn by the student."""
+
+    code = "homework/submission-already-graded"
+    message_key = "homework-submission-already-graded"
+
+
+class ReviewCommentRequiredError(ValidationFailedError):
+    """Returning a submission for revision needs a comment."""
+
+    code = "homework/review-comment-required"
+    message_key = "homework-review-comment-required"
+
+
+class ReviewCommentTooLongError(ValidationFailedError):
+    """A teacher comment is longer than 2000 characters."""
+
+    code = "homework/review-comment-too-long"
+    message_key = "homework-review-comment-too-long"
+
+
+class ReviewGradeInvalidError(ValidationFailedError):
+    """A grade is missing or not on the 2..5 scale."""
+
+    code = "homework/review-grade-invalid"
+    message_key = "homework-review-grade-invalid"

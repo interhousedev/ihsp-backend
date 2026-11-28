@@ -26,6 +26,9 @@ from app.modules.academic.infrastructure.orm.student import Student
 from app.modules.academic.infrastructure.orm.student_sync_job import StudentSyncJob
 from app.modules.academic.infrastructure.orm.subject import Subject
 from app.modules.academic.infrastructure.orm.sync_run import SyncRun
+from app.modules.academic.infrastructure.orm.teacher_homework_settings import (
+    TeacherHomeworkSettings,
+)
 from app.modules.academic.infrastructure.orm.temporary_mark import TemporaryMark
 from app.modules.academic.infrastructure.orm.term import Term
 from app.modules.academic.infrastructure.orm.timetable_entry import TimetableEntry
@@ -52,6 +55,7 @@ __all__ = [
     "StudentSyncJob",
     "Subject",
     "SyncRun",
+    "TeacherHomeworkSettings",
     "TemporaryMark",
     "Term",
     "TimetableEntry",

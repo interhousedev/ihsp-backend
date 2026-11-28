@@ -205,7 +205,9 @@ def _lesson(
         if item["attendance"] != "excused":
             item["attendance"] = "absent"
         item["attendance_source"] = "emis"
-    item["homework_text"] = lesson.homework_text
+    # EMIS-only homework has no text; "" still tells the page there is homework.
+    empty = "" if lesson.has_homework else None
+    item["homework_text"] = lesson.homework_text or empty
     return item
 
 

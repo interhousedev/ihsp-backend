@@ -208,6 +208,13 @@ def place_rest(
         days = sorted(d.day for d in view.deadlines if d.opportunity_id == o.id)
         term = term_of(days[0]) if days else _TERMS[0]
         extra.append(AiPlanStep(o.id, min(max(grade, first), grades[-1]), term, ""))
+    for p in view.personal:
+        if p.id in placed:
+            continue
+        grade = p.planned_grade or first
+        days = sorted(d for _, d in p.dates)
+        term = p.planned_term or (term_of(days[0]) if days else _TERMS[0])
+        extra.append(AiPlanStep(p.id, min(max(grade, first), grades[-1]), term, ""))
     if not extra:
         return plan
     steps = sorted([*plan.steps, *extra], key=lambda s: (s.grade, _TERMS.index(s.term)))
@@ -269,6 +276,13 @@ class OpportunityPlanner:
                 f"{', '.join(map(str, d.grades)) or 'any'}; planned grade "
                 f"{e.planned_grade or 'none'}; dates {dates or 'none'}"
             )
+        for p in view.personal:
+            dates = ", ".join(f"{kind} {day.isoformat()}" for kind, day in p.dates)
+            lines.append(
+                f"[entry:{p.id}] {p.kind} (student's own find, unverified): "
+                f"{_text(p.title)}; planned grade {p.planned_grade or 'none'}; "
+                f"dates {dates or 'none'}"
+            )
         return lines
 
     async def generate(
@@ -284,7 +298,7 @@ class OpportunityPlanner:
         if AI not in granted:
             raise ConsentRequiredError(params={"purpose": AI})
         view = await self._catalog.plan_of(ctx, ctx.user_id)
-        if not view.entries:
+        if not view.entries and not view.personal:
             raise ValidationFailedError(params={"field": "plan"})
         async with self._uow() as uow:
             words = await uow.items.words(ctx.user_id)
@@ -316,6 +330,7 @@ class OpportunityPlanner:
             max_tokens=_TOKENS,
         )
         known = {str(e.opportunity_id) for e in view.entries}
+        known |= {str(p.id) for p in view.personal}
         plan = place_rest(
             clean_plan(data, known, grade, self._clock.now(), grades),
             view,

@@ -61,5 +61,6 @@
   "admission-essay-keys-backup-invalid": "Не удалось открыть файл резервной копии. Проверьте файл и парольную фразу.",
   "admission-essay-keys-rotation-running": "Идёт ротация ключей. Дождитесь её окончания и повторите.",
   "admission-catalog-cycle": "Цикл должен быть текущим или следующим приёмным циклом в формате 2026-27 (цикл: {cycle}).",
-  "admission-scorecard-unavailable": "College Scorecard сейчас недоступен. Попробуйте позже."
+  "admission-scorecard-unavailable": "College Scorecard сейчас недоступен. Попробуйте позже.",
+  "plan-duplicate": "Эта возможность уже есть в вашем плане."
 }

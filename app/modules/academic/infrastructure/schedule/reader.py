@@ -415,6 +415,7 @@ class SqlScheduleReader:
         text_match = or_(
             LessonRow.topic.ilike(pattern, escape=ESCAPE),
             LessonRow.homework_text.ilike(pattern, escape=ESCAPE),
+            LessonRow.emis_topic_description.ilike(pattern, escape=ESCAPE),
             SubjectRow.name["uz"].astext.ilike(pattern, escape=ESCAPE),
             SubjectRow.name["ru"].astext.ilike(pattern, escape=ESCAPE),
             SubjectRow.name["en"].astext.ilike(pattern, escape=ESCAPE),

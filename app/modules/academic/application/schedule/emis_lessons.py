@@ -68,6 +68,8 @@ class LessonTally:
     changed: list[UUID] = field(default_factory=list)
     room_ids: set[UUID | None] = field(default_factory=set)
     urls: dict[tuple[UUID, str], EmisMaterial] = field(default_factory=dict)
+    # Lessons whose EMIS homework file appeared in this run.
+    new_homework: list[UUID] = field(default_factory=list)
 
 
 class LessonReconciler:
@@ -138,6 +140,10 @@ class LessonReconciler:
                 self._matched.add(lesson.id)
                 await self._enrich(lesson, item, keys)
         await self._cancel_missing(lessons, keys)
+        if self._tally.new_homework:
+            await self._uow.lessons.apply_homework_accept_default(
+                self._tally.new_homework
+            )
         self._log_bell_gaps()
         return self._tally
 
@@ -363,6 +369,8 @@ class LessonReconciler:
             lesson.topic,
             lesson.emis_topic,
             lesson.starts_at,
+            lesson.emis_homework_url,
+            lesson.emis_topic_description,
         )
         lesson.kind = item.kind
         if self._managed(lesson):
@@ -380,25 +388,44 @@ class LessonReconciler:
             lesson.topic,
             lesson.emis_topic,
             lesson.starts_at,
+            lesson.emis_homework_url,
+            lesson.emis_topic_description,
         )
         if after != before:
-            if await self._uow.lessons.try_save(lesson):
-                self._tally.enriched += 1
-                if before[2] != after[2]:
-                    self._note(lesson)
-            else:
-                self._conflicts += 1
-                log.info("emis_lesson_not_saved", lesson_id=str(lesson.id))
+            await self._save_enriched(lesson, before[2], before[7])
         if self._import_topics:
             self._collect_urls(lesson, item)
 
+    async def _save_enriched(
+        self, lesson: Lesson, status: str, homework_url: str | None
+    ) -> None:
+        """Save a lesson EMIS changed; ``status``/``homework_url`` are the old ones."""
+        if not await self._uow.lessons.try_save(lesson):
+            self._conflicts += 1
+            log.info("emis_lesson_not_saved", lesson_id=str(lesson.id))
+            return
+        self._tally.enriched += 1
+        if homework_url is None and lesson.emis_homework_url is not None:
+            self._tally.new_homework.append(lesson.id)
+        if status != lesson.status:
+            self._note(lesson)
+        elif homework_url != lesson.emis_homework_url:
+            if lesson.id not in self._tally.changed:
+                self._tally.changed.append(lesson.id)  # the due date follows it
+
     @staticmethod
     def _follow_topic(lesson: Lesson, item: EmisClass) -> None:
-        """Show the EMIS topic until a teacher writes their own."""
+        """Show the EMIS topic until a teacher writes their own; keep its homework."""
         topic = item.topic.name if item.topic else None
         if lesson.topic is None or lesson.topic == lesson.emis_topic:
             lesson.topic = topic
         lesson.emis_topic = topic
+        lesson.emis_homework_url = (
+            item.topic.homework_file_url or None if item.topic else None
+        )
+        lesson.emis_topic_description = (
+            item.topic.description or None if item.topic else None
+        )
 
     def _follow_bell(self, lesson: Lesson, item: EmisClass) -> None:
         """A lesson EMIS moved is overridden: the generator leaves its time alone."""

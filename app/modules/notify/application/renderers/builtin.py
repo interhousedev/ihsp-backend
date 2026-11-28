@@ -76,6 +76,12 @@ from app.modules.notify.application.renderers.files_expiring import (
 from app.modules.notify.application.renderers.gate_unexcused_exit import (
     GateUnexcusedExitRenderer,
 )
+from app.modules.notify.application.renderers.homework_reviewed import (
+    HomeworkReviewedRenderer,
+)
+from app.modules.notify.application.renderers.homework_submitted import (
+    HomeworkSubmittedRenderer,
+)
 from app.modules.notify.application.renderers.knowledge_gap import KnowledgeGapRenderer
 from app.modules.notify.application.renderers.lesson_absence import (
     LessonAbsenceRenderer,
@@ -350,7 +356,7 @@ def register_builtin_renderers(
         NotificationType.EVENT_RATING_REQUEST, EventRatingRequestRenderer(i18n, urls)
     )
     registry.register(
-        NotificationType.CLUB_ANNOUNCEMENT, ClubAnnouncementRenderer(i18n, urls)
+        NotificationType.CLUB_ANNOUNCEMENT, ClubAnnouncementRenderer(i18n, urls, files)
     )
     registry.register(
         NotificationType.CLUB_JOIN_REQUEST, ClubJoinRequestRenderer(i18n, urls)
@@ -368,4 +374,10 @@ def register_builtin_renderers(
     )
     registry.register(
         NotificationType.CLUB_OWNER_GRADUATING, ClubOwnerGraduatingRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.HOMEWORK_SUBMITTED, HomeworkSubmittedRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.HOMEWORK_REVIEWED, HomeworkReviewedRenderer(i18n, urls)
     )

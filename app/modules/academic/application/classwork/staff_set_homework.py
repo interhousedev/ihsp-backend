@@ -18,8 +18,15 @@ class StaffSetHomework:
         self.staff_lesson = staff_lesson
 
     async def execute(
-        self, lesson_id: UUID, actor: Actor, text: str, due_date: dt.date | None
+        self,
+        lesson_id: UUID,
+        actor: Actor,
+        text: str | None,
+        due_date: dt.date | None,
+        accept_submissions: bool | None = None,
     ) -> dict[str, Any]:
         """Return the ``StaffLesson`` JSON after the change."""
-        await self.set_homework.execute(lesson_id, actor, text, due_date)
+        await self.set_homework.execute(
+            lesson_id, actor, text, due_date, accept_submissions
+        )
         return await self.staff_lesson.execute(lesson_id, actor)

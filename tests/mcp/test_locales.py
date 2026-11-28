@@ -62,6 +62,7 @@ def test_error_classes_and_prompts_are_translated() -> None:
             "mcp-instructions-admin",
             "mcp-instructions-teacher",
             "mcp-instructions-app",
+            "mcp-instructions-catalog",
         }
         | {release.summary_key for release in RELEASES}
     )

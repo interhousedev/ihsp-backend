@@ -10,6 +10,9 @@ from app.modules.admission.infrastructure.orm.calendar import (
     CalendarFeedRow,
     CalendarReminderRow,
 )
+from app.modules.admission.infrastructure.orm.opportunities import (
+    OpportunityPersonalEntryRow,
+)
 from app.shared.personal_data import PersonalTable, SqlPersonalData, Treatment
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -42,6 +45,12 @@ SPECS: tuple[PersonalTable, ...] = (
         owner="user_id",
         exclude=("token_hash",),
         note="the calendar feed of the account; the token hash is a secret",
+    ),
+    PersonalTable(
+        OpportunityPersonalEntryRow,
+        E,
+        owner="student_id",
+        note="finds the student added to their plan; unverified by the school",
     ),
     PersonalTable(
         CalendarReminderRow,

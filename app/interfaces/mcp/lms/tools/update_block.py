@@ -5,10 +5,9 @@ from uuid import UUID
 
 from app.interfaces.mcp.call_log import LogSpec
 from app.interfaces.mcp.guard import current_actor
-from app.interfaces.mcp.lms.block_args import block_dict
+from app.interfaces.mcp.lms.block_args import parse_block
 from app.interfaces.mcp.lms.course_scope import ensure_step
 from app.interfaces.mcp.toolkit import ToolKit
-from app.shared.contracts.lms_blocks import AuthorBlockInput
 from app.shared.lms_scopes import MODULES_WRITE
 
 from pydantic import Field
@@ -23,15 +22,24 @@ def register(kit: ToolKit) -> None:
     async def update_block(
         step_id: Annotated[UUID, Field(description="Step id from get_course.")],
         block_id: Annotated[str, Field(description="Block id from get_step.")],
-        block: Annotated[AuthorBlockInput, Field(description="The new block content.")],
+        block: Annotated[
+            dict[str, Any],
+            Field(
+                description=(
+                    "The new block: an object with `type` and that type's fields, "
+                    "as list_block_types describes them."
+                )
+            ),
+        ],
     ) -> dict[str, Any]:
         """Replace a block of a step draft with new content (same position).
 
-        The block type may change. Example: block={"type": "text",
-        "markdown": "New text"}. Read block ids with get_step.
+        The block type may change, and any type from list_block_types works.
+        Example: block={"type": "text", "markdown": "New text"}. Read block ids
+        with get_step. A wrong field is refused with its path.
         """
         actor = current_actor()
         await ensure_step(kit, actor, step_id)
         return await kit.deps.lms_ops.update_block(
-            actor, step_id, block_id, block_dict(block)
+            actor, step_id, block_id, parse_block(block)
         )

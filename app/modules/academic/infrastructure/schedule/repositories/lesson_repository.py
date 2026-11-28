@@ -5,8 +5,12 @@ from collections.abc import Collection
 from uuid import UUID
 
 from app.modules.academic.domain.schedule.lesson import Lesson
+from app.modules.academic.infrastructure.orm import HomeworkSubmission as SubmissionRow
 from app.modules.academic.infrastructure.orm import Lesson as LessonRow
 from app.modules.academic.infrastructure.orm import Mark as MarkRow
+from app.modules.academic.infrastructure.orm import (
+    TeacherHomeworkSettings as SettingsRow,
+)
 from app.modules.academic.infrastructure.schedule.array_ops import overlaps
 from app.modules.academic.infrastructure.schedule.mappers import (
     lesson_apply,
@@ -30,15 +34,18 @@ _KIND_BY_CONSTRAINT = {
 
 
 def has_content_clause() -> ColumnElement[bool]:
-    """Return SQL true when homework, attendance, a topic or marks exist."""
+    """Return SQL true when homework, work, attendance, a topic or marks exist."""
     has_marks = exists().where(
         MarkRow.lesson_id == LessonRow.id, MarkRow.removed_at.is_(None)
     )
+    has_submissions = exists().where(SubmissionRow.lesson_id == LessonRow.id)
     return or_(
         LessonRow.homework_text.is_not(None),
+        LessonRow.emis_homework_url.is_not(None),
         LessonRow.attendance_absent.is_not(None),
         LessonRow.topic.is_not(None),
         has_marks,
+        has_submissions,
     )
 
 
@@ -259,3 +266,22 @@ class SqlLessonRepository:
             await self.session.delete(row)
         await self.session.flush()
         return affected
+
+    async def apply_homework_accept_default(self, lesson_ids: Collection[UUID]) -> None:
+        """Set the teacher's accept default on lessons with EMIS-only homework."""
+        if not lesson_ids:
+            return
+        default = (
+            select(SettingsRow.accept_by_default)
+            .where(SettingsRow.teacher_id == LessonRow.teacher_id)
+            .scalar_subquery()
+        )
+        await self.session.execute(
+            update(LessonRow)
+            .where(
+                LessonRow.id.in_(list(lesson_ids)),
+                LessonRow.homework_text.is_(None),
+            )
+            .values(homework_accept_submissions=func.coalesce(default, False))
+            .execution_options(synchronize_session=False)
+        )

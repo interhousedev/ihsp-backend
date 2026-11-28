@@ -46,7 +46,7 @@ def register(kit: ToolKit) -> None:
         if ai is None:
             raise ToolError(
                 "AI drafting is not available on this server; write the blocks "
-                "yourself with add_text_block and add_test_block."
+                "yourself with add_block (see list_block_types)."
             )
         if apply:
             if step_id is None:

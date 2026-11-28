@@ -57,6 +57,10 @@ _COUNTED = {
 }
 
 
+CAPTION_LIMIT = 1024  # Telegram caption limit
+MAX_ALBUM = 10  # Telegram media group limit
+
+
 @dataclass(slots=True)
 class DispatchReport:
     """What one run of the dispatcher did."""
@@ -354,16 +358,53 @@ class DispatchDue:
     async def _send_message(
         self, sender: TelegramSender, chat_id: int, message: RenderedMessage
     ) -> str | None:
-        """Send the text and the documents; a failed document is only noted."""
-        await self.limiter.acquire()
-        await sender.send_message(chat_id, message.text_html, message.buttons)
+        """Send photos, the text and the documents; failed extras are only noted."""
+        notes: list[str] = []
+        caption = await self._send_photos(sender, chat_id, message, notes)
+        if caption is None:
+            await self.limiter.acquire()
+            await sender.send_message(chat_id, message.text_html, message.buttons)
         for filename, data in message.documents:
             await self.limiter.acquire()
             try:
                 await sender.send_document(chat_id, filename, data)
             except TelegramSendFailed as exc:
                 log.warning("notification_document_failed", chat_id=chat_id)
-                return f"{chat_id}:document {filename}:{exc}"
+                notes.append(f"{chat_id}:document {filename}:{exc}")
+                break
+        return "; ".join(notes) or None
+
+    async def _send_photos(
+        self,
+        sender: TelegramSender,
+        chat_id: int,
+        message: RenderedMessage,
+        notes: list[str],
+    ) -> str | None:
+        """Send the photos; return the text when it went out as the photo caption.
+
+        One photo with a short text carries the text and buttons itself. Otherwise
+        the photo or album comes first and the text follows as its own message. A
+        photo that Telegram refuses is noted and the text is still sent.
+        """
+        photos = message.photos[:MAX_ALBUM]
+        if not photos:
+            return None
+        await self.limiter.acquire()
+        try:
+            if len(photos) == 1:
+                fits = len(message.text_html) <= CAPTION_LIMIT
+                await sender.send_photo(
+                    chat_id,
+                    photos[0],
+                    message.text_html if fits else None,
+                    message.buttons if fits else None,
+                )
+                return message.text_html if fits else None
+            await sender.send_media_group(chat_id, photos)
+        except TelegramSendFailed as exc:
+            log.warning("notification_photo_failed", chat_id=chat_id)
+            notes.append(f"{chat_id}:photo:{exc}")
         return None
 
     # - - - Outcomes - - -

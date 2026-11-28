@@ -1,14 +1,16 @@
 """ORM models of the activities schema: clubs, events, drafting, points, team."""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
 from app.shared.db.base import Base, TimestampMixin
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     Index,
     Integer,
@@ -77,6 +79,9 @@ class ClubRow(_Stamped):
     description: Mapped[str] = mapped_column(Text, server_default="")
     owner_id: Mapped[UUID | None] = mapped_column(Uuid)
     has_minor_members: Mapped[bool] = mapped_column(Boolean)
+    media_photo_max_bytes: Mapped[int | None] = mapped_column(BigInteger)
+    media_video_max_bytes: Mapped[int | None] = mapped_column(BigInteger)
+    media_quota_bytes: Mapped[int | None] = mapped_column(BigInteger)
     category: Mapped[str] = mapped_column(String(40), server_default="")
     goals: Mapped[str] = mapped_column(Text, server_default="")
     rules: Mapped[str] = mapped_column(Text, server_default="")
@@ -181,6 +186,7 @@ class EventRow(_Stamped):
         DateTime(timezone=True)
     )
     created_by: Mapped[UUID | None] = mapped_column(Uuid)
+    cover_media_id: Mapped[UUID | None] = mapped_column(Uuid)
 
 
 class RsvpRow(_Stamped):
@@ -446,3 +452,172 @@ class ClubCourseRow(_Stamped):
     requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     confirmed_by: Mapped[UUID | None] = mapped_column(Uuid)
     confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+_MEDIA_TARGETS = (
+    "(usage = 'staged' AND album_id IS NULL AND event_id IS NULL"
+    " AND announcement_id IS NULL)"
+    " OR (usage = 'album' AND album_id IS NOT NULL AND event_id IS NULL"
+    " AND announcement_id IS NULL)"
+    " OR (usage = 'event_cover' AND event_id IS NOT NULL AND album_id IS NULL"
+    " AND announcement_id IS NULL)"
+    " OR (usage = 'announcement' AND announcement_id IS NOT NULL"
+    " AND album_id IS NULL AND event_id IS NULL)"
+)
+
+
+class AlbumRow(_Stamped):
+    """A folder of club media (an event's root album or a free folder)."""
+
+    __tablename__ = "activities_albums"
+    __table_args__ = (
+        _in("visibility", ("members", "school")),
+        Index("ix_activities_albums_club", "club_id", "parent_id"),
+        Index(
+            "uq_activities_albums_event_root",
+            "event_id",
+            unique=True,
+            postgresql_where=text("parent_id IS NULL AND event_id IS NOT NULL"),
+        ),
+        Index(
+            "ix_activities_albums_event_date",
+            "club_id",
+            text("event_date DESC"),
+        ),
+        Index(
+            "uq_activities_albums_source_ref",
+            "source_ref",
+            unique=True,
+            postgresql_where=text("source_ref IS NOT NULL"),
+        ),
+        S,
+    )
+
+    id: Mapped[UUID] = _uuid_pk()
+    club_id: Mapped[UUID] = mapped_column(Uuid)
+    event_id: Mapped[UUID | None] = mapped_column(Uuid)
+    parent_id: Mapped[UUID | None] = mapped_column(Uuid)
+    title: Mapped[str] = mapped_column(String(120))
+    description: Mapped[str | None] = mapped_column(String(1000))
+    event_date: Mapped[date | None] = mapped_column(Date)
+    visibility: Mapped[str] = mapped_column(String(16), server_default="school")
+    allow_download: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
+    member_uploads: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    cover_media_id: Mapped[UUID | None] = mapped_column(Uuid)
+    source_ref: Mapped[str | None] = mapped_column(String(80))
+    created_by: Mapped[UUID | None] = mapped_column(Uuid)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class MediaRow(_Stamped):
+    """A club photo or video (files-module ids for the original and derivatives)."""
+
+    __tablename__ = "activities_media"
+    __table_args__ = (
+        _in("usage", ("staged", "album", "event_cover", "announcement")),
+        _in("kind", ("photo", "video")),
+        _in(
+            "status",
+            ("uploading", "processing", "ready", "failed", "hidden", "deleted"),
+        ),
+        _in("hidden_source", ("moderator", "uploader", "report")),
+        CheckConstraint(_MEDIA_TARGETS, name="target"),
+        Index("ix_activities_media_album", "album_id", "position", "id"),
+        Index("ix_activities_media_club", "club_id"),
+        Index("ix_activities_media_event", "event_id"),
+        Index("ix_activities_media_announcement", "announcement_id"),
+        Index("ix_activities_media_status", "status", "updated_at"),
+        Index(
+            "uq_activities_media_album_sha",
+            "album_id",
+            "content_sha256",
+            unique=True,
+            postgresql_where=text("album_id IS NOT NULL AND status <> 'deleted'"),
+        ),
+        Index(
+            "uq_activities_media_source_ref",
+            "source_ref",
+            unique=True,
+            postgresql_where=text("source_ref IS NOT NULL"),
+        ),
+        S,
+    )
+
+    id: Mapped[UUID] = _uuid_pk()
+    club_id: Mapped[UUID] = mapped_column(Uuid)
+    usage: Mapped[str] = mapped_column(String(16))
+    album_id: Mapped[UUID | None] = mapped_column(Uuid)
+    event_id: Mapped[UUID | None] = mapped_column(Uuid)
+    announcement_id: Mapped[UUID | None] = mapped_column(Uuid)
+    kind: Mapped[str] = mapped_column(String(8))
+    status: Mapped[str] = mapped_column(String(12))
+    original_file_id: Mapped[UUID | None] = mapped_column(Uuid)
+    thumb_file_id: Mapped[UUID | None] = mapped_column(Uuid)
+    preview_file_id: Mapped[UUID | None] = mapped_column(Uuid)
+    poster_file_id: Mapped[UUID | None] = mapped_column(Uuid)
+    byte_size: Mapped[int] = mapped_column(BigInteger, server_default="0")
+    content_sha256: Mapped[str] = mapped_column(String(64), server_default="")
+    width: Mapped[int | None] = mapped_column(Integer)
+    height: Mapped[int | None] = mapped_column(Integer)
+    duration_ms: Mapped[int | None] = mapped_column(Integer)
+    caption: Mapped[str | None] = mapped_column(String(300))
+    position: Mapped[int] = mapped_column(Integer, server_default="0")
+    consent_attested: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("false")
+    )
+    imported: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    source_ref: Mapped[str | None] = mapped_column(String(80))
+    uploaded_by: Mapped[UUID | None] = mapped_column(Uuid)
+    hidden_reason: Mapped[str | None] = mapped_column(String(300))
+    hidden_by: Mapped[UUID | None] = mapped_column(Uuid)
+    hidden_source: Mapped[str | None] = mapped_column(String(10))
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class MediaReportRow(_Stamped):
+    """A viewer's report of a media item."""
+
+    __tablename__ = "activities_media_reports"
+    __table_args__ = (
+        UniqueConstraint("media_id", "reporter_id"),
+        _in("status", ("open", "upheld", "dismissed")),
+        Index("ix_activities_media_reports_status", "status", "created_at"),
+        S,
+    )
+
+    id: Mapped[UUID] = _uuid_pk()
+    media_id: Mapped[UUID] = mapped_column(Uuid)
+    reporter_id: Mapped[UUID] = mapped_column(Uuid)
+    is_subject: Mapped[bool] = mapped_column(Boolean)
+    reason: Mapped[str] = mapped_column(String(500), server_default="")
+    status: Mapped[str] = mapped_column(String(10), server_default="open")
+    resolved_by: Mapped[UUID | None] = mapped_column(Uuid)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class MediaBlockRow(_Stamped):
+    """A user barred from uploading club media (``club_id`` NULL = every club)."""
+
+    __tablename__ = "activities_media_blocks"
+    __table_args__ = (
+        Index(
+            "uq_activities_media_blocks_club",
+            "user_id",
+            "club_id",
+            unique=True,
+            postgresql_where=text("club_id IS NOT NULL"),
+        ),
+        Index(
+            "uq_activities_media_blocks_global",
+            "user_id",
+            unique=True,
+            postgresql_where=text("club_id IS NULL"),
+        ),
+        S,
+    )
+
+    id: Mapped[UUID] = _uuid_pk()
+    user_id: Mapped[UUID] = mapped_column(Uuid)
+    club_id: Mapped[UUID | None] = mapped_column(Uuid)
+    reason: Mapped[str] = mapped_column(String(300), server_default="")
+    created_by: Mapped[UUID | None] = mapped_column(Uuid)

@@ -162,6 +162,46 @@ webfinger:
       - lms:lms.courses.write
       - lms:lms.courses.delete
       - lms:lms.modules.write
+      - clubs:read
+      - clubs:write
+      - progress:read
+      - homework:review
+      - application:read
+      - application:write
+      - documents:read
+      - documents:write
+      - plans:read
+      - plans:write
+      - catalog:read
+      - consents:read
+      - memory:read
+      - memory:write
+      - calendar:read
+      - calendar:write
+      - caseload:read
+      - students:read
+      - students:write
+      - documents:review
+      - student:clubs:read
+      - student:clubs:write
+      - student:progress:read
+      - teacher:homework:review
+      - admission:application:read
+      - admission:application:write
+      - admission:documents:read
+      - admission:documents:write
+      - admission:plans:read
+      - admission:plans:write
+      - admission:catalog:read
+      - admission:consents:read
+      - admission:memory:read
+      - admission:memory:write
+      - admission:calendar:read
+      - admission:calendar:write
+      - admission:caseload:read
+      - admission:students:read
+      - admission:students:write
+      - admission:documents:review
 
 sqa:
   opt_out: true

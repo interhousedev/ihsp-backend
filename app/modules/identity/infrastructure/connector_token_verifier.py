@@ -30,7 +30,7 @@ class DbConnectorTokenVerifier:
         self,
         token: str,
         *,
-        server: Literal["student", "lms", "admin", "teacher", "app"],
+        server: Literal["student", "lms", "admin", "teacher", "app", "admission"],
     ) -> Actor:
         """Return the actor with connector_id and scopes, or raise UnauthorizedError."""
         if not looks_like_token(token):

@@ -31,6 +31,7 @@ class PromptState:
     attendance_version: int
     homework_text: str | None
     expired: bool
+    has_homework: bool = False
 
     @property
     def absent_count(self) -> int:
@@ -62,4 +63,5 @@ def parse_prompt_state(raw: dict[str, Any]) -> PromptState:
         attendance_version=int(raw.get("attendance_version", 0)),
         homework_text=raw.get("homework_text"),
         expired=bool(raw.get("expired", False)),
+        has_homework=bool(raw.get("has_homework", raw.get("homework_text"))),
     )

@@ -58,6 +58,7 @@ KNOWN_ROUNDS: Final = frozenset(
 """Plan codes with a locale line `calendar-round-<code>`; others use `other`."""
 
 MAX_RANGE_DAYS: Final = 400
+MAX_EXPORT_KEYS: Final = 50
 FEED_PAST_DAYS: Final = 30
 FEED_AHEAD_DAYS: Final = 400
 REMINDER_LOCALE: Final = "ru"
@@ -349,6 +350,108 @@ class ScoreCalendarSource:
         return await self._store.admission_students()
 
 
+class PersonalSource:
+    """Dated events of the student's own finds (not verified by the school)."""
+
+    name: Final = "personal"
+
+    def __init__(
+        self, uow_factory: UowFactory, store: CalendarStore, t: Translate
+    ) -> None:
+        """Keep the collaborators."""
+        self._uow = uow_factory
+        self._store = store
+        self._t = t
+
+    async def entries(
+        self, student_id: UUID, start: dt.date, end: dt.date, locale: str
+    ) -> list[CalendarEntry]:
+        """Registration deadlines, starts and ends in range; ends are not reminded.
+
+        The title is the student's (or their assistant's) text: data only.
+        """
+        async with self._uow() as uow:
+            found = await uow.opportunities.personal_entries(student_id)
+        unverified = self._t(locale, "calendar-personal-unverified")
+        out: list[CalendarEntry] = []
+        for e in found:
+            for kind, day in e.dates:
+                if not start <= day <= end:
+                    continue
+                key = f"calendar-personal-{kind}"
+                out.append(
+                    CalendarEntry(
+                        key=f"personal:{e.id}:{kind}",
+                        source="personal",
+                        title=_title(self._t, locale, key, e.title),
+                        day=day,
+                        due_utc=end_of_day(day),
+                        url_path="/plan/?view=saved",
+                        remind=kind != "end",
+                        title_key=key,
+                        subject=e.title,
+                        description=unverified,
+                    )
+                )
+        return out
+
+    async def students(self) -> Sequence[UUID]:
+        """Every admission student."""
+        return await self._store.admission_students()
+
+
+def month_end(first: dt.date) -> dt.date:
+    """The last day of the month of `first`."""
+    return (first.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(
+        days=1
+    )
+
+
+class MilestoneSource:
+    """Open goal-plan milestones, due at the end of their month."""
+
+    name: Final = "milestone"
+
+    def __init__(
+        self, uow_factory: UowFactory, store: CalendarStore, t: Translate
+    ) -> None:
+        """Keep the collaborators."""
+        self._uow = uow_factory
+        self._store = store
+        self._t = t
+
+    async def entries(
+        self, student_id: UUID, start: dt.date, end: dt.date, locale: str
+    ) -> list[CalendarEntry]:
+        """Planned milestones with a month; done and dropped ones are left out."""
+        async with self._uow() as uow:
+            milestones = await uow.goals.list_for(student_id)
+        out: list[CalendarEntry] = []
+        for m in milestones:
+            if m.status != "planned" or m.due_month is None:
+                continue
+            day = month_end(m.due_month)
+            if not start <= day <= end:
+                continue
+            out.append(
+                CalendarEntry(
+                    key=f"goal:{m.id}",
+                    source="milestone",
+                    title=_title(self._t, locale, "calendar-milestone", m.title),
+                    day=day,
+                    due_utc=end_of_day(day),
+                    url_path="/plan/",
+                    title_key="calendar-milestone",
+                    subject=m.title,
+                )
+            )
+        return out
+
+    async def students(self) -> Sequence[UUID]:
+        """Every admission student."""
+        return await self._store.admission_students()
+
+
 @dataclass(frozen=True, slots=True)
 class FeedStatus:
     """Whether the caller has a live feed; the token itself is never re-shown."""
@@ -524,6 +627,50 @@ class CalendarService:
             now=self._clock.now(),
         )
 
+    # -- export -------------------------------------------------------------
+
+    async def export(
+        self,
+        ctx: AdmissionContext,
+        locale: str,
+        *,
+        keys: Sequence[str] = (),
+        start: dt.date | None = None,
+        end: dt.date | None = None,
+    ) -> str:
+        """An `.ics` of the caller's own entries: chosen `keys` or a date range.
+
+        Without keys the range is required (at most `MAX_RANGE_DAYS`); keys are
+        looked up over the feed window, and a key that is not the caller's is
+        not found. UIDs match the live feed, so a re-export is the same event.
+        """
+        await self._own(ctx)
+        if len(keys) > MAX_EXPORT_KEYS or len(set(keys)) != len(keys):
+            raise CalendarInputError(params={"field": "key"})
+        if keys:
+            today = self._clock.now().astimezone(TASHKENT).date()
+            start = today - dt.timedelta(days=FEED_PAST_DAYS)
+            end = today + dt.timedelta(days=FEED_AHEAD_DAYS)
+        elif start is None or end is None:
+            raise CalendarInputError(params={"field": "to"})
+        elif end < start or (end - start).days > MAX_RANGE_DAYS:
+            raise CalendarInputError(params={"field": "to"})
+        entries = await self._collect(ctx.user_id, start, end, locale)
+        if keys:
+            by_key = {e.key: e for e in entries}
+            if any(k not in by_key for k in keys):
+                raise AdmissionNotFoundError()
+            entries = [by_key[k] for k in keys]
+        feed = await self._store.active_feed(ctx.user_id)
+        return render_ics(
+            entries,
+            calendar_name=self._t(locale, "calendar-feed-name"),
+            user_key=feed.id.hex if feed else ctx.user_id.hex,
+            alarm_offsets=(feed.alarm_offsets if feed else None)
+            or await self._defaults(),
+            now=self._clock.now(),
+        )
+
     # -- exam dates (staff) -------------------------------------------------
 
     def _need_manage(self, ctx: AdmissionContext) -> None:
@@ -630,5 +777,7 @@ __all__ = [
     "ExamSource",
     "FeedStatus",
     "IssuedFeed",
+    "MilestoneSource",
+    "PersonalSource",
     "UniversitySource",
 ]

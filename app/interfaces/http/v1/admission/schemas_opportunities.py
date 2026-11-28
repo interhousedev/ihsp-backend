@@ -12,6 +12,7 @@ from app.modules.admission.application.opportunities import (
     TaxonomyField,
 )
 from app.modules.admission.application.opportunity_planner import AiPlan
+from app.modules.admission.application.personal_entries import Proposal
 from app.modules.admission.domain.opportunities import (
     DatedEvent,
     Opportunity,
@@ -22,6 +23,7 @@ from app.modules.admission.domain.opportunities import (
     TaxonomyNode,
 )
 from app.modules.admission.domain.orgs import Organization
+from app.modules.admission.domain.personal_entries import PersonalDraft, PersonalEntry
 
 from pydantic import BaseModel, Field
 
@@ -489,19 +491,129 @@ class AnalyticsOut(BaseModel):
     conflicts: list[ConflictOut]
 
 
+class PersonalEntryIn(BaseModel):
+    """A student's own find; the domain checks the link and the dates."""
+
+    kind: Kind
+    title: str = Field(min_length=1, max_length=200)
+    provider: str | None = Field(default=None, max_length=300)
+    url: str | None = Field(default=None, max_length=2000)
+    summary: str | None = Field(default=None, max_length=2000)
+    registration_deadline: dt.date | None = None
+    starts_on: dt.date | None = None
+    ends_on: dt.date | None = None
+    planned_grade: int | None = Field(default=None, ge=1, le=20)
+    planned_term: Term | None = None
+    note: str | None = Field(default=None, max_length=500)
+
+    def draft(self) -> PersonalDraft:
+        """The domain draft."""
+        return PersonalDraft(**self.model_dump(include=set(_DRAFT_FIELDS)))
+
+
+class PersonalCreateIn(PersonalEntryIn):
+    """A new find; `propose` also sends it to the school list moderators."""
+
+    propose: bool = False
+
+
+class PersonalUpdateIn(PersonalEntryIn):
+    """A changed find; `lock_version` as read."""
+
+    lock_version: int = Field(ge=0)
+
+
+_DRAFT_FIELDS = frozenset(PersonalEntryIn.model_fields)
+
+
+class ProposalOut(BaseModel):
+    """Moderation state of a find sent to the school list."""
+
+    submission_id: UUID
+    status: Status
+
+
+class PersonalEntryOut(BaseModel):
+    """A find of the student, not verified by the school."""
+
+    id: UUID
+    kind: Kind
+    title: str
+    provider: str | None
+    url: str | None
+    summary: str | None
+    registration_deadline: dt.date | None
+    starts_on: dt.date | None
+    ends_on: dt.date | None
+    planned_grade: int | None
+    planned_term: Term | None
+    note: str | None
+    origin: Literal["web", "mcp"]
+    verified: Literal[False] = False
+    proposal: ProposalOut | None
+    lock_version: int
+    created_at: dt.datetime
+    updated_at: dt.datetime
+
+    @classmethod
+    def of(
+        cls, e: PersonalEntry, proposal: Proposal | None = None
+    ) -> "PersonalEntryOut":
+        """Map an entry and its proposal state."""
+        return cls(
+            id=e.id,
+            kind=e.kind,
+            title=e.title,
+            provider=e.provider,
+            url=e.url,
+            summary=e.summary,
+            registration_deadline=e.registration_deadline,
+            starts_on=e.starts_on,
+            ends_on=e.ends_on,
+            planned_grade=e.planned_grade,
+            planned_term=cast(Term | None, e.planned_term),
+            note=e.note,
+            origin=e.origin,
+            proposal=(
+                ProposalOut(
+                    submission_id=proposal.submission_id,
+                    status=cast(Status, proposal.status),
+                )
+                if proposal
+                else None
+            ),
+            lock_version=e.lock_version,
+            created_at=e.created_at,
+            updated_at=e.updated_at,
+        )
+
+
+class PersonalAddedOut(BaseModel):
+    """The saved find, or the school list entry planned instead (`merged`)."""
+
+    merged: bool
+    entry: PersonalEntryOut | None
+    planned_opportunity_id: UUID | None
+
+
 class PlanOut(BaseModel):
-    """A student's plan."""
+    """A student's plan; `personal` are the student's own finds."""
 
     entries: list[PlanEntryOut]
     opportunities: list[OpportunityOut]
     analytics: AnalyticsOut
     deadlines: list[DeadlineOut]
+    personal: list[PersonalEntryOut]
 
     @classmethod
-    def of(cls, v: PlanView) -> "PlanOut":
-        """Map a plan view."""
+    def of(
+        cls, v: PlanView, proposals: dict[UUID, Proposal] | None = None
+    ) -> "PlanOut":
+        """Map a plan view and the proposal states of its finds."""
         a = v.analytics
+        sent = proposals or {}
         return cls(
+            personal=[PersonalEntryOut.of(p, sent.get(p.id)) for p in v.personal],
             entries=[PlanEntryOut.of(e) for e in v.entries],
             opportunities=[OpportunityOut.of(o, [], None) for o in v.catalog.values()],
             analytics=AnalyticsOut(

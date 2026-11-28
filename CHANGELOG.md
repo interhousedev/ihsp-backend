@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-11-28
+
+Migrations `academic_0020`, `activities_0005`, `admission_0071`, `files_0006`, `identity_0020`, `lms_0015` and `notify_0025` run forward only.
+
+### Added
+
+- Admission MCP server `/mcp/admission` for students and staff, also part of `/mcp/app`: application, documents, plans, personal finds, calendar export and feed; staff see a student's data only with that student's AI consent, never recommendation, bank or finance data.
+- Admission personal plan: a student's own finds (`/opportunities/plan/personal`), proposals to the school list, and `GET /calendar/export.ics` for chosen events or a range.
+- Clubs: photos on announcements (also sent in Telegram), event covers, event albums with photos and videos (previews, posters, signed short-lived URLs, reports hide at once, per-club limits and quota), admin moderation and upload blocks; MCP tools to create, edit and publish events, upload media and send announcements.
+- Homework: lessons with EMIS homework count as homework; teachers get a homework board, accept text or file answers on my.iht per lesson, grade (2–5, saved as a temporary mark) or return with a comment, and choose Telegram notifications for new submissions; the teacher MCP server can do all of it.
+- Student MCP: learning record, own attempts and AI review verdicts for building a personal plan.
+- `scripts/import_memory_archive.py` imports a Memory Archive export into club albums.
+
 ## [1.16.0] - 2026-11-28
 
 Migrations `academic_0019`, `identity_0017` and `identity_0018` run forward only.

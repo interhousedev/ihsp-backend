@@ -7,6 +7,7 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.files.application.combine_images_to_pdf import CombineImagesToPdf
+from app.modules.files.application.complete_upload import CompleteUpload
 from app.modules.files.application.download_links import DownloadLinks
 from app.modules.files.application.list_owned_files import ListOwnedFiles
 from app.modules.files.application.read_file_bytes import ReadFileBytes
@@ -14,6 +15,7 @@ from app.modules.files.application.read_full_text import ReadFullText
 from app.modules.files.application.read_outline import ReadOutline
 from app.modules.files.application.read_text_page import ReadTextPage
 from app.modules.files.application.remove_file import RemoveFile
+from app.modules.files.application.request_upload import RequestUpload
 from app.modules.files.application.search_text import SearchText
 from app.modules.files.application.store_bytes import StoreBytes
 from app.modules.files.application.transfer_ownership import TransferOwnership
@@ -40,6 +42,7 @@ from app.shared.contracts.files import (
     FullText,
     OutlineEntry,
     PageLayout,
+    PresignedPut,
     SignedDownload,
     TextPage,
 )
@@ -61,6 +64,8 @@ class FilesApiImpl:
         read_outline_uc: ReadOutline,
         search_text_uc: SearchText,
         store_bytes_uc: StoreBytes,
+        request_upload_uc: RequestUpload,
+        complete_upload_uc: CompleteUpload,
         combine_images_uc: CombineImagesToPdf,
         remove_file_uc: RemoveFile,
         list_owned_uc: ListOwnedFiles,
@@ -77,6 +82,8 @@ class FilesApiImpl:
         self._read_outline = read_outline_uc
         self._search_text = search_text_uc
         self._store_bytes = store_bytes_uc
+        self._request_upload = request_upload_uc
+        self._complete_upload = complete_upload_uc
         self._combine_images = combine_images_uc
         self._remove_file = remove_file_uc
         self._list_owned = list_owned_uc
@@ -241,6 +248,53 @@ class FilesApiImpl:
             confidential=confidential,
         )
         return file.to_ref()
+
+    async def store_path(
+        self,
+        *,
+        owner_id: UUID,
+        scope: FileScope,
+        purpose: FilePurpose,
+        name: str,
+        path: str,
+        content_type: str,
+    ) -> FileRef:
+        """Store a club file from disk; the type is sniffed, not taken on trust."""
+        file = await self._store_bytes.execute_path(
+            owner_id=owner_id, scope=scope, purpose=purpose, name=name, path=path
+        )
+        return file.to_ref()
+
+    async def request_upload(
+        self,
+        *,
+        owner_id: UUID,
+        scope: FileScope,
+        purpose: FilePurpose,
+        name: str,
+        size: int,
+        content_type: str,
+        sha256_b64: str,
+        max_bytes: int,
+    ) -> tuple[UUID, PresignedPut]:
+        """Reserve a club file and return its id and presigned PUT."""
+        ticket = await self._request_upload.execute_for_owner(
+            owner_id=owner_id,
+            scope=scope,
+            purpose=purpose,
+            name=name,
+            size=size,
+            content_type=content_type,
+            sha256_b64=sha256_b64,
+            max_bytes=max_bytes,
+        )
+        put = ticket.upload
+        return ticket.view.file.id, PresignedPut(put.url, dict(put.headers), put.method)
+
+    async def complete_upload(self, file_id: UUID) -> FileRef:
+        """Verify the uploaded club file (size, checksum, sniffed type)."""
+        view = await self._complete_upload.execute_club(file_id)
+        return view.file.to_ref()
 
     async def combine_images_to_pdf(
         self,

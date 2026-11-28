@@ -363,8 +363,14 @@ async def test_staff_lesson_has_audience_homework_materials_and_the_sheet(
     ]
     assert page["homework"] == {
         "text": "Task",
+        "source": "teacher",
         "due_date": "2026-10-06",
         "due_auto": False,
+        "accept_submissions": False,
+        "notify": None,
+        "notify_effective": True,
+        "emis_files": [],
+        "emis_topic_description": None,
         "submissions": {"submitted": 0, "total": 3},
     }
     assert len(page["materials"]) == 1

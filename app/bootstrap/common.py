@@ -22,6 +22,10 @@ from app.bootstrap.adapters.activities import (
     LmsCourseDirectory,
     per_call,
 )
+from app.bootstrap.adapters.activities_media import (
+    BrokerMediaKicker,
+    FilesMediaStore,
+)
 from app.bootstrap.adapters.admin_tools import AdminToolBackendAdapter
 from app.bootstrap.adapters.admission import (
     AdmissionCourseSourcesAdapter,
@@ -65,6 +69,7 @@ from app.bootstrap.adapters.mcp_files import (
     connector_active_check,
 )
 from app.bootstrap.adapters.mcp_history import build_history_tools
+from app.bootstrap.adapters.mcp_learning import build_learning_tools
 from app.bootstrap.adapters.mcp_lms_ai import LmsAi
 from app.bootstrap.adapters.mcp_offers import build_scope_overlay
 from app.bootstrap.adapters.mcp_ports import (
@@ -111,8 +116,13 @@ from app.modules.academic.wiring import (
     build_teaching,
 )
 from app.modules.activities.infrastructure.catalog import SqlOpportunityCatalog
+from app.modules.activities.infrastructure.media_processor import (
+    PillowFfmpegMediaProcessor,
+)
+from app.modules.activities.infrastructure.repositories import media_sql as media_sql
 from app.modules.activities.infrastructure.repositories import sql as activities_sql
 from app.modules.activities.ports.bundle import Ports as ActivitiesPorts
+from app.modules.activities.ports.gateways import MediaConfig
 from app.modules.activities.wiring import build as build_activities
 from app.modules.admin.domain.lyceum_logo import LogoNotFoundError
 from app.modules.admin.infrastructure.limit_snapshot import load_limit_snapshot
@@ -789,6 +799,16 @@ class _Assembler:
                 clock=c.clock,
                 secret=_activities_key(c.settings, "secret"),
                 ip_salt=_activities_key(c.settings, "ip_salt"),
+                albums=per_call(s, media_sql.SqlAlbumRepository),
+                media=per_call(s, media_sql.SqlMediaRepository),
+                media_store=FilesMediaStore(c.files.public),
+                media_processor=PillowFfmpegMediaProcessor(),
+                media_kicker=BrokerMediaKicker(c.kicker),
+                media_config=MediaConfig(
+                    photo_max_bytes=c.settings.activities.media_max_photo_bytes,
+                    video_max_bytes=c.settings.activities.media_max_video_bytes,
+                    quota_bytes=c.settings.activities.media_club_quota_bytes,
+                ),
             )
         )
 
@@ -1019,6 +1039,7 @@ class _Assembler:
         # The bot is a full process without LMS and serves no MCP tools.
         if self.plan.lms:
             c.mcp_files_courses_tools = build_files_courses_tools(c)
+            c.mcp_learning_tools = build_learning_tools(c)
             c.lms_ai_tools = LmsAi(llm=c.llm, settings=c.settings)
             c.lms.learning.badge_authoring.draft.model = LessonModelAdapter(
                 c.llm, c.settings

@@ -8,7 +8,7 @@ ids to blocks, questions, options and cards (LMS-23).
 """
 
 from collections.abc import Callable
-from typing import Annotated, Any, Final, Literal
+from typing import Annotated, Any, ClassVar, Final, Literal, get_args
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -431,6 +431,10 @@ def _number_answer(question: QuestionInput) -> dict[str, Any]:
 class TextBlockInput(BaseModel):
     """A Markdown text block (LaTeX goes between ``$...$`` or ``$$...$$``)."""
 
+    catalog: ClassVar[dict[str, Any]] = {
+        "examples": [{"type": "text", "markdown": "# Title"}]
+    }
+
     type: Literal["text"] = "text"
     markdown: str = Field(
         min_length=1,
@@ -444,6 +448,25 @@ class TestBlockInput(BaseModel):
 
     __test__ = False  # not a pytest class, despite the name
 
+    catalog: ClassVar[dict[str, Any]] = {
+        "examples": [
+            {
+                "type": "test",
+                "questions": [
+                    {
+                        "type": "single",
+                        "prompt": "2 + 2?",
+                        "options": [
+                            {"text": "4", "correct": True},
+                            {"text": "5"},
+                        ],
+                    }
+                ],
+            }
+        ],
+        "notes": "More questions can be added later with add_question.",
+    }
+
     type: Literal["test"] = "test"
     settings: QuizSettingsInput | None = Field(
         default=None, description="Test settings; omit for the defaults."
@@ -454,6 +477,10 @@ class TestBlockInput(BaseModel):
 class VideoBlockInput(BaseModel):
     """A video block: a link (YouTube, Vimeo or a direct file URL)."""
 
+    catalog: ClassVar[dict[str, Any]] = {
+        "examples": [{"type": "video", "url": "https://youtu.be/abc"}]
+    }
+
     type: Literal["video"] = "video"
     url: str = Field(
         min_length=1, max_length=2000, description="Video link, https only."
@@ -463,6 +490,11 @@ class VideoBlockInput(BaseModel):
 
 class FlashcardsBlockInput(BaseModel):
     """A flash cards block."""
+
+    catalog: ClassVar[dict[str, Any]] = {
+        "examples": [{"type": "flashcards", "cards": [{"front": "Q", "back": "A"}]}],
+        "notes": "The cards belong to the course, not to a student's own sets.",
+    }
 
     type: Literal["flashcards"] = "flashcards"
     cards: CardList
@@ -481,6 +513,17 @@ class UploadedVideoBlockInput(BaseModel):
     invent a file ID.
     """
 
+    catalog: ClassVar[dict[str, Any]] = {
+        "examples": [
+            {"type": "video_file", "file_id": "00000000-0000-0000-0000-000000000001"}
+        ],
+        "notes": (
+            "file_id is a ready file uploaded with purpose lms_video (the web "
+            "course editor or POST /v1/files). The upload_file tool stores "
+            "chat attachments only and cannot make one."
+        ),
+    }
+
     type: Literal["video_file"] = "video_file"
     file_id: UUID = Field(
         description="ID of a ready file uploaded with purpose `lms_video`."
@@ -488,14 +531,294 @@ class UploadedVideoBlockInput(BaseModel):
     caption: str = Field(default="", max_length=500, description="Caption, optional.")
 
 
+class H5PBlockInput(BaseModel):
+    """An interactive H5P exercise (a package played in the browser)."""
+
+    catalog: ClassVar[dict[str, Any]] = {
+        "examples": [{"type": "h5p", "title": "Drag the words"}],
+        "notes": (
+            "package_id is the id of an H5P package uploaded in the course "
+            "editor; no tool uploads H5P. Leave it out to add an empty block "
+            "that a teacher fills in the editor."
+        ),
+    }
+
+    type: Literal["h5p"] = "h5p"
+    title: str = Field(default="", max_length=500, description="Exercise title.")
+    package_id: UUID | None = Field(
+        default=None, description="ID of an uploaded H5P package, if there is one."
+    )
+    main_library: str = Field(
+        default="", max_length=200, description="H5P main library, e.g. H5P.Blanks."
+    )
+    passing_score_pct: float = Field(
+        default=0.0, ge=0, le=100, description="Percent of points needed to pass."
+    )
+
+
+class InteractionInput(BaseModel):
+    """A pause of an interactive video: a question, a note or a link."""
+
+    at_sec: float = Field(ge=0, le=24 * 3600, description="Second of the pause.")
+    kind: Literal["question", "note", "link"] = Field(
+        default="question", description="What the pause shows."
+    )
+    text: str = Field(
+        default="", max_length=2000, description="Question, note or link text."
+    )
+    options: list[OptionInput] = Field(
+        default_factory=list,
+        max_length=10,
+        description="Answer options (question only).",
+    )
+    multiple: bool = Field(default=False, description="Several right options.")
+    url: str = Field(default="", max_length=2000, description="Link target (http/s).")
+    points: float = Field(default=1.0, ge=0, le=100, description="Score.")
+
+
+class InteractiveVideoBlockInput(BaseModel):
+    """A video that pauses at given seconds for questions, notes and links."""
+
+    catalog: ClassVar[dict[str, Any]] = {
+        "examples": [
+            {
+                "type": "interactive_video",
+                "url": "https://www.youtube.com/watch?v=abc",
+                "interactions": [
+                    {
+                        "at_sec": 30,
+                        "kind": "question",
+                        "text": "2 + 2?",
+                        "options": [
+                            {"text": "4", "correct": True},
+                            {"text": "5"},
+                        ],
+                    }
+                ],
+            }
+        ],
+        "notes": (
+            "Give a link in `url`, or `file_id` of a video uploaded to Files "
+            "with purpose lms_video (the upload_file tool does not make one; "
+            "use the web editor or POST /v1/files)."
+        ),
+    }
+
+    type: Literal["interactive_video"] = "interactive_video"
+    url: str = Field(default="", max_length=2000, description="Video link, http(s).")
+    file_id: UUID | None = Field(
+        default=None, description="ID of an uploaded video; replaces `url`."
+    )
+    caption: str = Field(default="", max_length=500, description="Caption.")
+    interactions: list[InteractionInput] = Field(
+        default_factory=list, max_length=100, description="Pauses of the video."
+    )
+
+
+class ExamModuleInput(BaseModel):
+    """A timed module of an exam section."""
+
+    title: str = Field(default="", max_length=200)
+    time_limit_sec: int = Field(default=1920, ge=60, le=14_400)
+    questions: list[QuestionInput] = Field(
+        default_factory=list,
+        max_length=200,
+        description="Only single, multiple, number, text and free questions.",
+    )
+
+
+class ExamSectionInput(BaseModel):
+    """A section of an exam: modules taken in order."""
+
+    title: str = Field(default="", max_length=200)
+    modules: list[ExamModuleInput] = Field(default_factory=list, max_length=4)
+    adaptive: bool = Field(default=False, description="Module 2 depends on module 1.")
+
+
+class ExamScalingInput(BaseModel):
+    """The scaled score range of every section (SAT: 200 to 800)."""
+
+    min_score: int = Field(default=200, ge=0, le=10_000)
+    max_score: int = Field(default=800, ge=1, le=10_000)
+
+
+class ExamBlockInput(BaseModel):
+    """A Bluebook-style timed exam (SAT, AP or custom) with sections and modules."""
+
+    catalog: ClassVar[dict[str, Any]] = {
+        "examples": [
+            {
+                "type": "exam",
+                "title": "Practice test",
+                "sections": [
+                    {
+                        "title": "Math",
+                        "modules": [
+                            {
+                                "time_limit_sec": 1800,
+                                "questions": [
+                                    {
+                                        "type": "number",
+                                        "prompt": "3 * 4",
+                                        "number": 12,
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+        "notes": "Questions use the same fields as in a test block.",
+    }
+
+    type: Literal["exam"] = "exam"
+    title: str = Field(default="", max_length=200)
+    kind: Literal["sat", "ap", "custom"] = "custom"
+    directions: str = Field(default="", max_length=5000)
+    reference_sheet: str = Field(default="", max_length=20_000)
+    calculator: Literal["none", "scientific", "graphing"] = "none"
+    sections: list[ExamSectionInput] = Field(default_factory=list, max_length=6)
+    scaling: ExamScalingInput | None = Field(default=None)
+
+
+class CodeTestInput(BaseModel):
+    """A test of a code block; hidden tests show only their name to students."""
+
+    name: str = Field(default="", max_length=200)
+    code: str = Field(default="", max_length=5000)
+    hidden: bool = False
+
+
+class CodeBlockInput(BaseModel):
+    """A runnable code panel with starter code, a solution and tests."""
+
+    catalog: ClassVar[dict[str, Any]] = {
+        "examples": [
+            {
+                "type": "code",
+                "language": "python",
+                "instructions": "Print the sum of 2 and 3.",
+                "starter": "# your code",
+                "tests": [{"name": "sum", "code": "assert True"}],
+            }
+        ]
+    }
+
+    type: Literal["code"] = "code"
+    language: Literal["python", "javascript", "sql"] = "python"
+    instructions: str = Field(default="", max_length=5000)
+    starter: str = Field(default="", max_length=20_000)
+    solution: str = Field(default="", max_length=20_000)
+    tests: list[CodeTestInput] = Field(default_factory=list, max_length=30)
+    time_limit_ms: int = Field(default=5000, ge=1000, le=30_000)
+    graded: bool = False
+
+
+class HtmlBlockInput(BaseModel):
+    """A custom HTML widget, served in a sandbox."""
+
+    catalog: ClassVar[dict[str, Any]] = {
+        "examples": [{"type": "html", "title": "Pendulum", "height_px": 500}],
+        "notes": (
+            "package_id is the id of an HTML package uploaded in the course "
+            "editor; no tool uploads it. Leave it out to add an empty widget "
+            "that a teacher fills in the editor."
+        ),
+    }
+
+    type: Literal["html"] = "html"
+    title: str = Field(default="", max_length=200)
+    package_id: UUID | None = Field(
+        default=None, description="ID of an uploaded HTML package, if there is one."
+    )
+    height_px: int = Field(default=600, ge=200, le=2000)
+    allow_fullscreen: bool = False
+    graded: bool = False
+
+
+class AiReviewCriterionInput(BaseModel):
+    """One row of an AI review: a criterion and its top score."""
+
+    name: str = Field(min_length=1, max_length=200)
+    description: str = Field(default="", max_length=1000)
+    max_score: float = Field(default=10, ge=0, le=100)
+
+
+class AiReviewFileInput(BaseModel):
+    """A reference file for the reviewer; students never see its text."""
+
+    file_id: UUID = Field(description="ID of a ready uploaded file.")
+    name: str = Field(default="", max_length=200)
+
+
+AiReviewFileKind = Literal["pdf", "docx", "pptx", "image", "text"]
+
+
+class AiReviewBlockInput(BaseModel):
+    """An AI reviewer of a student's submitted work, graded by criteria."""
+
+    catalog: ClassVar[dict[str, Any]] = {
+        "examples": [
+            {
+                "type": "ai_review",
+                "title": "Project review",
+                "instructions_public": "Upload your report.",
+                "criteria": [{"name": "Clarity", "max_score": 10}],
+            }
+        ],
+        "notes": "reference_files need ids of files already uploaded to Files.",
+    }
+
+    type: Literal["ai_review"] = "ai_review"
+    title: str = Field(default="", max_length=200)
+    instructions_public: str = Field(
+        default="", max_length=10_000, description="Shown to students."
+    )
+    teacher_prompt: str = Field(
+        default="", max_length=10_000, description="Private instructions."
+    )
+    output_template: Literal[
+        "review_table", "rubric_checklist", "strengths_cards", "image_gallery"
+    ] = "review_table"
+    criteria: list[AiReviewCriterionInput] = Field(default_factory=list, max_length=20)
+    use_course_materials: bool = True
+    reference_files: list[AiReviewFileInput] = Field(
+        default_factory=list, max_length=10
+    )
+    web_search: bool = False
+    private_topics: list[Annotated[str, Field(max_length=200)]] = Field(
+        default_factory=list, max_length=30
+    )
+    max_submissions: int = Field(default=3, ge=1, le=20)
+    pass_threshold_pct: int = Field(default=60, ge=0, le=100)
+    accepted_types: list[AiReviewFileKind] = Field(
+        default_factory=lambda: list[AiReviewFileKind](
+            ["pdf", "docx", "image", "text"]
+        ),
+        min_length=1,
+    )
+
+
 AuthorBlockInput = Annotated[
     TextBlockInput
     | VideoBlockInput
     | UploadedVideoBlockInput
     | TestBlockInput
-    | FlashcardsBlockInput,
+    | FlashcardsBlockInput
+    | H5PBlockInput
+    | InteractiveVideoBlockInput
+    | ExamBlockInput
+    | CodeBlockInput
+    | HtmlBlockInput
+    | AiReviewBlockInput,
     Field(discriminator="type"),
 ]
+
+AUTHOR_BLOCK_MODELS: Final[tuple[type[BaseModel], ...]] = get_args(
+    get_args(AuthorBlockInput)[0]
+)
+"""Every block an author may create, derived from the union above."""
 
 
 class StepDraftInput(BaseModel):
@@ -514,7 +837,7 @@ def build_block(block: AuthorBlockInput) -> dict[str, Any]:
     """Return one block in the LMS shape.
 
     Raises:
-        BlockInputError: A test question breaks the rules of its type.
+        BlockInputError: The block breaks a rule of its type.
     """
     if isinstance(block, TextBlockInput):
         return build_text_block(block.markdown)
@@ -531,7 +854,125 @@ def build_block(block: AuthorBlockInput) -> dict[str, Any]:
         }
     if isinstance(block, FlashcardsBlockInput):
         return build_flashcards_block(block.cards)
-    return build_test_block(block.settings, block.questions)
+    if isinstance(block, TestBlockInput):
+        return build_test_block(block.settings, block.questions)
+    return _build_rich_block(block)
+
+
+def _build_rich_block(block: AuthorBlockInput) -> dict[str, Any]:
+    """Return an h5p, interactive video, exam, code, html or AI review block."""
+    if isinstance(block, H5PBlockInput):
+        return {
+            "id": "",
+            "type": "h5p",
+            "package_id": str(block.package_id or ""),
+            "title": block.title,
+            "main_library": block.main_library,
+            "passing_score_pct": block.passing_score_pct,
+        }
+    if isinstance(block, InteractiveVideoBlockInput):
+        return _interactive_video(block)
+    if isinstance(block, ExamBlockInput):
+        return _exam(block)
+    if isinstance(block, CodeBlockInput):
+        data = block.model_dump(exclude={"tests"})
+        tests = [{"id": "", **t.model_dump()} for t in block.tests]
+        return {"id": "", **data, "tests": tests}
+    if isinstance(block, HtmlBlockInput):
+        data = block.model_dump(exclude={"package_id"})
+        return {
+            "id": "",
+            **data,
+            "package_id": str(block.package_id or ""),
+            "entry": "index.html",
+        }
+    if isinstance(block, AiReviewBlockInput):
+        return _ai_review(block)
+    raise BlockInputError(f"unsupported block type: {block.type}")
+
+
+def _options_of(options: list[OptionInput]) -> list[dict[str, Any]]:
+    """Return answer options in the API shape (ids left empty)."""
+    return [
+        {"id": "", "text": o.text, "correct": o.correct, "pinned": o.pinned}
+        for o in options
+    ]
+
+
+def _interactive_video(block: InteractiveVideoBlockInput) -> dict[str, Any]:
+    """Return an interactive video block."""
+    if block.file_id is None:
+        if not block.url.strip().lower().startswith(("https://", "http://")):
+            raise BlockInputError("an interactive video needs `url` or `file_id`")
+    for item in block.interactions:
+        if item.kind == "question" and len(item.options) < 2:
+            raise BlockInputError("a question pause needs at least two options")
+    upload = block.file_id is not None
+    return {
+        "id": "",
+        "type": "interactive_video",
+        "source": "upload" if upload else "link",
+        "url": "" if upload else block.url.strip(),
+        "file_id": str(block.file_id) if upload else None,
+        "caption": block.caption,
+        "interactions": [
+            {
+                "id": "",
+                "at_sec": i.at_sec,
+                "kind": i.kind,
+                "text": i.text,
+                "options": _options_of(i.options),
+                "multiple": i.multiple,
+                "url": i.url,
+                "points": i.points,
+            }
+            for i in block.interactions
+        ],
+    }
+
+
+EXAM_QUESTION_TYPES: Final = frozenset({"single", "multiple", "number", "text", "free"})
+
+
+def _exam(block: ExamBlockInput) -> dict[str, Any]:
+    """Return an exam block; its questions follow the rules of a test."""
+    if block.scaling and block.scaling.max_score <= block.scaling.min_score:
+        raise BlockInputError("scaling max_score must be greater than min_score")
+    sections: list[dict[str, Any]] = []
+    for section in block.sections:
+        modules: list[dict[str, Any]] = []
+        for module in section.modules:
+            for question in module.questions:
+                if question.type not in EXAM_QUESTION_TYPES:
+                    raise BlockInputError(
+                        f"exam question type not allowed: {question.type}"
+                    )
+            modules.append(
+                {
+                    "id": "",
+                    "title": module.title,
+                    "time_limit_sec": module.time_limit_sec,
+                    "questions": [build_question(q) for q in module.questions],
+                }
+            )
+        sections.append(
+            {
+                "id": "",
+                "title": section.title,
+                "modules": modules,
+                "adaptive": section.adaptive,
+            }
+        )
+    data = block.model_dump(exclude={"sections", "scaling"})
+    scaling = block.scaling.model_dump() if block.scaling else None
+    return {"id": "", **data, "sections": sections, "scaling": scaling}
+
+
+def _ai_review(block: AiReviewBlockInput) -> dict[str, Any]:
+    """Return an AI review block."""
+    data = block.model_dump(exclude={"reference_files"})
+    files = [{"file_id": str(f.file_id), "name": f.name} for f in block.reference_files]
+    return {"id": "", **data, "reference_files": files}
 
 
 def build_step_content(draft: StepDraftInput) -> dict[str, Any]:

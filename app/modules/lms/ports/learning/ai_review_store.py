@@ -104,3 +104,9 @@ class AiReviewStore(Protocol):
     async def refund_submission(self, session_id: UUID) -> None:
         """Give back a submission reserved for a model call that failed."""
         ...
+
+    async def list_for_user(
+        self, user_id: UUID, *, course_id: UUID | None = None, limit: int
+    ) -> Sequence[AiReviewSessionRecord]:
+        """The user's sessions with at least one submission, newest first."""
+        ...

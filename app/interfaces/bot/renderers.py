@@ -62,7 +62,7 @@ def make_lesson_prompt_renderer(container: Any) -> Renderer:
         except (ForbiddenError, NotFoundError):
             return None  # reassigned or gone: nothing to ask
         state = parse_prompt_state(raw)
-        done = state.attendance_submitted and bool(state.homework_text)
+        done = state.attendance_submitted and state.has_homework
         if state.expired or done or state.lesson.status == "cancelled":
             return None
         return build_lesson_prompt(

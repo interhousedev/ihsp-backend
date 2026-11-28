@@ -11,7 +11,9 @@ submission and the model may ask one round of questions; the student's next mess
 """
 
 import base64
+import json
 import logging
+import re
 from collections.abc import Mapping, Sequence, Set
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -135,6 +137,41 @@ class AiReviewSubmissionView(BaseModel):
     status: Literal["open", "reviewed"]
     submitted_at: datetime | None
     review_openui: str | None
+
+
+class MyAiReviewSessionView(BaseModel):
+    """One of the student's reviewed-or-pending sessions, for the MCP list."""
+
+    session_id: UUID
+    course_id: UUID
+    step_id: UUID
+    step_title: str
+    status: Literal["open", "reviewed"]
+    created_at: datetime
+    submissions_used: int
+    reviewed: bool
+
+
+class AiReviewScoreView(BaseModel):
+    """A criterion of a verdict; ``score`` is as shown: ``3/5`` or a mark."""
+
+    name: str
+    score: str
+    comment: str
+
+
+class AiReviewVerdictView(BaseModel):
+    """The final verdict of a session; never the chat or the student's files."""
+
+    session_id: UUID
+    status: Literal["open", "reviewed"]
+    reviewed: bool
+    summary: str | None
+    scores: list[AiReviewScoreView]
+    strengths: list[str]
+    improvements: list[str]
+    total: float | None
+    max_total: float | None
 
 
 def _message_view(m: AiReviewMessageRecord) -> AiReviewMessageView:
@@ -356,6 +393,58 @@ class AiReviews:
             )
         return out
 
+    # - - - The student's own sessions and verdicts - - -
+
+    async def list_my_sessions(
+        self, actor: Actor, course_id: UUID | None = None, limit: int = 50
+    ) -> list[MyAiReviewSessionView]:
+        """The student's own sessions with a submission, newest first."""
+        sessions = await self.store.list_for_user(
+            actor.user_id, course_id=course_id, limit=max(1, min(limit, 50))
+        )
+        titles = await self._step_titles(sessions)
+        return [
+            MyAiReviewSessionView(
+                session_id=s.id,
+                course_id=s.course_id,
+                step_id=s.step_id,
+                step_title=titles.get((s.course_id, s.step_id), ""),
+                status=s.status,
+                created_at=s.created_at,
+                submissions_used=s.submissions_used,
+                reviewed=s.status == "reviewed",
+            )
+            for s in sessions
+        ]
+
+    async def verdict_of(self, actor: Actor, session_id: UUID) -> AiReviewVerdictView:
+        """The final verdict of the student's own session (empty until reviewed)."""
+        session = await self.store.get_session(session_id)
+        if session is None or session.user_id != actor.user_id:
+            raise AiReviewSessionNotFoundError(params={"session_id": str(session_id)})
+        messages = await self.store.messages(session.id)
+        reviews = [m for m in messages if m.kind == "review"]
+        return verdict_view(session, reviews[-1] if reviews else None)
+
+    async def _step_titles(
+        self, sessions: Sequence[AiReviewSessionRecord]
+    ) -> dict[tuple[UUID, UUID], str]:
+        """Titles of the live steps of the sessions' courses."""
+        course_ids = list(dict.fromkeys(s.course_id for s in sessions))
+        titles: dict[tuple[UUID, UUID], str] = {}
+        if not course_ids:
+            return titles
+        async with self.uow_factory() as uow:
+            for course in await uow.courses.get_many(course_ids):
+                if course.live_version_id is None:
+                    continue
+                version = await uow.versions.get(course.live_version_id)
+                if version is None:
+                    continue
+                for step in version.manifest.steps():
+                    titles[(course.id, step.step_id)] = step.title
+        return titles
+
     # - - - The model turn - - -
 
     async def _turn(
@@ -572,6 +661,138 @@ class AiReviews:
         return (await self.web.search(actor, query=query, locale=locale))[
             : review.MAX_WEB_CHARS
         ]
+
+
+# - - - Verdict of a stored review - - -
+
+_TOKEN = re.compile(r'\s*("(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?|[A-Za-z_]\w*|[()\[\],=])')
+
+
+def _tokens(source: str) -> list[str]:
+    out: list[str] = []
+    pos = 0
+    while source[pos:].strip():
+        match = _TOKEN.match(source, pos)
+        if match is None:
+            raise ValueError("unexpected character")
+        out.append(match.group(1))
+        pos = match.end()
+    return out
+
+
+def _expr(tokens: list[str], i: int) -> tuple[Any, int]:
+    """One literal, list or call of the OpenUI subset; calls are ``(name, args)``."""
+    token = tokens[i]
+    if token.startswith('"'):
+        return json.loads(token), i + 1
+    if token == "[":
+        items: list[Any] = []
+        i += 1
+        while tokens[i] != "]":
+            item, i = _expr(tokens, i)
+            items.append(item)
+            if tokens[i] == ",":
+                i += 1
+        return items, i + 1
+    if token[0].isalpha() and tokens[i + 1] == "(":
+        args: list[Any] = []
+        i += 2
+        while tokens[i] != ")":
+            arg, i = _expr(tokens, i)
+            args.append(arg)
+            if tokens[i] == ",":
+                i += 1
+        return (token, args), i + 1
+    return float(token), i + 1
+
+
+def _call(node: Any, name: str) -> list[Any] | None:  # noqa: ANN401 - parsed tree
+    if isinstance(node, tuple) and node[0] == name:
+        args: list[Any] = node[1]
+        return args
+    return None
+
+
+def _texts(nodes: Any) -> list[str]:  # noqa: ANN401 - parsed tree
+    out = []
+    for node in nodes if isinstance(nodes, list) else []:
+        args = _call(node, "TextBlock")
+        if args and isinstance(args[0], str):
+            out.append(args[0])
+    return out
+
+
+def parse_verdict(openui: str | None) -> dict[str, Any]:  # noqa: C901 - flat parse
+    """Read summary, criteria, strengths and improvements back from a review's OpenUI.
+
+    The source is our own `openui_of` output, so the subset is small. A source this
+    reader does not understand gives an empty verdict, never an error.
+    """
+    empty: dict[str, Any] = {
+        "summary": None,
+        "scores": [],
+        "strengths": [],
+        "improvements": [],
+        "total": None,
+        "max_total": None,
+    }
+    if not openui:
+        return empty
+    try:
+        tokens = _tokens(openui)
+        if tokens[:2] != ["root", "="]:
+            return empty
+        root, _ = _expr(tokens, 2)
+    except (ValueError, IndexError):
+        return empty
+    stack = _call(root, "Stack")
+    if not stack or not isinstance(stack[0], list):
+        return empty
+    out = dict(empty, scores=[], strengths=[], improvements=[])
+    strength_titles = {labels["strengths"] for labels in review.LABELS.values()}
+    improvement_titles = {labels["improvements"] for labels in review.LABELS.values()}
+    for position, node in enumerate(stack[0]):
+        text = _call(node, "TextBlock")
+        table = _call(node, "Table")
+        card = _call(node, "Card")
+        progress = _call(node, "Progress")
+        if text and position == 0 and isinstance(text[0], str):
+            out["summary"] = text[0]
+        elif table and len(table) > 1 and isinstance(table[1], list):
+            out["scores"] = [
+                {"name": row[0], "score": row[1], "comment": row[2]}
+                for row in table[1]
+                if isinstance(row, list)
+                and len(row) == 3
+                and all(isinstance(c, str) for c in row)
+            ]
+        elif card and len(card) > 1 and card[0] in strength_titles:
+            out["strengths"] = _texts(card[1])
+        elif card and len(card) > 1 and card[0] in improvement_titles:
+            out["improvements"] = _texts(card[1])
+        elif progress and len(progress) == 3:
+            out["total"], out["max_total"] = float(progress[1]), float(progress[2])
+    return out
+
+
+def verdict_view(
+    session: AiReviewSessionRecord, last_review: AiReviewMessageRecord | None
+) -> AiReviewVerdictView:
+    """The verdict of a session from its last review message (None: no review yet)."""
+    parsed = parse_verdict(last_review.openui if last_review else None)
+    if parsed["summary"] is None and last_review is not None:
+        parsed["summary"] = last_review.text
+    return AiReviewVerdictView(
+        session_id=session.id,
+        status=session.status,
+        reviewed=last_review is not None,
+        summary=parsed["summary"],
+        scores=[AiReviewScoreView(**s) for s in parsed["scores"]],
+        strengths=parsed["strengths"],
+        improvements=parsed["improvements"],
+        total=parsed["total"],
+        max_total=parsed["max_total"],
+    )
 
 
 def _uuid(value: str) -> UUID | None:

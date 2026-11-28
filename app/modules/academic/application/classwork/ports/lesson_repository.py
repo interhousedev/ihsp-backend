@@ -67,14 +67,31 @@ class LessonRepository(Protocol):
         self,
         lesson_id: UUID,
         *,
-        text: str,
+        text: str | None,
         due_date: dt.date | None,
         due_auto: bool,
         by: UUID,
         at: dt.datetime,
         mark_updated: bool,
+        accept_submissions: bool | None = None,
     ) -> None:
-        """Save the homework; ``mark_updated`` sets the "updated" badge time."""
+        """Save the homework; ``mark_updated`` sets the "updated" badge time.
+
+        ``text`` None keeps the stored text; ``accept_submissions`` None keeps the
+        switch.
+        """
+        ...
+
+    async def set_homework_switches(
+        self,
+        lesson_id: UUID,
+        *,
+        accept_submissions: bool | None,
+        notify: bool | None,
+        change_notify: bool,
+        at: dt.datetime,
+    ) -> None:
+        """Set the submissions switch and/or the notification override."""
         ...
 
     async def clear_homework(self, lesson_id: UUID, at: dt.datetime) -> None:

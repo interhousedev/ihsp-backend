@@ -25,6 +25,7 @@ class Permission(StrEnum):
     APPROVE = "approve"
     TRANSFER = "transfer"
     SEE_RATINGS_FULL = "see_ratings_full"
+    MODERATE_MEDIA = "moderate_media"
 
 
 _ALL = frozenset(Permission)
@@ -57,6 +58,7 @@ def global_permissions(roles: frozenset[Role] | set[Role]) -> frozenset[Permissi
             Permission.ANNOUNCE,
             Permission.APPROVE,
             Permission.TRANSFER,
+            Permission.MODERATE_MEDIA,
         }
     if Role.ACTIVITIES_ADMIN in roles or Role.ADMIN in roles:
         out |= {
@@ -64,6 +66,7 @@ def global_permissions(roles: frozenset[Role] | set[Role]) -> frozenset[Permissi
             Permission.EDIT_CLUB,
             Permission.TRANSFER,
             Permission.SEE_RATINGS_FULL,
+            Permission.MODERATE_MEDIA,
         }
     return frozenset(out)
 

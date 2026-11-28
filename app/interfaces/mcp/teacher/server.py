@@ -1,14 +1,16 @@
 """The Teachers MCP server: the teacher's own lessons, groups and controls."""
 
 from app.interfaces.mcp import list_notifications, upload_file
+from app.interfaces.mcp.catalog import CatalogMcp
 from app.interfaces.mcp.deps import McpDeps
-from app.interfaces.mcp.factory import make_toolkit
+from app.interfaces.mcp.factory import finish_catalog, make_toolkit
 from app.interfaces.mcp.teacher import ai_tools
 from app.interfaces.mcp.teacher.tools import (
     assessments_read,
     assessments_write,
     groups,
     homework,
+    homework_review,
     journal,
     marks_read,
     marks_write,
@@ -24,6 +26,7 @@ TOOL_MODULES = (
     groups,
     journal,
     homework,
+    homework_review,
     marks_read,
     marks_write,
     assessments_read,
@@ -41,8 +44,10 @@ def build_teacher_server(deps: McpDeps) -> FastMCP:
         "teacher",
         title=f"{current_brand().name} Teachers",
         instructions_key="mcp-instructions-teacher",
+        cls=CatalogMcp,
     )
     for module in TOOL_MODULES:
         module.register(kit)
     ai_tools.register(kit)
+    finish_catalog(kit, "teacher", ["find_feature", "get_today", "get_timetable"])
     return kit.mcp

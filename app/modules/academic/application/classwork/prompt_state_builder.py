@@ -84,5 +84,6 @@ class PromptStateBuilder:
                 draft.base_version if draft else lesson.attendance_version
             ),
             "homework_text": lesson.homework_text,
+            "has_homework": lesson.has_homework,
             "expired": self.expired(lesson),
         }

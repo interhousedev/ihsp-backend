@@ -81,6 +81,7 @@ class Event:
     schedule_revision: int = 0
     rating_requested_at: datetime | None = None
     created_by: UUID | None = None
+    cover_media_id: UUID | None = None
 
     def validate(self) -> None:
         """Times are timezone-aware and the end follows the start."""

@@ -48,5 +48,20 @@
   "activities-report-state": "Опубликовать можно только отчёт о завершённом событии.",
   "activities-role-full": "Все места на эту роль заняты.",
   "activities-round-closed": "Этот раунд больше не принимает записи.",
-  "activities-transfer": "Передачу клуба нельзя продолжить."
+  "activities-transfer": "Передачу клуба нельзя продолжить.",
+  "activities-media-state": "В текущем состоянии файла это невозможно.",
+  "activities-media-not-ready": "Фото ещё обрабатывается. Попробуйте чуть позже.",
+  "activities-media-quota-exceeded": "Клуб исчерпал место для медиафайлов.",
+  "activities-media-duplicate": "Этот файл уже есть в альбоме.",
+  "activities-media-upload-mismatch": "Загруженный файл не совпадает с заявленным. Загрузите его снова.",
+  "activities-media-already-reported": "Вы уже пожаловались на этот файл.",
+  "activities-album-exists": "У этого события уже есть альбом.",
+  "activities-album-depth": "Альбомы нельзя вкладывать так глубоко.",
+  "activities-media-consent-required": "Подтвердите, что люди на снимке согласны на публикацию.",
+  "activities-media-kind": "Этот тип файла здесь использовать нельзя.",
+  "activities-media-upload-blocked": "Вам запрещено загружать медиафайлы клубов.",
+  "activities-media-too-large": "Файл слишком большой.",
+  "activities-media-type-not-allowed": "Принимаются только фото JPG, PNG, WebP и видео MP4, WebM, MOV.",
+  "activities-media-rate-limited": "Слишком много загрузок. Попробуйте позже.",
+  "activities-invalid-media-url": "Ссылка недействительна."
 }

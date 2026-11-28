@@ -37,7 +37,15 @@ class CalendarEntryOut(BaseModel):
     """One dated item; `day` is the Tashkent calendar day."""
 
     key: str
-    source: Literal["university", "checklist", "exam", "opportunity", "test_score"]
+    source: Literal[
+        "university",
+        "checklist",
+        "exam",
+        "opportunity",
+        "test_score",
+        "personal",
+        "milestone",
+    ]
     title: str
     day: dt.date
     due_utc: dt.datetime
@@ -184,6 +192,28 @@ async def set_feed_alarms(
     )
 
 
+async def export_calendar_ics(
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    keys: Annotated[list[str] | None, Query(alias="key", max_length=50)] = None,
+    start: Annotated[dt.date | None, Query(alias="from")] = None,
+    end: Annotated[dt.date | None, Query(alias="to")] = None,
+    accept_language: Lang = None,
+) -> Response:
+    """A one-off `.ics` of my own entries: chosen `key`s or a `from`–`to` range."""
+    body = await container.admission.calendar.export(
+        ctx, _locale(accept_language), keys=keys or (), start=start, end=end
+    )
+    return Response(
+        content=body,
+        media_type="text/calendar; charset=utf-8",
+        headers={
+            "Cache-Control": "no-store",
+            "Content-Disposition": 'attachment; filename="calendar.ics"',
+        },
+    )
+
+
 async def get_feed_ics(token: str, container: ContainerDep) -> Response:
     """The public ICS feed of a token (no sign-in; unknown and revoked: 404)."""
     body = await container.admission.calendar.ics(token)
@@ -281,6 +311,14 @@ _route(
     "DELETE",
     "delete_exam_date",
     status_code=status.HTTP_204_NO_CONTENT,
+)
+_route(
+    "/calendar/export.ics",
+    export_calendar_ics,
+    "GET",
+    "export_calendar_ics",
+    response_class=Response,
+    responses={200: {"content": {"text/calendar": {}}}},
 )
 _route(
     "/calendar/{token}.ics",

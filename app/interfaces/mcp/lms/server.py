@@ -1,13 +1,12 @@
 """The LMS Course MCP server: read, and draft CRUD under scopes (MCP-1, MCP-6)."""
 
+from app.interfaces.mcp.catalog import CatalogMcp
 from app.interfaces.mcp.deps import McpDeps
-from app.interfaces.mcp.factory import make_toolkit
+from app.interfaces.mcp.factory import finish_catalog, make_toolkit
 from app.interfaces.mcp.lms.tools import (
-    add_flashcards_block,
+    add_block,
     add_question,
     add_staff,
-    add_test_block,
-    add_text_block,
     build_course,
     course_progress,
     create_course,
@@ -26,7 +25,9 @@ from app.interfaces.mcp.lms.tools import (
     get_course,
     get_settings,
     get_step,
+    list_ai_review_submissions,
     list_attempts,
+    list_block_types,
     list_courses,
     list_pending_changes,
     list_staff,
@@ -57,6 +58,7 @@ TOOL_MODULES = (
     find_feature,
     get_course,
     get_step,
+    list_block_types,
     list_pending_changes,
     list_versions,
     list_attempts,
@@ -70,10 +72,8 @@ TOOL_MODULES = (
     create_step,
     update_step,
     delete_step,
-    add_text_block,
-    add_test_block,
+    add_block,
     add_question,
-    add_flashcards_block,
     add_staff,
     build_course,
     course_progress,
@@ -82,6 +82,7 @@ TOOL_MODULES = (
     generate_course_draft,
     generate_lesson,
     get_attempt,
+    list_ai_review_submissions,
     get_settings,
     list_staff,
     list_students,
@@ -107,7 +108,9 @@ def build_lms_server(deps: McpDeps) -> FastMCP:
         "lms",
         title=f"{current_brand().name} LMS Course",
         instructions_key="mcp-instructions-lms",
+        cls=CatalogMcp,
     )
     for module in TOOL_MODULES:
         module.register(kit)
+    finish_catalog(kit, "lms", ["find_feature", "list_courses", "get_course"])
     return kit.mcp

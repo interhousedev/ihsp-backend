@@ -223,6 +223,17 @@ class S3Storage:
         except ClientError as exc:
             raise self._refused(exc, "put", key) from exc
 
+    async def put_path(self, key: str, path: str, content_type: str) -> None:
+        """Write an object from disk; the file is streamed, not loaded."""
+        client = await self._io()
+        try:
+            with open(path, "rb") as body:
+                await client.put_object(
+                    Bucket=self._bucket, Key=key, Body=body, ContentType=content_type
+                )
+        except ClientError as exc:
+            raise self._refused(exc, "put", key) from exc
+
     async def delete_many(self, keys: Sequence[str]) -> None:
         """Delete objects in batches of 1000; keys that do not exist are fine."""
         unique = list(dict.fromkeys(keys))

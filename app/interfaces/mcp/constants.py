@@ -7,15 +7,16 @@ from typing import Final, Literal, cast
 from app.shared.actor import Role
 from app.shared.contracts.auth import (
     AUDIENCE_MCP_ADMIN,
+    AUDIENCE_MCP_ADMISSION,
     AUDIENCE_MCP_APP,
     AUDIENCE_MCP_LMS,
     AUDIENCE_MCP_STUDENT,
     AUDIENCE_MCP_TEACHER,
 )
-from app.shared.mcp_scopes import SCOPE_NAMES_BY_SERVER
+from app.shared.mcp_scopes import ADMISSION_ROLES, SCOPE_NAMES_BY_SERVER
 
-ServerName = Literal["student", "lms", "admin", "teacher", "app"]
-SourceServerName = Literal["student", "lms", "teacher"]
+ServerName = Literal["student", "lms", "admin", "teacher", "app", "admission"]
+SourceServerName = Literal["student", "lms", "teacher", "admission"]
 
 SERVERS: Final[tuple[ServerName, ...]] = (
     "student",
@@ -23,10 +24,20 @@ SERVERS: Final[tuple[ServerName, ...]] = (
     "admin",
     "teacher",
     "app",
+    "admission",
 )
 
 # The universal server "app" serves the tools of these servers under prefixed names.
-APP_SOURCES: Final[tuple[SourceServerName, ...]] = ("student", "teacher", "lms")
+APP_SOURCES: Final[tuple[SourceServerName, ...]] = (
+    "student",
+    "teacher",
+    "lms",
+    "admission",
+)
+
+# Sources whose tools also need the person's acceptance of that app's legal
+# documents (beside the global ones), checked on every call, on `/app` too.
+CONSENT_APP_BY_SERVER: Final[Mapping[ServerName, str]] = {"admission": "admission"}
 
 # Every server is mounted under this prefix of the API app; in production nginx maps
 # the host mcp.ihsu.uz to it.
@@ -65,6 +76,7 @@ AUDIENCE_BY_SERVER: Final[Mapping[ServerName, str]] = {
     "admin": AUDIENCE_MCP_ADMIN,
     "teacher": AUDIENCE_MCP_TEACHER,
     "app": AUDIENCE_MCP_APP,
+    "admission": AUDIENCE_MCP_ADMISSION,
 }
 
 # Same table as identity's ALLOWED_SERVER_ROLES; checked again on every call so that a
@@ -75,13 +87,16 @@ _SOURCE_ROLES: Final[Mapping[SourceServerName, frozenset[Role]]] = {
     "lms": frozenset(
         {Role.TEACHER, Role.STUDENT, Role.LMS_ADMIN, Role.LMS_CREATOR, Role.ADMIN}
     ),
-    "teacher": frozenset({Role.TEACHER, Role.ADMIN}),
+    "teacher": frozenset({Role.TEACHER}),
+    # Applicants and admission staff; each tool narrows it with its own `roles`.
+    "admission": ADMISSION_ROLES,
 }
 # "app": the union of its sources; each tool is re-checked against its own source.
 ALLOWED_ROLES_BY_SERVER: Final[Mapping[ServerName, frozenset[Role]]] = {
     "student": _SOURCE_ROLES["student"],
     "lms": _SOURCE_ROLES["lms"],
     "teacher": _SOURCE_ROLES["teacher"],
+    "admission": _SOURCE_ROLES["admission"],
     "admin": frozenset({Role.ADMIN}),
     "app": frozenset().union(*_SOURCE_ROLES.values()),
 }

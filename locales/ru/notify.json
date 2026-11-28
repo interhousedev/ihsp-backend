@@ -312,5 +312,14 @@
   "club-transfer-bot-accepted": "Клуб передан вам. Теперь вы им руководите.",
   "club-transfer-bot-declined": "Вы отклонили предложение.",
   "club-transfer-bot-not-available": "Это предложение больше недоступно.",
-  "club-transfer-bot-already-answered": "На это предложение уже ответили."
+  "club-transfer-bot-already-answered": "На это предложение уже ответили.",
+  "notify-homework-submitted-title": "Новая сдача домашнего задания",
+  "notify-homework-submitted-body": "{student}, {group}\n{subject} · {date}{late}\nФайлов: {files}",
+  "notify-homework-submitted-late": " · с опозданием",
+  "notify-homework-submitted-button": "Открыть работы",
+  "notify-homework-reviewed-graded-title": "Домашнее задание проверено",
+  "notify-homework-reviewed-returned-title": "Домашнее задание возвращено на доработку",
+  "notify-homework-reviewed-grade": "Оценка: {grade}",
+  "notify-homework-reviewed-button": "Открыть задание",
+  "notify-homework-emis-file": "Файл домашнего задания из EMIS"
 }

@@ -197,3 +197,19 @@ class SqlAiReviewStore:
             if session is not None:
                 session.submissions_used = max(session.submissions_used - 1, 0)
                 await db.commit()
+
+    async def list_for_user(
+        self, user_id: UUID, *, course_id: UUID | None = None, limit: int
+    ) -> Sequence[AiReviewSessionRecord]:
+        """The user's sessions with a submission, newest first."""
+        query = select(AiReviewSession).where(
+            AiReviewSession.user_id == user_id,
+            AiReviewSession.submissions_used > 0,
+        )
+        if course_id is not None:
+            query = query.where(AiReviewSession.course_id == course_id)
+        async with self.sessionmaker() as db:
+            rows = await db.scalars(
+                query.order_by(AiReviewSession.id.desc()).limit(limit)
+            )
+            return [_session(r) for r in rows]

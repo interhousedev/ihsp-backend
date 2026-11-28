@@ -40,6 +40,9 @@ class Lesson:
     emis_class_id: int | None = None
     # The topic EMIS last sent; ``topic`` follows it until a teacher writes their own.
     emis_topic: str | None = None
+    # The homework file and the topic description EMIS last sent.
+    emis_homework_url: str | None = None
+    emis_topic_description: str | None = None
 
     def starts_after(self, now: dt.datetime) -> bool:
         """Return True if the lesson has not started yet."""

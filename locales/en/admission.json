@@ -61,5 +61,6 @@
   "admission-essay-keys-backup-invalid": "The backup file could not be opened. Check the file and the passphrase.",
   "admission-essay-keys-rotation-running": "A key rotation is running. Wait until it finishes and try again.",
   "admission-catalog-cycle": "The cycle must be the current or the next admission cycle, written as 2026-27 (cycle: {cycle}).",
-  "admission-scorecard-unavailable": "College Scorecard is unavailable right now. Try again later."
+  "admission-scorecard-unavailable": "College Scorecard is unavailable right now. Try again later.",
+  "plan-duplicate": "This opportunity is already in your plan."
 }

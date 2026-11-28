@@ -1,7 +1,7 @@
 """Choice of the TelegramSender by `TELEGRAM__MODE`."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
 from uuid import UUID
 
@@ -16,7 +16,12 @@ from app.modules.notify.infrastructure.telegram_sender import (
     create_bot,
 )
 from app.settings import Settings
-from app.shared.contracts.notify import BotRoute, TelegramSender
+from app.shared.contracts.notify import (
+    BotRoute,
+    PhotoRef,
+    SentPhoto,
+    TelegramSender,
+)
 
 import structlog
 from redis.asyncio import Redis
@@ -89,6 +94,24 @@ class MultiBotSender:
         """Through the default bot."""
         sender = await self._require_default()
         return await sender.send_document(chat_id, filename, data, caption_html)
+
+    async def send_photo(
+        self,
+        chat_id: int,
+        photo: PhotoRef,
+        caption_html: str | None = None,
+        buttons: list[list[dict[str, Any]]] | None = None,
+    ) -> SentPhoto:
+        """Through the default bot."""
+        sender = await self._require_default()
+        return await sender.send_photo(chat_id, photo, caption_html, buttons)
+
+    async def send_media_group(
+        self, chat_id: int, photos: Sequence[PhotoRef]
+    ) -> list[SentPhoto]:
+        """Through the default bot."""
+        sender = await self._require_default()
+        return await sender.send_media_group(chat_id, photos)
 
     async def delete_message(self, chat_id: int, message_id: int) -> None:
         """Through the default bot."""

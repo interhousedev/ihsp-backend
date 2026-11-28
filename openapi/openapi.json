@@ -1462,7 +1462,8 @@
               "lms",
               "admin",
               "teacher",
-              "app"
+              "app",
+              "admission"
             ],
             "title": "Server",
             "type": "string"
@@ -3167,6 +3168,336 @@
         "title": "AlarmsIn",
         "type": "object"
       },
+      "AlbumIn": {
+        "description": "A new album (an event album when `event_id` is given).",
+        "properties": {
+          "allow_download": {
+            "default": true,
+            "title": "Allow Download",
+            "type": "boolean"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "event_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Date"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
+          },
+          "member_uploads": {
+            "default": false,
+            "title": "Member Uploads",
+            "type": "boolean"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/AlbumVisibility",
+            "default": "school"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "AlbumIn",
+        "type": "object"
+      },
+      "AlbumListOut": {
+        "description": "Albums under one parent.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AlbumOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AlbumListOut",
+        "type": "object"
+      },
+      "AlbumOut": {
+        "description": "An album with counters and the caller's rights.",
+        "properties": {
+          "allow_download": {
+            "title": "Allow Download",
+            "type": "boolean"
+          },
+          "can_moderate": {
+            "title": "Can Moderate",
+            "type": "boolean"
+          },
+          "can_upload": {
+            "title": "Can Upload",
+            "type": "boolean"
+          },
+          "club_id": {
+            "format": "uuid",
+            "title": "Club Id",
+            "type": "string"
+          },
+          "cover_media_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Media Id"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "event_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Date"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
+          },
+          "folder_count": {
+            "title": "Folder Count",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "member_uploads": {
+            "title": "Member Uploads",
+            "type": "boolean"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "visibility": {
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "club_id",
+          "title",
+          "description",
+          "visibility",
+          "allow_download",
+          "member_uploads",
+          "event_id",
+          "parent_id",
+          "event_date",
+          "cover_media_id",
+          "created_at",
+          "item_count",
+          "folder_count",
+          "can_upload",
+          "can_moderate"
+        ],
+        "title": "AlbumOut",
+        "type": "object"
+      },
+      "AlbumPatch": {
+        "description": "Album fields; only the sent ones change.",
+        "properties": {
+          "allow_download": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allow Download"
+          },
+          "cover_media_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Media Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "event_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Date"
+          },
+          "member_uploads": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Uploads"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "visibility": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlbumVisibility"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "AlbumPatch",
+        "type": "object"
+      },
+      "AlbumVisibility": {
+        "description": "Who sees an album.",
+        "enum": [
+          "members",
+          "school"
+        ],
+        "title": "AlbumVisibility",
+        "type": "string"
+      },
       "AlertResponse": {
         "description": "`Alert`.",
         "properties": {
@@ -3720,6 +4051,15 @@
             "default": "members",
             "title": "Audience",
             "type": "string"
+          },
+          "media_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Media Ids",
+            "type": "array"
           },
           "scheduled_at": {
             "anyOf": [
@@ -7268,6 +7608,47 @@
         "title": "BaseReviewOut",
         "type": "object"
       },
+      "BatchIn": {
+        "description": "Move or delete up to 100 items of one club.",
+        "properties": {
+          "action": {
+            "enum": [
+              "move",
+              "delete"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "album_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Album Id"
+          },
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids",
+          "action"
+        ],
+        "title": "BatchIn",
+        "type": "object"
+      },
       "Bell-Input": {
         "description": "Start and end of one period on some weekdays (jsonb of Term.bells).\n\n``source`` says who set the bell: the EMIS ``class-hours`` sync (``emis``, the\ndefault, kept equal to EMIS), Administration for a period of their own\n(``manual``; EMIS replaces it when it lists the period) or Administration\noverriding an EMIS period (``override``: time and weekdays stay, the sync leaves\nthem alone). ``emis_start`` and ``emis_end`` remember what EMIS says for the\nperiod, so an override can be reset.",
         "properties": {
@@ -7566,6 +7947,56 @@
         "title": "BlockCard",
         "type": "object"
       },
+      "BlockIn": {
+        "description": "Bar a user from uploading club media (club_id null = every club).",
+        "properties": {
+          "club_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Club Id"
+          },
+          "reason": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Reason",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "BlockIn",
+        "type": "object"
+      },
+      "BlockListOut": {
+        "description": "Upload blocks.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BlockOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "BlockListOut",
+        "type": "object"
+      },
       "BlockOption": {
         "additionalProperties": true,
         "description": "An answer option of a choice question.",
@@ -7594,6 +8025,64 @@
           "text"
         ],
         "title": "BlockOption",
+        "type": "object"
+      },
+      "BlockOut": {
+        "description": "A user barred from uploading (club_id null = every club).",
+        "properties": {
+          "club_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Club Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "club_id",
+          "reason",
+          "created_by",
+          "created_at"
+        ],
+        "title": "BlockOut",
         "type": "object"
       },
       "BlockQuestion": {
@@ -7673,6 +8162,189 @@
           "prompt"
         ],
         "title": "BlockQuestion",
+        "type": "object"
+      },
+      "BoardCountsResponse": {
+        "description": "Submission counts of a board lesson; ``total`` is the expected roster.",
+        "properties": {
+          "graded": {
+            "title": "Graded",
+            "type": "integer"
+          },
+          "late": {
+            "title": "Late",
+            "type": "integer"
+          },
+          "missing": {
+            "title": "Missing",
+            "type": "integer"
+          },
+          "submitted": {
+            "title": "Submitted",
+            "type": "integer"
+          },
+          "to_review": {
+            "title": "To Review",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "submitted",
+          "late",
+          "missing",
+          "to_review",
+          "graded",
+          "total"
+        ],
+        "title": "BoardCountsResponse",
+        "type": "object"
+      },
+      "BoardHomeworkResponse": {
+        "description": "Homework of a board lesson.",
+        "properties": {
+          "due_auto": {
+            "title": "Due Auto",
+            "type": "boolean"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "source": {
+            "enum": [
+              "teacher",
+              "emis",
+              "both"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "due_date",
+          "due_auto",
+          "source"
+        ],
+        "title": "BoardHomeworkResponse",
+        "type": "object"
+      },
+      "BoardLessonResponse": {
+        "description": "A lesson of the homework board.",
+        "properties": {
+          "accept_submissions": {
+            "title": "Accept Submissions",
+            "type": "boolean"
+          },
+          "counts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoardCountsResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "emis_files": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceItemResponse"
+            },
+            "title": "Emis Files",
+            "type": "array"
+          },
+          "emis_topic_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emis Topic Description"
+          },
+          "homework": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoardHomeworkResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "notify": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notify"
+          },
+          "notify_effective": {
+            "title": "Notify Effective",
+            "type": "boolean"
+          },
+          "period": {
+            "title": "Period",
+            "type": "integer"
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          }
+        },
+        "required": [
+          "lesson_id",
+          "date",
+          "period",
+          "topic",
+          "emis_topic_description",
+          "emis_files",
+          "homework",
+          "accept_submissions",
+          "notify",
+          "notify_effective",
+          "counts"
+        ],
+        "title": "BoardLessonResponse",
         "type": "object"
       },
       "Body_add_entry_file_v1_certificates_me__entry_id__files_post": {
@@ -9715,7 +10387,9 @@
               "checklist",
               "exam",
               "opportunity",
-              "test_score"
+              "test_score",
+              "personal",
+              "milestone"
             ],
             "title": "Source",
             "type": "string"
@@ -15646,7 +16320,8 @@
               "lms",
               "admin",
               "teacher",
-              "app"
+              "app",
+              "admission"
             ],
             "title": "Server",
             "type": "string"
@@ -15820,7 +16495,8 @@
                   "lms",
                   "admin",
                   "teacher",
-                  "app"
+                  "app",
+                  "admission"
                 ],
                 "type": "string"
               },
@@ -18185,6 +18861,28 @@
         "title": "CourseWorkspaceResponse",
         "type": "object"
       },
+      "CoverIn": {
+        "description": "The event's preview image (a staged, ready photo), or null to remove it.",
+        "properties": {
+          "media_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Id"
+          }
+        },
+        "required": [
+          "media_id"
+        ],
+        "title": "CoverIn",
+        "type": "object"
+      },
       "CoveringOfficerIn": {
         "description": "Make a transcript officer cover every student (admin only).",
         "properties": {
@@ -18448,7 +19146,8 @@
               "lms",
               "admin",
               "teacher",
-              "app"
+              "app",
+              "admission"
             ],
             "title": "Server",
             "type": "string"
@@ -18623,7 +19322,8 @@
               "lms",
               "admin",
               "teacher",
-              "app"
+              "app",
+              "admission"
             ],
             "title": "Server",
             "type": "string"
@@ -25362,6 +26062,18 @@
             ],
             "title": "Course Id"
           },
+          "cover_media_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Media Id"
+          },
           "created_by": {
             "anyOf": [
               {
@@ -25534,6 +26246,54 @@
           "ends_at"
         ],
         "title": "EventIn",
+        "type": "object"
+      },
+      "EventPatch": {
+        "description": "Editable event fields; times change through `:reschedule`.",
+        "properties": {
+          "capacity": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capacity"
+          },
+          "description": {
+            "title": "Description"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "rsvp_policy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rsvp Policy"
+          },
+          "title": {
+            "title": "Title"
+          }
+        },
+        "title": "EventPatch",
         "type": "object"
       },
       "EventStatus": {
@@ -28843,7 +29603,8 @@
           "feedback",
           "admission_document",
           "lms_ai_review",
-          "lms_captions"
+          "lms_captions",
+          "club_media"
         ],
         "title": "FilePurpose",
         "type": "string"
@@ -31903,6 +32664,19 @@
         "title": "HelperText",
         "type": "object"
       },
+      "HideIn": {
+        "description": "Why a moderator hides an item.",
+        "properties": {
+          "reason": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "title": "HideIn",
+        "type": "object"
+      },
       "HideResourceBody": {
         "description": "Hide or show a resource.",
         "properties": {
@@ -32047,8 +32821,56 @@
         "title": "HomeworkNoteBody",
         "type": "object"
       },
+      "HomeworkSettingsBody": {
+        "description": "Body of ``PUT /v1/staff/homework/settings``; an omitted field is kept.",
+        "properties": {
+          "accept_by_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accept By Default"
+          },
+          "notify_on_submission": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notify On Submission"
+          }
+        },
+        "title": "HomeworkSettingsBody",
+        "type": "object"
+      },
+      "HomeworkSettingsResponse": {
+        "description": "The teacher's own homework settings.",
+        "properties": {
+          "accept_by_default": {
+            "title": "Accept By Default",
+            "type": "boolean"
+          },
+          "notify_on_submission": {
+            "title": "Notify On Submission",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accept_by_default",
+          "notify_on_submission"
+        ],
+        "title": "HomeworkSettingsResponse",
+        "type": "object"
+      },
       "HomeworkSubmissionBody": {
-        "description": "Body of ``PUT /v1/me/homework/{lesson_id}/submission``.",
+        "description": "Body of ``PUT /v1/me/homework/{lesson_id}/submission``.\n\nA text answer, files or both; an empty submission is refused with 422.",
         "properties": {
           "comment": {
             "anyOf": [
@@ -32067,19 +32889,26 @@
               "type": "string"
             },
             "maxItems": 10,
-            "minItems": 1,
             "title": "File Ids",
             "type": "array"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
           }
         },
-        "required": [
-          "file_ids"
-        ],
         "title": "HomeworkSubmissionBody",
         "type": "object"
       },
       "HomeworkSubmissionResponse": {
-        "description": "``HomeworkSubmission``: the student's own submission.",
+        "description": "``HomeworkSubmission``: the student's own submission and its review.",
         "properties": {
           "comment": {
             "anyOf": [
@@ -32099,10 +32928,63 @@
             "title": "Files",
             "type": "array"
           },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
           "lesson_id": {
             "format": "uuid",
             "title": "Lesson Id",
             "type": "string"
+          },
+          "previous_comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Comment"
+          },
+          "review_status": {
+            "enum": [
+              "pending",
+              "returned",
+              "graded"
+            ],
+            "title": "Review Status",
+            "type": "string"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "reviewer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__interfaces__http__v1__me_classwork__schemas__PersonRefResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "status": {
             "enum": [
@@ -32116,6 +32998,28 @@
             "format": "date-time",
             "title": "Submitted At",
             "type": "string"
+          },
+          "teacher_comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Comment"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
           }
         },
         "required": [
@@ -32123,7 +33027,14 @@
           "status",
           "files",
           "comment",
-          "submitted_at"
+          "submitted_at",
+          "text",
+          "review_status",
+          "grade",
+          "teacher_comment",
+          "previous_comment",
+          "reviewed_at",
+          "reviewer"
         ],
         "title": "HomeworkSubmissionResponse",
         "type": "object"
@@ -41121,6 +42032,35 @@
         "title": "LessonDraftOptions",
         "type": "object"
       },
+      "LessonHomeworkSwitchesBody": {
+        "description": "Body of ``PATCH /v1/staff/lessons/{id}/homework/settings``.\n\nAn omitted field is kept; ``notify: null`` follows the teacher's setting again.",
+        "properties": {
+          "accept_submissions": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accept Submissions"
+          },
+          "notify": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notify"
+          }
+        },
+        "title": "LessonHomeworkSwitchesBody",
+        "type": "object"
+      },
       "LessonItem": {
         "description": "A lesson in lists.",
         "properties": {
@@ -45418,7 +46358,8 @@
               "lms",
               "admin",
               "teacher",
-              "app"
+              "app",
+              "admission"
             ],
             "title": "Server",
             "type": "string"
@@ -45521,7 +46462,8 @@
                   "lms",
                   "admin",
                   "teacher",
-                  "app"
+                  "app",
+                  "admission"
                 ],
                 "type": "string"
               },
@@ -45556,6 +46498,16 @@
       "McpConnectionOut": {
         "description": "What the web shows on the \"connect your AI agent\" panel.",
         "properties": {
+          "app_url": {
+            "description": "URL of the combined `/app` MCP server",
+            "title": "App Url",
+            "type": "string"
+          },
+          "connectors_url": {
+            "description": "Page where the user connects AI services",
+            "title": "Connectors Url",
+            "type": "string"
+          },
           "example_config": {
             "additionalProperties": true,
             "title": "Example Config",
@@ -45564,6 +46516,14 @@
           "max_expiry_days": {
             "title": "Max Expiry Days",
             "type": "integer"
+          },
+          "oauth_scopes": {
+            "description": "OAuth scopes of the admission server this caller's roles may hold",
+            "items": {
+              "type": "string"
+            },
+            "title": "Oauth Scopes",
+            "type": "array"
           },
           "scopes": {
             "items": {
@@ -45581,6 +46541,9 @@
           "url",
           "scopes",
           "max_expiry_days",
+          "oauth_scopes",
+          "app_url",
+          "connectors_url",
           "example_config"
         ],
         "title": "McpConnectionOut",
@@ -45644,7 +46607,8 @@
               "lms",
               "admin",
               "teacher",
-              "app"
+              "app",
+              "admission"
             ],
             "title": "Server",
             "type": "string"
@@ -45883,7 +46847,7 @@
             "title": "Group Id"
           },
           "kind": {
-            "$ref": "#/components/schemas/MediaKind",
+            "$ref": "#/components/schemas/app__modules__media__domain__media_job__MediaKind",
             "default": "video_with_voice"
           },
           "language": {
@@ -46005,7 +46969,7 @@
             "type": "string"
           },
           "kind": {
-            "$ref": "#/components/schemas/MediaKind"
+            "$ref": "#/components/schemas/MediaKind-Output"
           },
           "status": {
             "$ref": "#/components/schemas/MediaStatus"
@@ -46028,7 +46992,7 @@
         "title": "MediaJobView",
         "type": "object"
       },
-      "MediaKind": {
+      "MediaKind-Output": {
         "description": "What the teacher gets.",
         "enum": [
           "video_with_voice",
@@ -46036,6 +47000,378 @@
         ],
         "title": "MediaKind",
         "type": "string"
+      },
+      "MediaLimitsIn": {
+        "description": "Per-club media limits in bytes; null keeps the settings default.",
+        "properties": {
+          "photo_max_bytes": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Max Bytes"
+          },
+          "quota_bytes": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quota Bytes"
+          },
+          "video_max_bytes": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Max Bytes"
+          }
+        },
+        "title": "MediaLimitsIn",
+        "type": "object"
+      },
+      "MediaListOut": {
+        "description": "Items.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "MediaListOut",
+        "type": "object"
+      },
+      "MediaOut": {
+        "description": "A photo or video with signed relative URLs (null while not served).",
+        "properties": {
+          "album_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Album Id"
+          },
+          "announcement_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Announcement Id"
+          },
+          "byte_size": {
+            "title": "Byte Size",
+            "type": "integer"
+          },
+          "can_delete": {
+            "title": "Can Delete",
+            "type": "boolean"
+          },
+          "can_moderate": {
+            "title": "Can Moderate",
+            "type": "boolean"
+          },
+          "caption": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caption"
+          },
+          "club_id": {
+            "format": "uuid",
+            "title": "Club Id",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height"
+          },
+          "hidden_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hidden Source"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "original_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Url"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "poster_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Poster Url"
+          },
+          "preview_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview Url"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "thumb_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumb Url"
+          },
+          "uploaded_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uploaded By"
+          },
+          "usage": {
+            "title": "Usage",
+            "type": "string"
+          },
+          "video_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Url"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          }
+        },
+        "required": [
+          "id",
+          "club_id",
+          "kind",
+          "status",
+          "usage",
+          "album_id",
+          "event_id",
+          "announcement_id",
+          "uploaded_by",
+          "caption",
+          "position",
+          "width",
+          "height",
+          "duration_ms",
+          "byte_size",
+          "hidden_source",
+          "created_at",
+          "thumb_url",
+          "preview_url",
+          "poster_url",
+          "video_url",
+          "original_url",
+          "can_delete",
+          "can_moderate"
+        ],
+        "title": "MediaOut",
+        "type": "object"
+      },
+      "MediaPageOut": {
+        "description": "A page of album items.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "MediaPageOut",
+        "type": "object"
+      },
+      "MediaPatch": {
+        "description": "Caption, album or the uploader's own hide switch.",
+        "properties": {
+          "album_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Album Id"
+          },
+          "caption": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caption"
+          },
+          "hidden": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hidden"
+          }
+        },
+        "title": "MediaPatch",
+        "type": "object"
       },
       "MediaRedeemBody": {
         "description": "`POST /v1/lms/media/redeem`: the token from the fragment of the link.",
@@ -53723,6 +55059,387 @@
         "title": "PersonResponse",
         "type": "object"
       },
+      "PersonalAddedOut": {
+        "description": "The saved find, or the school list entry planned instead (`merged`).",
+        "properties": {
+          "entry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonalEntryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "merged": {
+            "title": "Merged",
+            "type": "boolean"
+          },
+          "planned_opportunity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Opportunity Id"
+          }
+        },
+        "required": [
+          "merged",
+          "entry",
+          "planned_opportunity_id"
+        ],
+        "title": "PersonalAddedOut",
+        "type": "object"
+      },
+      "PersonalCreateIn": {
+        "description": "A new find; `propose` also sends it to the school list moderators.",
+        "properties": {
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "kind": {
+            "enum": [
+              "exam",
+              "certification",
+              "course",
+              "event",
+              "recurring",
+              "program",
+              "scholarship",
+              "research"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "planned_grade": {
+            "anyOf": [
+              {
+                "maximum": 20.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Grade"
+          },
+          "planned_term": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fall",
+                  "spring",
+                  "summer"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Term"
+          },
+          "propose": {
+            "default": false,
+            "title": "Propose",
+            "type": "boolean"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "registration_deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registration Deadline"
+          },
+          "starts_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "kind",
+          "title"
+        ],
+        "title": "PersonalCreateIn",
+        "type": "object"
+      },
+      "PersonalEntryOut": {
+        "description": "A find of the student, not verified by the school.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "exam",
+              "certification",
+              "course",
+              "event",
+              "recurring",
+              "program",
+              "scholarship",
+              "research"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "lock_version": {
+            "title": "Lock Version",
+            "type": "integer"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "origin": {
+            "enum": [
+              "web",
+              "mcp"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "planned_grade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Grade"
+          },
+          "planned_term": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fall",
+                  "spring",
+                  "summer"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Term"
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProposalOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "registration_deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registration Deadline"
+          },
+          "starts_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "verified": {
+            "const": false,
+            "default": false,
+            "title": "Verified",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "provider",
+          "url",
+          "summary",
+          "registration_deadline",
+          "starts_on",
+          "ends_on",
+          "planned_grade",
+          "planned_term",
+          "note",
+          "origin",
+          "proposal",
+          "lock_version",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PersonalEntryOut",
+        "type": "object"
+      },
       "PersonalTokenResponse": {
         "description": "Personal token metadata (never the secret).",
         "properties": {
@@ -53792,6 +55509,156 @@
           "revoked_at"
         ],
         "title": "PersonalTokenResponse",
+        "type": "object"
+      },
+      "PersonalUpdateIn": {
+        "description": "A changed find; `lock_version` as read.",
+        "properties": {
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "kind": {
+            "enum": [
+              "exam",
+              "certification",
+              "course",
+              "event",
+              "recurring",
+              "program",
+              "scholarship",
+              "research"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "lock_version": {
+            "minimum": 0.0,
+            "title": "Lock Version",
+            "type": "integer"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "planned_grade": {
+            "anyOf": [
+              {
+                "maximum": 20.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Grade"
+          },
+          "planned_term": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fall",
+                  "spring",
+                  "summer"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Term"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "registration_deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registration Deadline"
+          },
+          "starts_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "lock_version"
+        ],
+        "title": "PersonalUpdateIn",
         "type": "object"
       },
       "PickIn": {
@@ -54319,7 +56186,7 @@
         "type": "object"
       },
       "PlanOut": {
-        "description": "A student's plan.",
+        "description": "A student's plan; `personal` are the student's own finds.",
         "properties": {
           "analytics": {
             "$ref": "#/components/schemas/app__interfaces__http__v1__admission__schemas_opportunities__AnalyticsOut"
@@ -54344,13 +56211,21 @@
             },
             "title": "Opportunities",
             "type": "array"
+          },
+          "personal": {
+            "items": {
+              "$ref": "#/components/schemas/PersonalEntryOut"
+            },
+            "title": "Personal",
+            "type": "array"
           }
         },
         "required": [
           "entries",
           "opportunities",
           "analytics",
-          "deadlines"
+          "deadlines",
+          "personal"
         ],
         "title": "PlanOut",
         "type": "object"
@@ -58829,6 +60704,31 @@
         "title": "ProposalBody",
         "type": "object"
       },
+      "ProposalOut": {
+        "description": "Moderation state of a find sent to the school list.",
+        "properties": {
+          "status": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submission_id": {
+            "format": "uuid",
+            "title": "Submission Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "submission_id",
+          "status"
+        ],
+        "title": "ProposalOut",
+        "type": "object"
+      },
       "ProvisionedMcpSetupResponse": {
         "description": "A pre-created client; `client_secret` is set only when this call created it.",
         "properties": {
@@ -62936,6 +64836,24 @@
         "title": "ReportFormat",
         "type": "string"
       },
+      "ReportIn": {
+        "description": "Report an item; `is_subject` (\"I am in this photo\") hides it at once.",
+        "properties": {
+          "is_subject": {
+            "default": false,
+            "title": "Is Subject",
+            "type": "boolean"
+          },
+          "reason": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "title": "ReportIn",
+        "type": "object"
+      },
       "ReportOptions": {
         "description": "`ReportOptions` of § 4.4; ``style`` belongs to conspects only.",
         "properties": {
@@ -63004,31 +64922,6 @@
           "format"
         ],
         "title": "ReportOptions",
-        "type": "object"
-      },
-      "ReportOut": {
-        "description": "The comparison on every sample.",
-        "properties": {
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/SampleResultOut"
-            },
-            "title": "Results",
-            "type": "array"
-          },
-          "warnings": {
-            "items": {
-              "$ref": "#/components/schemas/IssueOut"
-            },
-            "title": "Warnings",
-            "type": "array"
-          }
-        },
-        "required": [
-          "warnings",
-          "results"
-        ],
-        "title": "ReportOut",
         "type": "object"
       },
       "ReportReason": {
@@ -63862,39 +65755,6 @@
         "title": "ReviewAnswerBody",
         "type": "object"
       },
-      "ReviewBody": {
-        "description": "POST /v1/me/flashcards/{card_id}/review.\n\n`duration_ms` is how long the student looked at the card (the server keeps at\nmost one minute of it).",
-        "properties": {
-          "duration_ms": {
-            "anyOf": [
-              {
-                "maximum": 3600000.0,
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Duration Ms"
-          },
-          "rating": {
-            "enum": [
-              "again",
-              "hard",
-              "medium",
-              "easy"
-            ],
-            "title": "Rating",
-            "type": "string"
-          }
-        },
-        "required": [
-          "rating"
-        ],
-        "title": "ReviewBody",
-        "type": "object"
-      },
       "ReviewFindingOut": {
         "description": "One finding of a section with the references of its evidence.",
         "properties": {
@@ -63950,6 +65810,27 @@
         "title": "ReviewGradeBody",
         "type": "object"
       },
+      "ReviewItemOut": {
+        "description": "An item in the moderation queue with its reports.",
+        "properties": {
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "reports": {
+            "items": {
+              "$ref": "#/components/schemas/app__interfaces__http__v1__activities__schemas_media__ReportOut"
+            },
+            "title": "Reports",
+            "type": "array"
+          }
+        },
+        "required": [
+          "media",
+          "reports"
+        ],
+        "title": "ReviewItemOut",
+        "type": "object"
+      },
       "ReviewLinkOut": {
         "description": "The screen a finding or subsection opens; `ref` is empty for a whole screen.",
         "properties": {
@@ -63977,6 +65858,28 @@
           }
         },
         "title": "ReviewLinkOut",
+        "type": "object"
+      },
+      "ReviewListOut": {
+        "description": "A page of the moderation queue.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ReviewListOut",
         "type": "object"
       },
       "ReviewOut": {
@@ -66263,7 +68166,8 @@
               "lms",
               "admin",
               "teacher",
-              "app"
+              "app",
+              "admission"
             ],
             "title": "Server",
             "type": "string"
@@ -67853,7 +69757,8 @@
               "lms",
               "admin",
               "teacher",
-              "app"
+              "app",
+              "admission"
             ],
             "title": "Server",
             "type": "string"
@@ -67965,8 +69870,19 @@
         "type": "object"
       },
       "SetHomeworkBody": {
-        "description": "Body of ``PUT /v1/staff/lessons/{id}/homework``.",
+        "description": "Body of ``PUT /v1/staff/lessons/{id}/homework``.\n\n``text`` may be omitted when the lesson has EMIS homework; then only the due\ndate and the switch change. ``accept_submissions`` omitted keeps the switch.",
         "properties": {
+          "accept_submissions": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accept Submissions"
+          },
           "due_date": {
             "anyOf": [
               {
@@ -67980,13 +69896,17 @@
             "title": "Due Date"
           },
           "text": {
-            "title": "Text",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
           }
         },
-        "required": [
-          "text"
-        ],
         "title": "SetHomeworkBody",
         "type": "object"
       },
@@ -70915,9 +72835,48 @@
         "title": "StaffGroupResponse",
         "type": "object"
       },
-      "StaffHomeworkResponse": {
-        "description": "Homework of a lesson as the teacher sees it.",
+      "StaffHomeworkBoardResponse": {
+        "description": "``StaffHomeworkBoard``: the lessons of one journal option, newest first.",
         "properties": {
+          "audience_key": {
+            "title": "Audience Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "lessons": {
+            "items": {
+              "$ref": "#/components/schemas/BoardLessonResponse"
+            },
+            "title": "Lessons",
+            "type": "array"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/HomeworkSettingsResponse"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/app__interfaces__http__v1__me_classwork__schemas__SubjectRefResponse"
+          }
+        },
+        "required": [
+          "subject",
+          "audience_key",
+          "label",
+          "lessons",
+          "settings"
+        ],
+        "title": "StaffHomeworkBoardResponse",
+        "type": "object"
+      },
+      "StaffHomeworkResponse": {
+        "description": "Homework of a lesson as the teacher sees it.\n\n``text`` is empty for homework that only EMIS gave; ``notify`` None follows the\nteacher's own setting, ``notify_effective`` is the value in force.",
+        "properties": {
+          "accept_submissions": {
+            "title": "Accept Submissions",
+            "type": "boolean"
+          },
           "due_auto": {
             "title": "Due Auto",
             "type": "boolean"
@@ -70933,6 +72892,48 @@
               }
             ],
             "title": "Due Date"
+          },
+          "emis_files": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceItemResponse"
+            },
+            "title": "Emis Files",
+            "type": "array"
+          },
+          "emis_topic_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emis Topic Description"
+          },
+          "notify": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notify"
+          },
+          "notify_effective": {
+            "title": "Notify Effective",
+            "type": "boolean"
+          },
+          "source": {
+            "enum": [
+              "teacher",
+              "emis",
+              "both"
+            ],
+            "title": "Source",
+            "type": "string"
           },
           "submissions": {
             "anyOf": [
@@ -70951,8 +72952,14 @@
         },
         "required": [
           "text",
+          "source",
           "due_date",
-          "due_auto"
+          "due_auto",
+          "accept_submissions",
+          "notify",
+          "notify_effective",
+          "emis_files",
+          "emis_topic_description"
         ],
         "title": "StaffHomeworkResponse",
         "type": "object"
@@ -72229,7 +74236,7 @@
         "type": "object"
       },
       "StaffSubmissionRowResponse": {
-        "description": "One student of the lesson and what they handed in.",
+        "description": "One student of the lesson, what they handed in and the review.",
         "properties": {
           "comment": {
             "anyOf": [
@@ -72249,6 +74256,17 @@
             "title": "Files",
             "type": "array"
           },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
           "group_name": {
             "title": "Group Name",
             "type": "string"
@@ -72264,6 +74282,48 @@
               }
             ],
             "title": "Id"
+          },
+          "previous_comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Comment"
+          },
+          "review_status": {
+            "enum": [
+              "pending",
+              "returned",
+              "graded"
+            ],
+            "title": "Review Status",
+            "type": "string"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "reviewer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__interfaces__http__v1__me_classwork__schemas__PersonRefResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "status": {
             "enum": [
@@ -72299,6 +74359,28 @@
               }
             ],
             "title": "Submitted At"
+          },
+          "teacher_comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Comment"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
           }
         },
         "required": [
@@ -72309,7 +74391,14 @@
           "status",
           "files",
           "comment",
-          "submitted_at"
+          "submitted_at",
+          "text",
+          "review_status",
+          "grade",
+          "teacher_comment",
+          "previous_comment",
+          "reviewed_at",
+          "reviewer"
         ],
         "title": "StaffSubmissionRowResponse",
         "type": "object"
@@ -75839,6 +77928,10 @@
       "SubmissionCountsResponse": {
         "description": "Totals over the lesson's students.",
         "properties": {
+          "graded": {
+            "title": "Graded",
+            "type": "integer"
+          },
           "late": {
             "title": "Late",
             "type": "integer"
@@ -75847,8 +77940,16 @@
             "title": "Missing",
             "type": "integer"
           },
+          "returned": {
+            "title": "Returned",
+            "type": "integer"
+          },
           "submitted": {
             "title": "Submitted",
+            "type": "integer"
+          },
+          "to_review": {
+            "title": "To Review",
             "type": "integer"
           },
           "total": {
@@ -75860,6 +77961,9 @@
           "submitted",
           "late",
           "missing",
+          "to_review",
+          "graded",
+          "returned",
           "total"
         ],
         "title": "SubmissionCountsResponse",
@@ -76107,11 +78211,31 @@
         "type": "object"
       },
       "SubmissionSummaryResponse": {
-        "description": "What the student handed in for a homework item.",
+        "description": "What the student handed in for a homework item and how it was reviewed.",
         "properties": {
           "file_count": {
             "title": "File Count",
             "type": "integer"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "review_status": {
+            "enum": [
+              "pending",
+              "returned",
+              "graded"
+            ],
+            "title": "Review Status",
+            "type": "string"
           },
           "status": {
             "enum": [
@@ -76130,7 +78254,9 @@
         "required": [
           "status",
           "file_count",
-          "submitted_at"
+          "submitted_at",
+          "review_status",
+          "grade"
         ],
         "title": "SubmissionSummaryResponse",
         "type": "object"
@@ -83209,6 +85335,71 @@
         "title": "UploadDayResponse",
         "type": "object"
       },
+      "UploadIn": {
+        "description": "Reserve an upload; the browser then PUTs the bytes to `upload.url`.",
+        "properties": {
+          "album_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Album Id"
+          },
+          "caption": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caption"
+          },
+          "consent_attested": {
+            "title": "Consent Attested",
+            "type": "boolean"
+          },
+          "content_type": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Content Type",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "sha256_b64": {
+            "maxLength": 44,
+            "minLength": 44,
+            "title": "Sha256 B64",
+            "type": "string"
+          },
+          "size": {
+            "minimum": 1.0,
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "size",
+          "content_type",
+          "sha256_b64",
+          "consent_attested"
+        ],
+        "title": "UploadIn",
+        "type": "object"
+      },
       "UploadInfo": {
         "description": "The request the client sends to storage.",
         "properties": {
@@ -83235,6 +85426,23 @@
           "headers"
         ],
         "title": "UploadInfo",
+        "type": "object"
+      },
+      "UploadOut": {
+        "description": "The reserved item and its upload target.",
+        "properties": {
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "upload": {
+            "$ref": "#/components/schemas/UploadTargetOut"
+          }
+        },
+        "required": [
+          "media",
+          "upload"
+        ],
+        "title": "UploadOut",
         "type": "object"
       },
       "UploadResponse": {
@@ -83308,6 +85516,33 @@
           "queue_position"
         ],
         "title": "UploadRowResponse",
+        "type": "object"
+      },
+      "UploadTargetOut": {
+        "description": "Where and how to PUT the bytes.",
+        "properties": {
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Headers",
+            "type": "object"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "method",
+          "headers"
+        ],
+        "title": "UploadTargetOut",
         "type": "object"
       },
       "UploaderResponse": {
@@ -83486,6 +85721,76 @@
           "storage"
         ],
         "title": "UsageInsights",
+        "type": "object"
+      },
+      "UsageOut": {
+        "description": "Storage use and limits of a club; overrides are null when not set.",
+        "properties": {
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "override_photo_max_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Photo Max Bytes"
+          },
+          "override_quota_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Quota Bytes"
+          },
+          "override_video_max_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Video Max Bytes"
+          },
+          "photo_max_bytes": {
+            "title": "Photo Max Bytes",
+            "type": "integer"
+          },
+          "quota_bytes": {
+            "title": "Quota Bytes",
+            "type": "integer"
+          },
+          "used_bytes": {
+            "title": "Used Bytes",
+            "type": "integer"
+          },
+          "video_max_bytes": {
+            "title": "Video Max Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "used_bytes",
+          "quota_bytes",
+          "item_count",
+          "photo_max_bytes",
+          "video_max_bytes",
+          "override_photo_max_bytes",
+          "override_video_max_bytes",
+          "override_quota_bytes"
+        ],
+        "title": "UsageOut",
         "type": "object"
       },
       "UsageResponse": {
@@ -86064,6 +88369,54 @@
         "title": "NoteIn",
         "type": "object"
       },
+      "app__interfaces__http__v1__activities__schemas_media__ReportOut": {
+        "description": "A report of an item.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_subject": {
+            "title": "Is Subject",
+            "type": "boolean"
+          },
+          "media_id": {
+            "format": "uuid",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "reporter_id": {
+            "format": "uuid",
+            "title": "Reporter Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "media_id",
+          "reporter_id",
+          "is_subject",
+          "reason",
+          "status",
+          "created_at"
+        ],
+        "title": "ReportOut",
+        "type": "object"
+      },
       "app__interfaces__http__v1__admin_activities__schemas__AnalyticsOut": {
         "description": "Platform-wide club figures for a period.",
         "properties": {
@@ -88587,6 +90940,31 @@
         "title": "FeedbackIn",
         "type": "object"
       },
+      "app__interfaces__http__v1__admission__routes_prompt_studio__ReportOut": {
+        "description": "The comparison on every sample.",
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SampleResultOut"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/IssueOut"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "warnings",
+          "results"
+        ],
+        "title": "ReportOut",
+        "type": "object"
+      },
       "app__interfaces__http__v1__admission__routes_prompt_studio__VersionOut": {
         "description": "One stored prompt version.",
         "properties": {
@@ -90763,6 +93141,39 @@
         "title": "CopyBody",
         "type": "object"
       },
+      "app__interfaces__http__v1__flashcards__schemas__ReviewBody": {
+        "description": "POST /v1/me/flashcards/{card_id}/review.\n\n`duration_ms` is how long the student looked at the card (the server keeps at\nmost one minute of it).",
+        "properties": {
+          "duration_ms": {
+            "anyOf": [
+              {
+                "maximum": 3600000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "rating": {
+            "enum": [
+              "again",
+              "hard",
+              "medium",
+              "easy"
+            ],
+            "title": "Rating",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rating"
+        ],
+        "title": "ReviewBody",
+        "type": "object"
+      },
       "app__interfaces__http__v1__id__login__schemas__RestoreBody": {
         "description": "POST /v1/id/login/restore and /login/restore/decline.",
         "properties": {
@@ -91496,8 +93907,12 @@
         "type": "object"
       },
       "app__interfaces__http__v1__me_classwork__schemas__HomeworkItemResponse": {
-        "description": "``HomeworkItem``; ``days_overdue`` is 0 unless the open item is past due.",
+        "description": "``HomeworkItem``; ``days_overdue`` is 0 unless the open item is past due.\n\n``text`` is empty for homework that only EMIS gave (``source`` ``emis``) and on a\nlesson page without homework (``source`` None);\n``emis_files`` are the EMIS homework files and ``topic`` the EMIS topic text.",
         "properties": {
+          "accepts_submissions": {
+            "title": "Accepts Submissions",
+            "type": "boolean"
+          },
           "days_overdue": {
             "title": "Days Overdue",
             "type": "integer"
@@ -91526,6 +93941,13 @@
             ],
             "title": "Due Date"
           },
+          "emis_files": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceItemResponse"
+            },
+            "title": "Emis Files",
+            "type": "array"
+          },
           "given_on": {
             "format": "date",
             "title": "Given On",
@@ -91546,6 +93968,22 @@
               }
             ],
             "title": "Note"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "teacher",
+                  "emis",
+                  "both"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
           },
           "subject": {
             "$ref": "#/components/schemas/app__interfaces__http__v1__me_classwork__schemas__SubjectRefResponse"
@@ -91574,6 +94012,17 @@
             "title": "Text",
             "type": "string"
           },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          },
           "updated": {
             "title": "Updated",
             "type": "boolean"
@@ -91584,6 +94033,10 @@
           "subject",
           "teacher",
           "text",
+          "source",
+          "emis_files",
+          "topic",
+          "accepts_submissions",
           "due_date",
           "given_on",
           "days_overdue",
@@ -92758,6 +95211,46 @@
         "title": "ProgressBody",
         "type": "object"
       },
+      "app__interfaces__http__v1__staff_classwork__schemas__ReviewBody": {
+        "description": "Body of ``PUT /v1/staff/homework/submissions/{submission_id}/review``.\n\n``grade`` (2..5) is required for ``grade``, ``comment`` for ``return``.",
+        "properties": {
+          "action": {
+            "enum": [
+              "grade",
+              "return"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "ReviewBody",
+        "type": "object"
+      },
       "app__interfaces__http__v1__teacher_ai__question_bank__QuestionBody": {
         "description": "One question to store.",
         "properties": {
@@ -92800,6 +95293,15 @@
         ],
         "title": "QuestionBody",
         "type": "object"
+      },
+      "app__modules__activities__domain__media__MediaKind": {
+        "description": "Photo or video.",
+        "enum": [
+          "photo",
+          "video"
+        ],
+        "title": "MediaKind",
+        "type": "string"
       },
       "app__modules__library__domain__enums__Visibility": {
         "description": "Who may see a published item.",
@@ -93358,6 +95860,15 @@
         },
         "title": "VideoBlock",
         "type": "object"
+      },
+      "app__modules__media__domain__media_job__MediaKind": {
+        "description": "What the teacher gets.",
+        "enum": [
+          "video_with_voice",
+          "audio_only"
+        ],
+        "title": "MediaKind",
+        "type": "string"
       }
     }
   },
@@ -93883,6 +96394,226 @@
         ]
       }
     },
+    "/v1/activities/albums/{album_id}": {
+      "delete": {
+        "description": "Delete an album and its items (soft).",
+        "operationId": "delete_album_v1_activities_albums__album_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "album_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Album Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Album",
+        "tags": [
+          "activities"
+        ]
+      },
+      "get": {
+        "description": "One album.",
+        "operationId": "get_album_v1_activities_albums__album_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "album_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Album Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Album",
+        "tags": [
+          "activities"
+        ]
+      },
+      "patch": {
+        "description": "Album fields.",
+        "operationId": "update_album_v1_activities_albums__album_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "album_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Album Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlbumPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Album",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/albums/{album_id}/media": {
+      "get": {
+        "description": "Items of an album, oldest position first.",
+        "operationId": "album_media_v1_activities_albums__album_id__media_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "album_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Album Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 60,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/app__modules__activities__domain__media__MediaKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaPageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Album Media",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
     "/v1/activities/announcements/{announcement_id}:cancel": {
       "post": {
         "description": "Cancel a scheduled announcement.",
@@ -94330,6 +97061,119 @@
           }
         },
         "summary": "Update Club",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/clubs/{club_id}/albums": {
+      "get": {
+        "description": "Albums under a parent (root when omitted) that the caller may see.",
+        "operationId": "list_albums_v1_activities_clubs__club_id__albums_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "club_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Club Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Parent Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Albums",
+        "tags": [
+          "activities"
+        ]
+      },
+      "post": {
+        "description": "A new album.",
+        "operationId": "create_album_v1_activities_clubs__club_id__albums_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "club_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Club Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlbumIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Album",
         "tags": [
           "activities"
         ]
@@ -95153,6 +97997,104 @@
           }
         },
         "summary": "My Club State",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/clubs/{club_id}/media/usage": {
+      "get": {
+        "description": "Storage use and limits of the club.",
+        "operationId": "media_usage_v1_activities_clubs__club_id__media_usage_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "club_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Club Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Media Usage",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/clubs/{club_id}/media:request-upload": {
+      "post": {
+        "description": "Reserve an item and get a presigned PUT for its bytes.",
+        "operationId": "request_upload_v1_activities_clubs__club_id__media_request_upload_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "club_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Club Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request Upload",
         "tags": [
           "activities"
         ]
@@ -96416,6 +99358,152 @@
         "tags": [
           "activities"
         ]
+      },
+      "patch": {
+        "description": "Edit the event's text, place, capacity or RSVP policy.",
+        "operationId": "update_event_v1_activities_events__event_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Event"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Event",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/events/{event_id}/album": {
+      "get": {
+        "description": "The event's album, or null.",
+        "operationId": "event_album_v1_activities_events__event_id__album_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/AlbumOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Event Album V1 Activities Events  Event Id  Album Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Event Album",
+        "tags": [
+          "activities"
+        ]
+      },
+      "put": {
+        "description": "Create the event's album if missing (idempotent).",
+        "operationId": "ensure_event_album_v1_activities_events__event_id__album_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ensure Event Album",
+        "tags": [
+          "activities"
+        ]
       }
     },
     "/v1/activities/events/{event_id}/check-in": {
@@ -96467,6 +99555,60 @@
           }
         },
         "summary": "Check In",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/events/{event_id}/cover": {
+      "put": {
+        "description": "Set, replace or remove the event's preview image.",
+        "operationId": "set_event_cover_v1_activities_events__event_id__cover_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoverIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Event"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Event Cover",
         "tags": [
           "activities"
         ]
@@ -97201,6 +100343,358 @@
           }
         },
         "summary": "Set Consent",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/media/{media_id}": {
+      "delete": {
+        "description": "Delete an own item (or any, for moderators).",
+        "operationId": "delete_media_v1_activities_media__media_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Media Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Media",
+        "tags": [
+          "activities"
+        ]
+      },
+      "get": {
+        "description": "One item (poll while it is processing).",
+        "operationId": "get_media_v1_activities_media__media_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Media Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Media",
+        "tags": [
+          "activities"
+        ]
+      },
+      "patch": {
+        "description": "Caption, album, or the uploader's own hide/show.",
+        "operationId": "update_media_v1_activities_media__media_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Media Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Media",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/media/{media_id}/{variant}": {
+      "get": {
+        "description": "Signed file route: no Bearer; the signature and the item state decide.",
+        "operationId": "media_file_v1_activities_media__media_id___variant__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Media Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "variant",
+            "required": true,
+            "schema": {
+              "title": "Variant",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "e",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "E"
+            }
+          },
+          {
+            "in": "query",
+            "name": "s",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "S"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/webp": {}
+            },
+            "description": "Successful Response"
+          },
+          "302": {
+            "description": "Presigned storage URL"
+          },
+          "404": {
+            "description": "Bad or expired signature, or item not served"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Media File",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/media/{media_id}:complete": {
+      "post": {
+        "description": "The bytes are uploaded; processing starts.",
+        "operationId": "complete_upload_v1_activities_media__media_id__complete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Media Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete Upload",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/media/{media_id}:report": {
+      "post": {
+        "description": "Report an item; \"I am in this photo\" hides it at once.",
+        "operationId": "report_media_v1_activities_media__media_id__report_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Media Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Report Media",
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/media:batch": {
+      "post": {
+        "description": "Move or delete several items of one club.",
+        "operationId": "batch_v1_activities_media_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Batch",
         "tags": [
           "activities"
         ]
@@ -98065,6 +101559,144 @@
         ]
       }
     },
+    "/v1/admin/activities/clubs/{club_id}/media-limits": {
+      "delete": {
+        "description": "Drop every override of the club.",
+        "operationId": "clear_media_limits_v1_admin_activities_clubs__club_id__media_limits_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "club_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Club Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clear Media Limits",
+        "tags": [
+          "admin-activities"
+        ]
+      },
+      "get": {
+        "description": "Storage use, limits in force and the club's overrides.",
+        "operationId": "get_media_limits_v1_admin_activities_clubs__club_id__media_limits_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "club_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Club Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Media Limits",
+        "tags": [
+          "admin-activities"
+        ]
+      },
+      "put": {
+        "description": "Replace the club's overrides; a null field falls back to the default.",
+        "operationId": "set_media_limits_v1_admin_activities_clubs__club_id__media_limits_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "club_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Club Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaLimitsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Media Limits",
+        "tags": [
+          "admin-activities"
+        ]
+      }
+    },
     "/v1/admin/activities/clubs/{club_id}:force-transfer": {
       "post": {
         "description": "Hand a club to another person without an offer.",
@@ -98266,6 +101898,462 @@
           }
         },
         "summary": "Suspend Club",
+        "tags": [
+          "admin-activities"
+        ]
+      }
+    },
+    "/v1/admin/activities/media": {
+      "get": {
+        "description": "Club media awaiting review: reported or hidden items with their reports.",
+        "operationId": "media_queue_v1_admin_activities_media_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "default": "reported",
+              "enum": [
+                "reported",
+                "hidden"
+              ],
+              "title": "State",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "club_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Club Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Media Queue",
+        "tags": [
+          "admin-activities"
+        ]
+      }
+    },
+    "/v1/admin/activities/media-blocks": {
+      "get": {
+        "description": "Upload blocks of a club, or the global ones.",
+        "operationId": "list_media_blocks_v1_admin_activities_media_blocks_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "club_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Club Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Media Blocks",
+        "tags": [
+          "admin-activities"
+        ]
+      },
+      "post": {
+        "description": "Bar a user from uploading club media.",
+        "operationId": "block_uploader_v1_admin_activities_media_blocks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Block Uploader",
+        "tags": [
+          "admin-activities"
+        ]
+      }
+    },
+    "/v1/admin/activities/media-blocks/{user_id}": {
+      "delete": {
+        "description": "Lift an upload block.",
+        "operationId": "unblock_uploader_v1_admin_activities_media_blocks__user_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "club_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Club Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unblock Uploader",
+        "tags": [
+          "admin-activities"
+        ]
+      }
+    },
+    "/v1/admin/activities/media-reports/{report_id}:dismiss": {
+      "post": {
+        "description": "Close a report as unfounded; the item returns when no report stays open.",
+        "operationId": "dismiss_report_v1_admin_activities_media_reports__report_id__dismiss_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Report Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dismiss Report",
+        "tags": [
+          "admin-activities"
+        ]
+      }
+    },
+    "/v1/admin/activities/media-reports/{report_id}:uphold": {
+      "post": {
+        "description": "Agree with a report; the item stays hidden.",
+        "operationId": "uphold_report_v1_admin_activities_media_reports__report_id__uphold_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Report Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Uphold Report",
+        "tags": [
+          "admin-activities"
+        ]
+      }
+    },
+    "/v1/admin/activities/media/{media_id}": {
+      "delete": {
+        "description": "Remove an item and its files now.",
+        "operationId": "purge_media_v1_admin_activities_media__media_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Media Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Purge Media",
+        "tags": [
+          "admin-activities"
+        ]
+      }
+    },
+    "/v1/admin/activities/media/{media_id}:hide": {
+      "post": {
+        "description": "Hide an item from everyone but moderators.",
+        "operationId": "hide_media_v1_admin_activities_media__media_id__hide_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Media Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HideIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Hide Media",
+        "tags": [
+          "admin-activities"
+        ]
+      }
+    },
+    "/v1/admin/activities/media/{media_id}:restore": {
+      "post": {
+        "description": "Show a hidden item again.",
+        "operationId": "restore_media_v1_admin_activities_media__media_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Media Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Media",
         "tags": [
           "admin-activities"
         ]
@@ -105608,7 +109696,8 @@
                     "lms",
                     "admin",
                     "teacher",
-                    "app"
+                    "app",
+                    "admission"
                   ],
                   "type": "string"
                 },
@@ -110575,6 +114664,106 @@
           }
         },
         "summary": "Delete Exam Date",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/calendar/export.ics": {
+      "get": {
+        "description": "A one-off `.ics` of my own entries: chosen `key`s or a `from`–`to` range.",
+        "operationId": "admission_export_calendar_ics",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 50,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Key"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/calendar": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Calendar Ics",
         "tags": [
           "admission"
         ]
@@ -121505,7 +125694,7 @@
     },
     "/v1/admission/opportunities/plan": {
       "get": {
-        "description": "The caller's saved entries with analytics.",
+        "description": "The caller's saved entries with analytics and own finds.",
         "operationId": "admission_get_my_opportunity_plan",
         "responses": {
           "200": {
@@ -121636,6 +125825,137 @@
           }
         },
         "summary": "List Opportunity Deadlines",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/opportunities/plan/personal": {
+      "post": {
+        "description": "Add an own find; a school list match is planned instead (200, `merged`).",
+        "operationId": "admission_add_personal_plan_entry",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonalCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalAddedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Personal Plan Entry",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/opportunities/plan/personal/{entry_id}": {
+      "delete": {
+        "description": "Remove an own find; a sent proposal stays in moderation.",
+        "operationId": "admission_delete_personal_plan_entry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Personal Plan Entry",
+        "tags": [
+          "admission"
+        ]
+      },
+      "patch": {
+        "description": "Change an own find (optimistic lock: 409 on a stale `lock_version`).",
+        "operationId": "admission_update_personal_plan_entry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonalUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalEntryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Personal Plan Entry",
         "tags": [
           "admission"
         ]
@@ -126699,7 +131019,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReportOut"
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_prompt_studio__ReportOut"
                 }
               }
             },
@@ -128200,7 +132520,7 @@
     },
     "/v1/admission/students/{student_id}/opportunities/plan": {
       "get": {
-        "description": "A student's plan for assigned staff.",
+        "description": "A student's plan for assigned staff (own finds read-only).",
         "operationId": "admission_get_student_opportunity_plan",
         "parameters": [
           {
@@ -136352,7 +140672,8 @@
                 "lms",
                 "admin",
                 "teacher",
-                "app"
+                "app",
+                "admission"
               ],
               "title": "Server",
               "type": "string"
@@ -136416,7 +140737,8 @@
                 "lms",
                 "admin",
                 "teacher",
-                "app"
+                "app",
+                "admission"
               ],
               "title": "Server",
               "type": "string"
@@ -150420,7 +154742,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReviewBody"
+                "$ref": "#/components/schemas/app__interfaces__http__v1__flashcards__schemas__ReviewBody"
               }
             }
           },
@@ -151034,7 +155356,7 @@
         ]
       },
       "put": {
-        "description": "Save or replace the submission; after the due date it counts as late.",
+        "description": "Save or replace the submission; after the due date it counts as late.\n\n409 when the teacher does not accept submissions or the work is graded.",
         "operationId": "submit_homework_v1_me_homework__lesson_id__submission_put",
         "parameters": [
           {
@@ -160395,6 +164717,303 @@
         ]
       }
     },
+    "/v1/staff/homework": {
+      "get": {
+        "description": "Return the lessons with homework, switches and counts; current term by default.\n\n404 when the option is not the teacher's or there is no current term.",
+        "operationId": "get_homework_board_v1_staff_homework_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "audience_key",
+            "required": true,
+            "schema": {
+              "title": "Audience Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "only",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "with_homework",
+                "to_review"
+              ],
+              "title": "Only",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffHomeworkBoardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Homework Board",
+        "tags": [
+          "staff-classwork"
+        ]
+      }
+    },
+    "/v1/staff/homework/settings": {
+      "get": {
+        "description": "Return whether new homework accepts submissions and notifies by default.",
+        "operationId": "get_homework_settings_v1_staff_homework_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeworkSettingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Homework Settings",
+        "tags": [
+          "staff-classwork"
+        ]
+      },
+      "put": {
+        "description": "Save the given settings; an omitted field keeps its value.",
+        "operationId": "save_homework_settings_v1_staff_homework_settings_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HomeworkSettingsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeworkSettingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Homework Settings",
+        "tags": [
+          "staff-classwork"
+        ]
+      }
+    },
+    "/v1/staff/homework/submissions/{submission_id}": {
+      "get": {
+        "description": "Return one submission with time-limited file links.",
+        "operationId": "get_homework_submission_v1_staff_homework_submissions__submission_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "submission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Submission Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffSubmissionRowResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Homework Submission",
+        "tags": [
+          "staff-classwork"
+        ]
+      }
+    },
+    "/v1/staff/homework/submissions/{submission_id}/review": {
+      "delete": {
+        "description": "Put the submission back to pending and delete the grade's mark.",
+        "operationId": "clear_homework_review_v1_staff_homework_submissions__submission_id__review_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "submission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Submission Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clear Homework Review",
+        "tags": [
+          "staff-classwork"
+        ]
+      },
+      "put": {
+        "description": "Grade the work (also a temporary mark) or return it with a comment.",
+        "operationId": "review_homework_submission_v1_staff_homework_submissions__submission_id__review_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "submission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Submission Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__interfaces__http__v1__staff_classwork__schemas__ReviewBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffSubmissionRowResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Homework Submission",
+        "tags": [
+          "staff-classwork"
+        ]
+      }
+    },
     "/v1/staff/journal": {
       "get": {
         "description": "Return students by lessons with absences and marks.",
@@ -160792,7 +165411,7 @@
         ]
       },
       "put": {
-        "description": "Save the homework; the due date defaults to the next lesson (ACA-10).",
+        "description": "Save the homework; the due date defaults to the next lesson (ACA-10).\n\n``text`` may be omitted when the lesson has EMIS homework.",
         "operationId": "set_homework_v1_staff_lessons__id__homework_put",
         "parameters": [
           {
@@ -160839,6 +165458,60 @@
           }
         },
         "summary": "Set Homework",
+        "tags": [
+          "staff-classwork"
+        ]
+      }
+    },
+    "/v1/staff/lessons/{id}/homework/settings": {
+      "patch": {
+        "description": "Open or close submissions and override the notification setting.\n\n``notify`` sent as null makes the lesson follow the teacher's setting again;\nan omitted field is kept.",
+        "operationId": "set_homework_settings_v1_staff_lessons__id__homework_settings_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LessonHomeworkSwitchesBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffLessonResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Homework Settings",
         "tags": [
           "staff-classwork"
         ]

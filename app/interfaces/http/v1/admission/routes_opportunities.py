@@ -35,6 +35,10 @@ from app.interfaces.http.v1.admission.schemas_opportunities import (
     OpportunityDetailOut,
     OpportunityListOut,
     OpportunityOut,
+    PersonalAddedOut,
+    PersonalCreateIn,
+    PersonalEntryOut,
+    PersonalUpdateIn,
     PlanEntryIn,
     PlanEntryOut,
     PlanOut,
@@ -49,7 +53,7 @@ from app.interfaces.http.v1.admission.schemas_opportunities import (
     TaxonomyNodeOut,
     TaxonomyOut,
 )
-from app.modules.admission.application.opportunities import CatalogFilter
+from app.modules.admission.application.opportunities import CatalogFilter, PlanView
 from app.shared.base_error import ValidationFailedError
 
 from fastapi import APIRouter, Query, Response, status
@@ -257,18 +261,68 @@ async def archive_opportunity(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+async def _plan_out(container: ContainerDep, view: PlanView) -> PlanOut:
+    proposals = await container.admission.personal_entries.proposals(view.personal)
+    return PlanOut.of(view, proposals)
+
+
 async def get_my_opportunity_plan(container: ContainerDep, ctx: StudentCtx) -> PlanOut:
-    """The caller's saved entries with analytics."""
+    """The caller's saved entries with analytics and own finds."""
     view = await container.admission.opportunities.plan_of(ctx, ctx.user_id)
-    return PlanOut.of(view)
+    return await _plan_out(container, view)
 
 
 async def get_student_opportunity_plan(
     student_id: UUID, container: ContainerDep, ctx: AnyContext
 ) -> PlanOut:
-    """A student's plan for assigned staff."""
+    """A student's plan for assigned staff (own finds read-only)."""
     view = await container.admission.opportunities.plan_of(ctx, student_id)
-    return PlanOut.of(view)
+    return await _plan_out(container, view)
+
+
+async def add_personal_plan_entry(
+    body: PersonalCreateIn,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    response: Response,
+) -> PersonalAddedOut:
+    """Add an own find; a school list match is planned instead (200, `merged`)."""
+    added = await container.admission.personal_entries.add(
+        ctx, body.draft(), origin="web", propose=body.propose
+    )
+    if added.entry is None:
+        response.status_code = status.HTTP_200_OK
+        return PersonalAddedOut(
+            merged=True,
+            entry=None,
+            planned_opportunity_id=added.planned_opportunity_id,
+        )
+    proposals = await container.admission.personal_entries.proposals([added.entry])
+    return PersonalAddedOut(
+        merged=False,
+        entry=PersonalEntryOut.of(added.entry, proposals.get(added.entry.id)),
+        planned_opportunity_id=None,
+    )
+
+
+async def update_personal_plan_entry(
+    entry_id: UUID, body: PersonalUpdateIn, container: ContainerDep, ctx: AdmissionCtx
+) -> PersonalEntryOut:
+    """Change an own find (optimistic lock: 409 on a stale `lock_version`)."""
+    service = container.admission.personal_entries
+    entry = await service.update(
+        ctx, entry_id, body.draft(), lock_version=body.lock_version
+    )
+    proposals = await service.proposals([entry])
+    return PersonalEntryOut.of(entry, proposals.get(entry.id))
+
+
+async def delete_personal_plan_entry(
+    entry_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+) -> Response:
+    """Remove an own find; a sent proposal stays in moderation."""
+    await container.admission.personal_entries.delete(ctx, entry_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 async def save_opportunity_to_plan(
@@ -415,6 +469,29 @@ _R(
     methods=["POST"],
     response_model=AiPlanOut,
     operation_id="admission_generate_opportunity_ai_plan",
+)
+_R(
+    "/opportunities/plan/personal",
+    add_personal_plan_entry,
+    methods=["POST"],
+    status_code=status.HTTP_201_CREATED,
+    response_model=PersonalAddedOut,
+    operation_id="admission_add_personal_plan_entry",
+)
+_R(
+    "/opportunities/plan/personal/{entry_id}",
+    update_personal_plan_entry,
+    methods=["PATCH"],
+    response_model=PersonalEntryOut,
+    operation_id="admission_update_personal_plan_entry",
+)
+_R(
+    "/opportunities/plan/personal/{entry_id}",
+    delete_personal_plan_entry,
+    methods=["DELETE"],
+    status_code=_NO,
+    response_class=Response,
+    operation_id="admission_delete_personal_plan_entry",
 )
 _R(
     "/opportunities/plan/{opportunity_id}",

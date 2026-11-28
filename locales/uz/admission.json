@@ -61,5 +61,6 @@
   "admission-essay-keys-backup-invalid": "Zaxira faylini ochib boʻlmadi. Fayl va parol iborasini tekshiring.",
   "admission-essay-keys-rotation-running": "Kalitlar almashtirilmoqda. Tugashini kuting va qayta urinib koʻring.",
   "admission-catalog-cycle": "Sikl joriy yoki keyingi qabul sikli boʻlishi kerak, 2026-27 koʻrinishida (sikl: {cycle}).",
-  "admission-scorecard-unavailable": "College Scorecard hozir mavjud emas. Keyinroq urinib koʻring."
+  "admission-scorecard-unavailable": "College Scorecard hozir mavjud emas. Keyinroq urinib koʻring.",
+  "plan-duplicate": "Bu imkoniyat rejangizda allaqachon bor."
 }

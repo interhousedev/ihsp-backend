@@ -42,9 +42,13 @@ from app.modules.admission.domain.opportunities import (
     upcoming_dates,
 )
 from app.modules.admission.domain.permissions import KIND_ROLE, Permission
+from app.modules.admission.domain.personal_entries import PersonalEntry
 from app.modules.admission.domain.study_fields import group_of
 from app.modules.admission.ports.media_mirror import MediaMirror
-from app.modules.admission.ports.opportunities import OpportunityUnitOfWork
+from app.modules.admission.ports.opportunities import (
+    OpportunityRepository,
+    OpportunityUnitOfWork,
+)
 from app.modules.admission.ports.repositories import AuditEvent
 from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork
 from app.shared.actor import Role
@@ -177,12 +181,17 @@ class OpportunityDeadline:
 
 @dataclass(frozen=True, slots=True)
 class PlanView:
-    """A student's saved entries with the catalog rows and analytics."""
+    """A student's saved entries with the catalog rows and analytics.
+
+    `personal` are the student's own finds, not verified by the school; they are
+    left out of the analytics and `deadlines` (the calendar has its own source).
+    """
 
     entries: list[PlanEntry]
     catalog: dict[UUID, Opportunity]
     analytics: PlanAnalytics
     deadlines: list[OpportunityDeadline]
+    personal: list[PersonalEntry] = dataclasses.field(default_factory=list)
 
 
 def tree(nodes: list[TaxonomyNode]) -> list[TaxonomyField]:
@@ -524,6 +533,7 @@ class OpportunityService:
                     draft, target_id=current.target_id, by=current.submitted_by
                 )
                 await repo.resolve_item_links(current.id, applied)
+                await self._merge_personal(repo, current.id, applied)
             saved = await repo.save_review(
                 dataclasses.replace(
                     current,
@@ -545,6 +555,26 @@ class OpportunityService:
             )
             await uow.commit()
         return saved
+
+    async def _merge_personal(
+        self, repo: OpportunityRepository, submission_id: UUID, applied: UUID
+    ) -> None:
+        """Replace the personal finds proposed by this submission with the entry."""
+        for found in await repo.personal_by_submission(submission_id):
+            planned = {e.opportunity_id for e in await repo.plan(found.student_id)}
+            if applied not in planned:
+                await repo.save_plan_entry(
+                    PlanEntry(
+                        id=new_id(),
+                        student_id=found.student_id,
+                        opportunity_id=applied,
+                        planned_grade=found.planned_grade,
+                        planned_term=found.planned_term,
+                        note=found.note,
+                        created_at=self._clock.now(),
+                    )
+                )
+            await repo.delete_personal(found.student_id, found.id)
 
     async def set_archived(
         self, ctx: AdmissionContext, opportunity_id: UUID, archived: bool
@@ -695,7 +725,10 @@ class OpportunityService:
             known = next(
                 (e for e in current if e.opportunity_id == opportunity_id), None
             )
-            if known is None and len(current) >= MAX_PLAN_ITEMS:
+            if known is None and (
+                len(current) + len(await repo.personal_entries(ctx.user_id))
+                >= MAX_PLAN_ITEMS
+            ):
                 raise ItemLimitError(params={"limit": MAX_PLAN_ITEMS})
             saved = await repo.save_plan_entry(
                 PlanEntry(
@@ -742,6 +775,7 @@ class OpportunityService:
             entries = await repo.plan(student_id)
             nodes = await repo.taxonomy()
             rows = await repo.get_many([e.opportunity_id for e in entries])
+            personal = await repo.personal_entries(student_id)
             catalog: dict[UUID, Opportunity] = {row.id: row for row in rows}
         today = self._clock.now().date()
         horizon = today + dt.timedelta(days=HORIZON_DAYS)
@@ -751,6 +785,7 @@ class OpportunityService:
             catalog=catalog,
             analytics=analyse(entries, catalog, fld, today, horizon),
             deadlines=_deadlines(entries, catalog, today, horizon),
+            personal=personal,
         )
 
     async def deadlines_for(

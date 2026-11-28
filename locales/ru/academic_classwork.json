@@ -38,5 +38,12 @@
   "academic-temporary-mark-student-not-in-lesson": "Этого ученика нет в списке урока.",
   "homework-submission-not-found": "Вы ещё ничего не сдали по этому уроку.",
   "homework-submission-files-invalid": "Файлы нельзя сдать: прикрепите от 1 до {max} своих загруженных файлов.",
-  "homework-submission-comment-too-long": "Комментарий может содержать до {max} символов."
+  "homework-submission-comment-too-long": "Комментарий может содержать до {max} символов.",
+  "homework-submission-text-too-long": "Ответ может содержать до {max} символов.",
+  "homework-submission-empty": "Напишите ответ или прикрепите хотя бы один файл.",
+  "homework-submissions-closed": "Учитель не принимает это задание через приложение.",
+  "homework-submission-already-graded": "Работа уже оценена, её нельзя изменить.",
+  "homework-review-comment-required": "Напишите комментарий, чтобы вернуть работу на доработку.",
+  "homework-review-comment-too-long": "Комментарий может содержать до {max} символов.",
+  "homework-review-grade-invalid": "Выберите оценку от {min} до {max}."
 }

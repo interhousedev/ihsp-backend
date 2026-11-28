@@ -5,6 +5,8 @@ from types import ModuleType, SimpleNamespace
 from typing import Any, cast
 
 from app.interfaces.mcp.admin.server import TOOL_MODULES as ADMIN_MODULES
+from app.interfaces.mcp.admission.tools import TOOL_MODULES as ADMISSION_MODULES
+from app.interfaces.mcp.admission.tools import staff as admission_staff
 from app.interfaces.mcp.constants import (
     SCOPES_BY_SERVER,
     SERVERS,
@@ -21,7 +23,7 @@ from app.settings import Settings
 from app.shared.ai_access import AiAccess
 from app.shared.mcp_scopes import READ_ONLY_TOOLS_IN_WRITE_SCOPES, scope_info
 from tests.mcp.conftest import World
-from tests.mcp.helpers import call, text_of
+from tests.mcp.helpers import call, registered_tools, text_of
 
 import pytest
 from mcp.types import Tool
@@ -31,6 +33,10 @@ MODULES: dict[ServerName, tuple[ModuleType, ...]] = {
     "lms": LMS_MODULES,
     "admin": ADMIN_MODULES,
     "teacher": TEACHER_MODULES,
+    "admission": (
+        *ADMISSION_MODULES,
+        cast(ModuleType, SimpleNamespace(register=admission_staff.register_staff)),
+    ),
 }
 CANARY = "CANARY-text-from-the-client"
 ACTOR_PARAMETERS = {"user_id", "owner_id", "student_id", "actor_id", "issued_to"}
@@ -51,6 +57,7 @@ def _live_tools() -> list[tuple[ServerName, str]]:
         t=lambda key, **params: key,
         access_verifier=None,
         connector_verifier=None,
+        admission=None,
     )
     return [
         (server, name)
@@ -134,10 +141,8 @@ def _is_plain_text(schema: dict[str, Any]) -> bool:
 
 
 async def _tool(world: World, server: ServerName, name: str, token: str) -> Tool:
-    async with world.serve() as running:
-        async with running.session(server, token) as session:
-            listed = await session.list_tools()
-    return next(tool for tool in listed.tools if tool.name == name)
+    listed = await registered_tools(world.deps(), server)
+    return next(tool for tool in listed if tool.name == name)
 
 
 @pytest.mark.parametrize(("server", "name"), ALL_TOOLS, ids=IDS)
@@ -227,12 +232,9 @@ async def test_no_student_tool_takes_a_user_from_its_arguments(
     world: World, server: ServerName
 ) -> None:
     """Per-tool rule 1: the actor comes from the guard only."""
-    token, _ = world.connector_token(server, *SCOPES_BY_SERVER[server])
+    listed = await registered_tools(world.deps(), server)
 
-    async with world.session(server, token) as session:
-        listed = await session.list_tools()
-
-    for tool in listed.tools:
+    for tool in listed:
         assert not ACTOR_PARAMETERS & set(
             tool.inputSchema.get("properties", {})
         ), tool.name

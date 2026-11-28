@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from app.shared.actor import Role
-from app.shared.contracts.auth import AUDIENCE_MCP_APP
+from app.shared.contracts.auth import AUDIENCE_MCP_ADMISSION, AUDIENCE_MCP_APP
 from app.shared.lms_scopes import (
     COURSES_DELETE,
     COURSES_READ,
@@ -12,12 +12,26 @@ from app.shared.lms_scopes import (
     LEGACY_ALIASES,
     MODULES_WRITE,
 )
-from app.shared.mcp_scopes import APP_SOURCES, SCOPE_CATALOG, ScopeInfo
+from app.shared.mcp_scopes import (
+    ADMISSION_APPLICANT_ROLES,
+    ADMISSION_ROLES,
+    APP_SOURCES,
+    SCOPE_CATALOG,
+    ScopeInfo,
+    scopes_for_roles,
+)
 
-__all__ = ["SCOPE_CATALOG", "ScopeInfo"]
+__all__ = ["SCOPE_CATALOG", "ScopeInfo", "scopes_for_roles"]
 
-Server = Literal["student", "lms", "admin", "teacher", "app"]
-SERVERS: tuple[Server, ...] = ("student", "lms", "admin", "teacher", "app")
+Server = Literal["student", "lms", "admin", "teacher", "app", "admission"]
+SERVERS: tuple[Server, ...] = (
+    "student",
+    "lms",
+    "admin",
+    "teacher",
+    "app",
+    "admission",
+)
 
 # Roles that may connect to a server. For "lms" the real check (edit permission
 # on some course) happens at call time (MCP-5).
@@ -27,7 +41,10 @@ ALLOWED_SERVER_ROLES: dict[str, frozenset[Role]] = {
         {Role.TEACHER, Role.STUDENT, Role.LMS_ADMIN, Role.LMS_CREATOR, Role.ADMIN}
     ),
     "admin": frozenset({Role.ADMIN}),
-    "teacher": frozenset({Role.TEACHER, Role.ADMIN}),
+    # Teacher tools only for teachers: an administrator reads through "admin".
+    "teacher": frozenset({Role.TEACHER}),
+    # Applicants (students) and admission staff; each scope narrows it further.
+    "admission": ADMISSION_ROLES,
 }
 # "app" serves the tools of its sources: any of their roles may connect.
 ALLOWED_SERVER_ROLES["app"] = frozenset().union(
@@ -40,6 +57,7 @@ AUDIENCE_BY_SERVER: dict[str, str] = {
     "admin": "mcp-admin",
     "teacher": "mcp-teacher",
     "app": AUDIENCE_MCP_APP,
+    "admission": AUDIENCE_MCP_ADMISSION,
 }
 
 
@@ -82,6 +100,25 @@ PRESETS: dict[str, tuple[Preset, ...]] = {
         ),
         Preset("lesson-planner", ("lesson-plans:write", "materials:generate")),
     ),
+    # Applicant scopes only: staff scopes are never in a preset.
+    "admission": (
+        Preset(
+            "read",
+            tuple(
+                info.scope
+                for info in SCOPE_CATALOG["admission"]
+                if not info.write and info.roles & ADMISSION_APPLICANT_ROLES
+            ),
+        ),
+        Preset(
+            "full",
+            tuple(
+                info.scope
+                for info in SCOPE_CATALOG["admission"]
+                if info.roles & ADMISSION_APPLICANT_ROLES
+            ),
+        ),
+    ),
 }
 # The presets of "app" are those of its sources, their scopes namespaced.
 PRESETS["app"] = tuple(
@@ -116,17 +153,20 @@ def app_scopes_for_roles(
     """The namespaced app scopes whose source server one of the roles may use.
 
     A student gets the LMS source read-only: its write scopes are never offered.
+    A scope with its own role list (admission staff or applicant) needs one of them.
     """
     student_only = Role.STUDENT in roles and not set(roles) & (
         ALLOWED_SERVER_ROLES["lms"] - {Role.STUDENT}
     )
     lms_writes = {f"lms:{info.scope}" for info in SCOPE_CATALOG["lms"] if info.write}
+    held = scopes_for_roles("app", roles)
     return frozenset(
         scope
         for scope in scopes
         if (source := source_of_scope(scope)) is not None
         and role_may_use_server(roles, source)
         and not (student_only and scope in lms_writes)
+        and (scope in held or not scope.startswith("admission:"))
     )
 
 

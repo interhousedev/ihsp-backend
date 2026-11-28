@@ -1,4 +1,4 @@
-"""``PUT /v1/me/homework/{lesson_id}/submission``: hand in files."""
+"""``PUT /v1/me/homework/{lesson_id}/submission``: hand in a text answer or files."""
 
 from uuid import UUID
 
@@ -15,8 +15,11 @@ async def submit_homework(
     actor: StudentActor,
     container: ContainerDep,
 ) -> HomeworkSubmissionResponse:
-    """Save or replace the submission; after the due date it counts as late."""
+    """Save or replace the submission; after the due date it counts as late.
+
+    409 when the teacher does not accept submissions or the work is graded.
+    """
     data = await container.academic.classwork.submit_homework.execute(
-        lesson_id, actor, body.file_ids, body.comment
+        lesson_id, actor, body.file_ids, body.comment, body.text
     )
     return HomeworkSubmissionResponse.model_validate(data)

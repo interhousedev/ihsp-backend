@@ -111,6 +111,7 @@ async def build_views(
                     for gid in audience_keys.group_ids(keys)
                     if gid in names
                 },
+                emis_homework=row.emis_homework_url is not None,
             )
         )
     return views

@@ -5,9 +5,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.interfaces.mcp.call_log import LogSpec
+from app.interfaces.mcp.catalog import CatalogMcp
 from app.interfaces.mcp.constants import WRITE_LIMIT, ToolLimit
 from app.interfaces.mcp.deps import McpDeps
 from app.interfaces.mcp.guard import ToolFn, ToolGuard
+from app.shared.actor import Role
 
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
@@ -31,6 +33,7 @@ class ToolKit:
         limit: ToolLimit | None = None,
         log: LogSpec | None = None,
         meta: dict[str, Any] | None = None,
+        roles: frozenset[Role] | None = None,
     ) -> Callable[[ToolFn], ToolFn]:
         """Register a tool that needs `scope` (guard first, then the SDK decorator).
 
@@ -38,7 +41,8 @@ class ToolKit:
         WRITE_LIMIT. `log` says what the call log may store: without it, the name only.
         `idempotent` defaults to `read_only`; set False for a read with a side effect.
         A tool that is not read-only, or not idempotent, is a write: the guard
-        refuses it during maintenance mode.
+        refuses it during maintenance mode. `roles` limits the tool to actors holding
+        one of them: refused for others and hidden from them on a catalog server.
         """
         annotations = ToolAnnotations(
             readOnlyHint=read_only,
@@ -57,9 +61,12 @@ class ToolKit:
                 log=log,
                 read_only=read_only,
                 destructive=destructive,
+                roles=roles,
             )(fn)
             name = self.guard.name_prefix + getattr(fn, "__name__", "tool")
             self.mcp.tool(name=name, annotations=annotations, meta=meta)(guarded)
+            if roles is not None and isinstance(self.mcp, CatalogMcp):
+                self.mcp.tool_roles[name] = roles
             return guarded
 
         return decorate

@@ -39,6 +39,10 @@ from app.modules.admission.domain.opportunities import (
     upcoming_dates,
 )
 from app.modules.admission.domain.permissions import Permission
+from app.modules.admission.domain.personal_entries import (
+    PersonalEntry,
+    PlanDuplicateError,
+)
 from app.shared.actor import Role
 from app.shared.base_error import RateLimitedError, ValidationFailedError
 from app.shared.ids import new_id
@@ -59,6 +63,7 @@ class FakeOpportunities:
         self.plans: dict[tuple[UUID, UUID], PlanEntry] = {}
         self.ai: dict[UUID, tuple[dict[str, Any], dt.datetime]] = {}
         self.links: dict[UUID, ItemOpportunityLink] = {}
+        self.personal: dict[UUID, PersonalEntry] = {}
 
     async def taxonomy(self) -> list[TaxonomyNode]:
         return list(self.nodes.values())
@@ -172,6 +177,58 @@ class FakeOpportunities:
         self, student_id: UUID, plan: dict[str, Any], at: dt.datetime
     ) -> None:
         self.ai[student_id] = (plan, at)
+
+    async def personal_entries(self, student_id: UUID) -> list[PersonalEntry]:
+        return sorted(
+            (p for p in self.personal.values() if p.student_id == student_id),
+            key=lambda p: p.created_at,
+        )
+
+    async def get_personal(
+        self, student_id: UUID, entry_id: UUID
+    ) -> PersonalEntry | None:
+        found = self.personal.get(entry_id)
+        return found if found is not None and found.student_id == student_id else None
+
+    async def personal_by_key(
+        self, student_id: UUID, dedup_key: str
+    ) -> PersonalEntry | None:
+        return next(
+            (
+                p
+                for p in self.personal.values()
+                if p.student_id == student_id and p.dedup_key == dedup_key
+            ),
+            None,
+        )
+
+    async def personal_by_submission(self, submission_id: UUID) -> list[PersonalEntry]:
+        return [p for p in self.personal.values() if p.submission_id == submission_id]
+
+    async def add_personal(self, entry: PersonalEntry) -> PersonalEntry:
+        if await self.personal_by_key(entry.student_id, entry.dedup_key):
+            raise PlanDuplicateError()
+        self.personal[entry.id] = entry
+        return entry
+
+    async def save_personal(
+        self, entry: PersonalEntry, *, expected_lock: int
+    ) -> PersonalEntry:
+        current = self.personal.get(entry.id)
+        if current is None or current.lock_version != expected_lock:
+            raise AdmissionConflictError()
+        twin = await self.personal_by_key(entry.student_id, entry.dedup_key)
+        if twin is not None and twin.id != entry.id:
+            raise PlanDuplicateError()
+        saved = dataclasses.replace(entry, lock_version=expected_lock + 1)
+        self.personal[entry.id] = saved
+        return saved
+
+    async def delete_personal(self, student_id: UUID, entry_id: UUID) -> bool:
+        if await self.get_personal(student_id, entry_id) is None:
+            return False
+        del self.personal[entry_id]
+        return True
 
 
 class Env:

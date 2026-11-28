@@ -18,6 +18,7 @@ async def test_submit_get_list_and_withdraw(
         homework_text="Read page 5",
         homework_due_date=DAY + dt.timedelta(days=1),
         homework_due_auto=False,
+        homework_accept_submissions=True,
     )
     aziz = env.student("aziz")
     file_id = env.files.add(aziz.user_id)

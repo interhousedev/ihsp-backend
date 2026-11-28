@@ -1,30 +1,35 @@
-"""Memory notes and the admission MCP tools: scopes, ownership, expiry of access."""
+"""Memory notes, the admission memory tools and the personal-token verifier."""
 
+from collections.abc import Awaitable, Callable
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, cast
+from unittest.mock import patch
 from uuid import UUID
 
-from app.interfaces.mcp.admission.auth import AdmissionTokenVerifier
-from app.interfaces.mcp.admission.tools import TOOL_SCOPES, AdmissionMcpTools
+from app.interfaces.mcp import guard as guard_module
+from app.interfaces.mcp.admission.auth import PersonalTokenVerifier
+from app.interfaces.mcp.admission.tools import memory
 from app.interfaces.mcp.auth import IhspAccessToken
-from app.interfaces.mcp.errors import McpNotFoundError, McpScopeError
+from app.interfaces.mcp.deps import McpDeps
+from app.interfaces.mcp.guard import ToolGuard
+from app.interfaces.mcp.toolkit import ToolKit
 from app.modules.admission.application.memory_notes import MemoryNoteService
-from app.modules.admission.domain.documents import DocumentRecord
 from app.modules.admission.domain.errors import AdmissionNotFoundError
 from app.modules.admission.domain.memory_notes import CONTENT_MAX, MemoryNote
 from app.shared.actor import Actor, Role
-from app.shared.base_error import BaseError, ForbiddenError, UnauthorizedError
-from app.shared.ids import new_id
-from app.shared.notifications import AuditDraft
+from app.shared.base_error import BaseError, UnauthorizedError
+from app.shared.mcp_scopes import pat_scopes
 from tests.admission.unit.fakes import NOW, FakeStore, FakeUow
 from tests.admission.unit.test_access_policy import OTHER, STUDENT, World
 from tests.fakes.clock import FixedClock
-from tests.fakes.files.sniffer import SignatureSniffer
 
 import pytest
+from mcp.server.auth.provider import AccessToken
+from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.exceptions import ToolError
 
-ALL = frozenset(set(TOOL_SCOPES.values()))
-PDF = "JVBERi0xLjQKJSVFT0YK"  # "%PDF-1.4\n%%EOF\n"
+OLD = frozenset({"admission:read", "admission:memory"})
+ALL = pat_scopes(OLD)
 
 
 class _Notes:
@@ -54,71 +59,47 @@ class _Uow(FakeUow):
         self.memory_notes = notes
 
 
-class _Docs:
-    def __init__(self) -> None:
-        self.mine = DocumentRecord(new_id(), STUDENT, "passport", "student", STUDENT)
-        self.theirs = DocumentRecord(new_id(), OTHER, "passport", "student", OTHER)
-        self.uploads: list[tuple[str, str, bytes]] = []
-
-    async def listing(self, ctx: Any, student_id: UUID | None = None) -> list[Any]:
-        docs = [d for d in (self.mine, self.theirs) if d.student_id == ctx.user_id]
-        return [SimpleNamespace(doc=d, can_download=True) for d in docs]
-
-    async def download(self, ctx: Any, doc_id: UUID) -> Any:
-        return SimpleNamespace(url=f"https://s3/{doc_id}", expires_at=NOW)
-
-    async def upload_limit(self, user_id: UUID) -> int:
-        return 1024
-
-    async def upload(self, ctx: Any, kind: str, name: str, data: bytes) -> Any:
-        self.uploads.append((kind, name, data))
-        return SimpleNamespace(doc=self.mine)
+async def _noop(*a: Any, **k: Any) -> None:  # noqa: ANN401
+    return None
 
 
-class _Audit:
-    def __init__(self) -> None:
-        self.drafts: list[AuditDraft] = []
-
-    async def audit(self, draft: AuditDraft) -> None:
-        self.drafts.append(draft)
-
-
-class _Limiter:
-    async def hit(self, key: str, *, limit: int, window_seconds: int) -> int:
-        return 1
-
-
-class _Consent:
-    def __init__(self) -> None:
-        self.accepted = True
-        self.calls: list[tuple[UUID, str]] = []
-
-    async def execute(self, user_id: UUID, app: str = "global") -> None:
-        self.calls.append((user_id, app))
-        if not self.accepted:
-            raise ForbiddenError()
+async def _ready(value: Any) -> Any:  # noqa: ANN401
+    return value
 
 
 class Kit:
     def __init__(self) -> None:
         self.w = World()
         self.notes = _Notes()
-        self.docs = _Docs()
-        self.audit = _Audit()
-        self.consent = _Consent()
         self.service = MemoryNoteService(
             lambda: _Uow(self.w.store, self.notes), self.w.policy, FixedClock(NOW)
         )
-        adm = SimpleNamespace(
-            actor=self.w.resolver,
-            documents=self.docs,
-            memory_notes=self.service,
-            application_data=None,
+        admission = SimpleNamespace(actor=self.w.resolver, memory_notes=self.service)
+        deps = SimpleNamespace(
+            t=lambda key, **p: key,
+            maintenance=None,
+            rate_limiter=SimpleNamespace(hit=_noop),
+            consent=None,
+            scope_overlay=None,
+            limits=SimpleNamespace(
+                ai_access=lambda _u: _ready(SimpleNamespace(blocks=lambda _s: False))
+            ),
+            audit=SimpleNamespace(audit=_noop),
+            call_log=SimpleNamespace(record=_noop),
+            admission=admission,
         )
-        limiter: Any = _Limiter()
-        self.tools = AdmissionMcpTools(
-            adm, limiter, self.audit, sniffer=SignatureSniffer(), consent=self.consent
+        self.mcp = FastMCP("t")
+        guard = ToolGuard(cast(McpDeps, deps), "admission")
+        memory.register(ToolKit(self.mcp, cast(McpDeps, deps), guard))
+        self.actor = student()
+
+    async def call(self, name: str, **kwargs: Any) -> Any:  # noqa: ANN401
+        fn = cast(
+            Callable[..., Awaitable[Any]],
+            self.mcp._tool_manager.get_tool(name).fn,  # type: ignore[union-attr]
         )
+        with patch.object(guard_module, "_token_actor", lambda: self.actor):
+            return await fn(**kwargs)
 
 
 def student(scopes: frozenset[str] = ALL, user: UUID = STUDENT) -> Actor:
@@ -147,78 +128,39 @@ async def test_notes_are_owned_audited_and_limited() -> None:
 # -- MCP tools ---------------------------------------------------------------
 
 
-@pytest.mark.parametrize("tool", sorted(TOOL_SCOPES))
-async def test_every_tool_needs_its_exact_scope(tool: str) -> None:
+@pytest.mark.parametrize(
+    ("tool", "args"),
+    [
+        ("list_memory_notes", {}),
+        ("write_memory_note", {"content": "x"}),
+        ("delete_memory_note", {"note_id": STUDENT}),
+    ],
+)
+async def test_every_memory_tool_needs_a_scope(tool: str, args: dict[str, Any]) -> None:
     k = Kit()
-    others = ALL - {TOOL_SCOPES[tool]}
-    args: dict[str, Any] = {
-        "read_document": {"document_id": str(new_id())},
-        "upload_document": {"kind": "passport", "name": "a.pdf", "content_base64": PDF},
-        "write_memory_note": {"content": "x"},
-        "delete_memory_note": {"note_id": str(new_id())},
-    }.get(tool, {})
-    with pytest.raises(McpScopeError):
-        await getattr(k.tools, tool)(student(others), **args)
-    assert k.audit.drafts[-1].type == "mcp.denied"
-    assert k.audit.drafts[-1].metadata["tool"] == tool
+    k.actor = student(frozenset())
+    with pytest.raises(ToolError):
+        await k.call(tool, **args)
 
 
-async def test_tools_only_touch_the_callers_data() -> None:
+async def test_tools_only_touch_the_callers_notes() -> None:
     k = Kit()
-    note = await k.tools.write_memory_note(student(), "remember SAT in May")
-    assert k.audit.drafts[-1].type == "mcp.call"
+    note = await k.call("write_memory_note", content="remember SAT in May")
     assert k.notes.rows[UUID(note["id"])].source == "mcp"
-    intruder = student(user=OTHER)
-    assert await k.tools.list_memory_notes(intruder) == []
-    with pytest.raises(BaseError):
-        await k.tools.delete_memory_note(intruder, note["id"])
-    docs = await k.tools.list_documents(intruder)
-    assert [d["id"] for d in docs] == [str(k.docs.theirs.id)]
-    with pytest.raises(McpNotFoundError):
-        await k.tools.read_document(intruder, str(k.docs.mine.id))
-    link = await k.tools.read_document(student(), str(k.docs.mine.id))
-    assert link["url"].endswith(str(k.docs.mine.id))
+    listed = (await k.call("list_memory_notes"))["result"]
+    assert [n["id"] for n in listed] == [note["id"]]
+    k.actor = student(user=OTHER)
+    assert (await k.call("list_memory_notes"))["result"] == []
+    with pytest.raises(ToolError):
+        await k.call("delete_memory_note", note_id=UUID(note["id"]))
+    assert UUID(note["id"]) in k.notes.rows
 
 
-async def test_upload_checks_type_and_size() -> None:
+async def test_staff_cannot_use_applicant_memory_tools() -> None:
     k = Kit()
-    await k.tools.upload_document(student(), "passport", "a.pdf", PDF)
-    assert k.docs.uploads[0][2].startswith(b"%PDF")
-    with pytest.raises(BaseError):  # not a PDF/JPEG/PNG
-        await k.tools.upload_document(student(), "passport", "a.txt", "aGVsbG8=")
-    big = "JVBERi0" + "A" * 2001
-    with pytest.raises(BaseError):
-        await k.tools.upload_document(student(), "passport", "a.pdf", big)
-    assert len(k.docs.uploads) == 1
-
-
-async def test_read_document_needs_the_documents_scope() -> None:
-    k = Kit()
-    doc = str(k.docs.mine.id)
-    with pytest.raises(McpScopeError):
-        await k.tools.read_document(student(frozenset({"admission:read"})), doc)
-    link = await k.tools.read_document(student(frozenset({"admission:documents"})), doc)
-    assert link["url"].endswith(doc)
-
-
-async def test_tools_require_admission_consent() -> None:
-    k = Kit()
-    k.consent.accepted = False
-    with pytest.raises(ForbiddenError):
-        await k.tools.list_documents(student())
-    assert k.audit.drafts[-1].type == "mcp.denied"
-    assert k.audit.drafts[-1].metadata["reason"] == "consent"
-    assert k.consent.calls == [(STUDENT, "admission")]
-    k.consent.accepted = True
-    assert len(await k.tools.list_documents(student())) == 1
-
-
-async def test_upload_type_is_sniffed_not_trusted() -> None:
-    k = Kit()
-    fake = "TVqQAAMAAAAEAAAA"  # an "MZ" executable named .pdf
-    with pytest.raises(BaseError):
-        await k.tools.upload_document(student(), "passport", "a.pdf", fake)
-    assert k.docs.uploads == []
+    k.actor = Actor(STUDENT, frozenset({Role.COUNSELOR}), scopes=ALL)
+    with pytest.raises(ToolError):
+        await k.call("list_memory_notes")
 
 
 # -- token verifier ----------------------------------------------------------
@@ -234,15 +176,14 @@ class _Personal:
         return self.actor
 
 
-class _Hydra:
-    async def verify(self, token: str, *, audience: str) -> Actor:
-        assert audience == "mcp-admission"
-        return student()
+class _Inner:
+    async def verify_token(self, token: str) -> AccessToken | None:
+        return AccessToken(token=token, client_id="hydra", scopes=[])
 
 
-def _verifier(actor: Actor | None) -> AdmissionTokenVerifier:
-    return AdmissionTokenVerifier(
-        access=_Hydra(),  # type: ignore[arg-type]
+def _verifier(actor: Actor | None) -> PersonalTokenVerifier:
+    return PersonalTokenVerifier(
+        inner=_Inner(),
         personal=_Personal(actor),
         resource_url="https://mcp/admission",
     )
@@ -252,14 +193,16 @@ PAT = "ihsp_pat_" + "a" * 43
 
 
 async def test_verifier_admits_students_with_an_admission_scope_only() -> None:
-    ok = await _verifier(student()).verify_token(PAT)
+    ok = await _verifier(student(OLD)).verify_token(PAT)
     assert isinstance(ok, IhspAccessToken) and ok.actor.user_id == STUDENT
+    assert ok.actor.scopes == ALL
     assert await _verifier(None).verify_token(PAT) is None  # expired/revoked
-    teacher = Actor(STUDENT, frozenset({Role.TEACHER}), scopes=ALL)
+    teacher = Actor(STUDENT, frozenset({Role.TEACHER}), scopes=OLD)
     assert await _verifier(teacher).verify_token(PAT) is None
     me_only = student(frozenset({"me:read"}))
     assert await _verifier(me_only).verify_token(PAT) is None
-    assert await _verifier(None).verify_token("hydra-jwt") is not None
+    other = await _verifier(None).verify_token("hydra-jwt")
+    assert other is not None and other.client_id == "hydra"
 
 
 async def test_verifier_refuses_catalog_tokens() -> None:
@@ -268,4 +211,4 @@ async def test_verifier_refuses_catalog_tokens() -> None:
     counselor = Actor(STUDENT, frozenset({Role.COUNSELOR}), scopes=catalog)
     assert await _verifier(counselor).verify_token(PAT) is None
     assert await _verifier(student(catalog)).verify_token(PAT) is None
-    assert await _verifier(student(ALL | catalog)).verify_token(PAT) is None
+    assert await _verifier(student(OLD | catalog)).verify_token(PAT) is None

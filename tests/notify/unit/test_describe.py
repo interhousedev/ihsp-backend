@@ -353,6 +353,24 @@ PAYLOADS: dict[NotificationType, dict[str, Any]] = {
         "result": "approved",
     },
     NotificationType.CLUB_OWNER_GRADUATING: {"club_id": "c"},
+    NotificationType.HOMEWORK_SUBMITTED: {
+        "lesson_id": "l",
+        "submission_id": "s",
+        "student_name": "Ali",
+        "subject_names": ["Math"],
+        "group_name": "10A",
+        "lesson_date": "2026-11-27",
+        "late": True,
+        "file_count": 2,
+    },
+    NotificationType.HOMEWORK_REVIEWED: {
+        "lesson_id": "l",
+        "subject_names": ["Math"],
+        "lesson_date": "2026-11-27",
+        "review_status": "graded",
+        "grade": 5,
+        "comment_preview": "Well done",
+    },
 }
 
 

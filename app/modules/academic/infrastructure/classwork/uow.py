@@ -6,6 +6,9 @@ from app.modules.academic.infrastructure.classwork.absence_digest_reader import 
 from app.modules.academic.infrastructure.classwork.attendance_reports import (
     SqlAttendanceReports,
 )
+from app.modules.academic.infrastructure.classwork.homework_settings_repository import (
+    SqlHomeworkSettingsRepository,
+)
 from app.modules.academic.infrastructure.classwork.journal_reader import (
     SqlJournalReader,
 )
@@ -54,6 +57,7 @@ class SqlClassworkUnitOfWork(SqlUnitOfWork):
     work_off_reader: SqlWorkOffReader
     digest: SqlAbsenceDigestReader
     temporary_marks: SqlTemporaryMarkRepository
+    homework_settings: SqlHomeworkSettingsRepository
 
     def _init_repos(self) -> None:
         """Create the repositories bound to the open session."""
@@ -70,3 +74,4 @@ class SqlClassworkUnitOfWork(SqlUnitOfWork):
         self.work_off_reader = SqlWorkOffReader(self.session)
         self.digest = SqlAbsenceDigestReader(self.session)
         self.temporary_marks = SqlTemporaryMarkRepository(self.session)
+        self.homework_settings = SqlHomeworkSettingsRepository(self.session)

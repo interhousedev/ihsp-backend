@@ -30,5 +30,13 @@
   "calendar-exam-day-sat": "День экзамена SAT",
   "calendar-exam-day-act": "День экзамена ACT",
   "calendar-test-registration": "Дедлайн регистрации на тест",
-  "calendar-test-day": "День теста"
+  "calendar-test-day": "День теста",
+  "calendar-source-personal": "Мои находки",
+  "calendar-source-milestone": "План целей",
+  "calendar-personal-unverified": "Добавлено учеником. Школа не проверяла.",
+  "calendar-feed-exists": "У вас уже есть ссылка на календарь. Замените её, чтобы получить новую; старая ссылка перестанет работать.",
+  "calendar-personal-registration": "Дедлайн регистрации",
+  "calendar-personal-start": "Начало",
+  "calendar-personal-end": "Окончание",
+  "calendar-milestone": "Шаг плана целей"
 }

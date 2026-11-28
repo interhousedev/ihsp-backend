@@ -38,6 +38,8 @@ class SqlSubmissionReader:
                 Lesson.teacher_id,
                 Lesson.subject_id,
                 Lesson.homework_text,
+                Lesson.emis_topic,
+                Lesson.emis_topic_description,
             )
             .join(Lesson, Lesson.id == HomeworkSubmission.lesson_id)
             .where(HomeworkSubmission.id == submission_id)
@@ -56,7 +58,8 @@ class SqlSubmissionReader:
                 data = await self.files.read_bytes(file_id)
                 parts.append(data.decode(errors="replace")[:_FILE_CHARS])
         return SubmissionWork(
-            row.homework_text or "",
+            # EMIS-only homework: the topic stands in for the missing task text.
+            row.homework_text or row.emis_topic_description or row.emis_topic or "",
             "\n\n".join(parts),
             row.subject_id,
             None,

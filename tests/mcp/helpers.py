@@ -2,8 +2,13 @@
 
 from typing import Any
 
+from app.interfaces.mcp.catalog import META_TOOLS
+from app.interfaces.mcp.deps import McpDeps
+from app.interfaces.mcp.server import _BUILDERS
+
 from mcp.client.session import ClientSession
-from mcp.types import CallToolResult, TextContent
+from mcp.server.fastmcp import FastMCP
+from mcp.types import CallToolResult, TextContent, Tool
 
 
 async def call(
@@ -29,3 +34,14 @@ async def tool_names(session: ClientSession) -> set[str]:
     """Names of all tools a server offers."""
     listed = await session.list_tools()
     return {tool.name for tool in listed.tools}
+
+
+async def registered_tools(deps: McpDeps, server: str) -> list[Tool]:
+    """Every tool registered on `server`, as `tools/list` would show it unfiltered.
+
+    The served `tools/list` is only the meta and pinned tools, so assertions about
+    what is registered (names, hints, schemas) read the server object instead. Role
+    filtering is not applied here: assert it through `search_tools`/`describe_tool`.
+    """
+    tools = await FastMCP.list_tools(_BUILDERS[server](deps))
+    return [tool for tool in tools if tool.name not in META_TOOLS]

@@ -11,7 +11,7 @@ from app.shared.contracts.mcp_academic import MaterialFetch
 from tests.mcp.conftest import World
 from tests.mcp.fakes import make_lesson, make_resource
 from tests.mcp.fakes_academic import running
-from tests.mcp.helpers import call, data_of, text_of
+from tests.mcp.helpers import call, data_of, registered_tools, text_of
 
 import pytest
 
@@ -97,10 +97,8 @@ async def test_the_description_tells_the_client_to_retry_up_to_the_ceiling(
     world: World,
 ) -> None:
     """A3: the client retries the same call and waits up to 60 seconds."""
-    token, _ = world.connector_token("student", SCOPE)
-    async with world.session("student", token) as session:
-        listed = await session.list_tools()
-    text = next(t for t in listed.tools if t.name == "get_lesson_materials").description
+    listed = await registered_tools(world.deps(), "student")
+    text = next(t for t in listed if t.name == "get_lesson_materials").description
     assert text is not None
     assert "pending" in text
     assert "60 seconds" in text

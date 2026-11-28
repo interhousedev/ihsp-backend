@@ -194,23 +194,25 @@ def assemble(
         limits=limits,
     )
     remove_file = RemoveFile(uow_factory=uow_factory, storage=storage)
+    request_upload = RequestUpload(
+        uow_factory=uow_factory,
+        storage=storage,
+        terms=terms,
+        views=views,
+        clock=clock,
+        limits=limits,
+    )
+    complete_upload = CompleteUpload(
+        uow_factory=uow_factory,
+        storage=storage,
+        sniffer=sniffer,
+        views=views,
+        clock=clock,
+        kicker=kicker,
+    )
     return FilesServices(
-        request_upload=RequestUpload(
-            uow_factory=uow_factory,
-            storage=storage,
-            terms=terms,
-            views=views,
-            clock=clock,
-            limits=limits,
-        ),
-        complete_upload=CompleteUpload(
-            uow_factory=uow_factory,
-            storage=storage,
-            sniffer=sniffer,
-            views=views,
-            clock=clock,
-            kicker=kicker,
-        ),
+        request_upload=request_upload,
+        complete_upload=complete_upload,
         process_file=ProcessFile(
             uow_factory=uow_factory, storage=storage, extractor=extractor, clock=clock
         ),
@@ -261,6 +263,8 @@ def assemble(
             read_outline_uc=read_outline,
             search_text_uc=search,
             store_bytes_uc=store,
+            request_upload_uc=request_upload,
+            complete_upload_uc=complete_upload,
             combine_images_uc=combine_images,
             remove_file_uc=remove_file,
             list_owned_uc=list_owned,

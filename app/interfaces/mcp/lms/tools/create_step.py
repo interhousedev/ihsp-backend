@@ -31,7 +31,7 @@ def register(kit: ToolKit) -> None:
     ) -> dict[str, Any]:
         """Add a new empty step at the end of a section of a course draft.
 
-        Add content with add_text_block, add_test_block and add_flashcards_block.
+        Add content with add_block (call list_block_types for the block types).
         The change is a pending change marked "via MCP".
         """
         actor = current_actor()

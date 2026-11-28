@@ -66,7 +66,13 @@ CAPTION_PURPOSES = frozenset({FilePurpose.LMS_CAPTIONS})
 LMS_CAPTIONS_MAX_BYTES = 1 * MB
 _WEBVTT_SIGNATURE = re.compile(rb"\A(?:\xef\xbb\xbf)?WEBVTT(?:[ \t\r\n]|\Z)")
 # Purposes that take videos as well as documents and images (anyone may upload).
-MIXED_PURPOSES = frozenset({FilePurpose.FEEDBACK})
+MIXED_PURPOSES = frozenset({FilePurpose.FEEDBACK, FilePurpose.CLUB_MEDIA})
+# Club photos and videos: owned by the club, never expire, no per-actor quota, and
+# reachable only through the activities module (never the generic upload route).
+CLUB_PURPOSES = frozenset({FilePurpose.CLUB_MEDIA})
+CLUB_MEDIA_EXTENSIONS = frozenset(
+    {".png", ".jpg", ".jpeg", ".webp", ".mp4", ".webm", ".mov"}
+)
 VIDEO_UPLOAD_ROLES = frozenset(
     {Role.TEACHER, Role.ADMIN, Role.LMS_ADMIN, Role.LMS_CREATOR}
 )
@@ -178,6 +184,7 @@ class FilesLimits:
     library_student_quota_bytes: int = 300 * MB  # LIBRARY__STUDENT_QUOTA_BYTES
     library_teacher_quota_bytes: int = 2 * GB  # LIBRARY__TEACHER_QUOTA_BYTES
     lms_video_max_bytes: int = 500 * MB  # FILES__LMS_VIDEO_MAX_MB
+    club_media_max_bytes: int = 300 * MB  # default ceiling; activities passes its own
 
     def max_bytes_for(self, scope: FileScope) -> int:
         """Return the size limit of one file in the scope."""
@@ -189,6 +196,8 @@ class FilesLimits:
         """Return the size limit of one file of the purpose."""
         if purpose in VIDEO_PURPOSES:
             return self.lms_video_max_bytes
+        if purpose in CLUB_PURPOSES:
+            return self.club_media_max_bytes
         if purpose in CAPTION_PURPOSES:
             return min(LMS_CAPTIONS_MAX_BYTES, self.max_bytes_for(scope))
         if purpose == FilePurpose.LMS_AI_REVIEW:  # a student's work for an AI review
@@ -331,6 +340,8 @@ def scope_for_purpose(purpose: FilePurpose, actor: Actor) -> FileScope:
     """Library purposes live in the library scope; the rest follow the actor."""
     if purpose in LIBRARY_PURPOSES:
         return FileScope.LIBRARY
+    if purpose in CLUB_PURPOSES:
+        return FileScope.CLUB
     return scope_for(actor)
 
 
@@ -349,6 +360,8 @@ def check_purpose_extension(purpose: FilePurpose, name: str) -> None:
     Mixed purposes also take videos (but no caption tracks).
     """
     ext = extension_of(name)
+    if purpose in CLUB_PURPOSES and ext not in CLUB_MEDIA_EXTENSIONS:
+        raise TypeNotAllowedError(params={"extension": ext, "purpose": purpose.value})
     is_caption = ext in CAPTION_EXTENSIONS
     if is_caption != (purpose in CAPTION_PURPOSES):
         raise TypeNotAllowedError(params={"extension": ext, "purpose": purpose.value})
@@ -360,8 +373,12 @@ def check_purpose_extension(purpose: FilePurpose, name: str) -> None:
 
 
 def check_scope_purpose(scope: FileScope, purpose: FilePurpose) -> None:
-    """`library_*` purposes belong to the library scope, and only they do."""
+    """`library_*` purposes go to the library scope, `club_media` to the club one."""
     if (purpose in LIBRARY_PURPOSES) != (scope == FileScope.LIBRARY):
+        raise TypeNotAllowedError(
+            params={"purpose": purpose.value, "scope": scope.value}
+        )
+    if (purpose in CLUB_PURPOSES) != (scope == FileScope.CLUB):
         raise TypeNotAllowedError(
             params={"purpose": purpose.value, "scope": scope.value}
         )
@@ -370,8 +387,12 @@ def check_scope_purpose(scope: FileScope, purpose: FilePurpose) -> None:
 def may_read(file: StoredFile, actor: Actor) -> bool:
     """The owner and administrators read a file; librarians also read library files.
 
+    Club files (owned by the club id) are read by administrators only.
+
     Everyone else gets library files from the library, which checks its own rules.
     """
+    if file.scope == FileScope.CLUB:  # owner is the club id; activities serves it
+        return actor.has(Role.ADMIN)
     if file.is_owned_by(actor.user_id) or actor.has(Role.ADMIN):
         return True
     return file.scope == FileScope.LIBRARY and actor.has(Role.LIBRARIAN)

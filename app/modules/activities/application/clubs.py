@@ -26,6 +26,7 @@ from app.modules.activities.domain.club import (
     next_declaration,
 )
 from app.modules.activities.domain.errors import ActivitiesNotFoundError
+from app.modules.activities.domain.media import validate_logo_file
 from app.modules.activities.domain.membership import (
     MemberRole,
     Membership,
@@ -134,10 +135,15 @@ class ClubService:
             raise ClubInvalidError(params={"field": sorted(extra)[0]})
         club = Club(uuid7(), slug, ClubKind.CLUB, name.strip(), owner_id)
         club.description = description
+        logo_id = kw.get("logo_file_id")
+        if logo_id is not None:
+            await self._vet_logo(owner_id, club.id, None, logo_id)
         _apply(club, kw)
         club.validate()
         club.validate_profile()
         await p.clubs.add(club)
+        if logo_id is not None:
+            await p.media_store.adopt([logo_id], club.id)
         await p.members.save(
             Membership(
                 club.id,
@@ -234,10 +240,33 @@ class ClubService:
         if extra:
             raise ClubInvalidError(params={"field": sorted(extra)[0]})
         club = await load_club(self._p, club_id)
+        logo_id = fields.get("logo_file_id")
+        adopt = logo_id is not None and logo_id != club.logo_file_id
+        if logo_id is not None:
+            await self._vet_logo(actor.user_id, club_id, club.logo_file_id, logo_id)
         _apply(club, fields)
         club.validate_profile()
         await self._p.clubs.save(club)
+        if adopt and logo_id is not None:
+            await self._p.media_store.adopt([logo_id], club_id)
         return club
+
+    async def _vet_logo(
+        self, actor_id: UUID, club_id: UUID, current: UUID | None, file_id: UUID
+    ) -> None:
+        """Only the caller's own small image (or the current logo) may be a logo."""
+        info = await self._p.media_store.info(file_id)
+        if info is None:
+            raise ClubInvalidError(params={"field": "logo_file_id"})
+        validate_logo_file(
+            actor_id=actor_id,
+            owner_id=info.owner_id,
+            content_type=info.content_type,
+            byte_size=info.byte_size,
+            club_id=club_id,
+            current_logo_id=current,
+            file_id=file_id,
+        )
 
     async def declare(
         self,

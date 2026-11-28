@@ -94,12 +94,44 @@ from app.modules.lms.ports.learning.engagement import (
     EngagementUnitOfWork,
     QuestRecord,
 )
+from app.modules.lms.ports.learning.unit_of_work import LearningUnitOfWork
 from app.shared import srs
 from app.shared.actor import Actor, Role
 from app.shared.clock import Clock, to_local
 from app.shared.ids import new_id
 
 EngagementUowFactory = Callable[[], EngagementUnitOfWork]
+
+
+async def course_mastery(
+    uow: LearningUnitOfWork,
+    user_id: UUID,
+    manifest: LiveManifest,
+    threshold: int | None,
+) -> list[SectionMastery]:
+    """Return a learner's section mastery of a live version (best test points)."""
+    steps = manifest.steps()
+    step_ids = [s.step_id for s in steps]
+    revisions = await uow.revisions.get_many([s.revision_id for s in steps])
+    best = await uow.attempts.best_scores(user_id, step_ids)
+    completed = set(await uow.states.completed_step_ids(user_id, step_ids))
+    sections = []
+    for section in manifest.sections:
+        points = []
+        for live in section.steps:
+            revision = revisions.get(live.revision_id)
+            tests = _tests(revision.content) if revision else []
+            points.append(
+                StepPoints(
+                    step_id=live.step_id,
+                    title=live.title,
+                    max_points=sum((block_max_points(t) for t in tests), Decimal(0)),
+                    best_points=best_by_step(best, live.step_id, [t.id for t in tests]),
+                    completed=live.step_id in completed,
+                )
+            )
+        sections.append((section.id, section.title, points))
+    return mastery_map(sections, threshold)
 
 
 class LevelHook(Protocol):
@@ -580,32 +612,7 @@ class EngagementService:
         manifest: LiveManifest,
         threshold: int | None,
     ) -> list[SectionMastery]:
-        steps = manifest.steps()
-        step_ids = [s.step_id for s in steps]
-        revisions = await uow.revisions.get_many([s.revision_id for s in steps])
-        best = await uow.attempts.best_scores(user_id, step_ids)
-        completed = set(await uow.states.completed_step_ids(user_id, step_ids))
-        sections = []
-        for section in manifest.sections:
-            points = []
-            for live in section.steps:
-                revision = revisions.get(live.revision_id)
-                tests = _tests(revision.content) if revision else []
-                points.append(
-                    StepPoints(
-                        step_id=live.step_id,
-                        title=live.title,
-                        max_points=sum(
-                            (block_max_points(t) for t in tests), Decimal(0)
-                        ),
-                        best_points=best_by_step(
-                            best, live.step_id, [t.id for t in tests]
-                        ),
-                        completed=live.step_id in completed,
-                    )
-                )
-            sections.append((section.id, section.title, points))
-        return mastery_map(sections, threshold)
+        return await course_mastery(uow, user_id, manifest, threshold)
 
     async def mastery(self, actor: Actor, course_id: UUID) -> EngagementMasteryView:
         """Return the learner's mastery map of a course they are enrolled in."""

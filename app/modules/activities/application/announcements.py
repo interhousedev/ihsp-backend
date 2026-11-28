@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import builtins
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 from uuid import UUID
 
@@ -12,6 +13,7 @@ from app.modules.activities.application.common import (
     note,
     require,
 )
+from app.modules.activities.application.media import MediaService
 from app.modules.activities.domain.access import Permission, is_platform_staff
 from app.modules.activities.domain.announcement import (
     Announcement,
@@ -19,6 +21,7 @@ from app.modules.activities.domain.announcement import (
     parse_audience,
 )
 from app.modules.activities.domain.errors import ActivitiesNotFoundError
+from app.modules.activities.domain.media import Media, MediaQuotaExceededError
 from app.modules.activities.ports.bundle import Ports
 from app.shared.actor import Actor
 from app.shared.notifications import NotificationDraft, NotificationType
@@ -38,11 +41,13 @@ class AnnouncementService:
         text: str,
         audience: str,
         scheduled_at: datetime | None = None,
+        media_ids: Sequence[UUID] = (),
     ) -> Announcement:
-        """Send now, or keep until `scheduled_at`."""
+        """Send now, or keep until `scheduled_at`; photos are staged media ids."""
         p = self._p
         await require(p, actor, club_id, Permission.ANNOUNCE)
         await load_club(p, club_id)
+        photos = await self._photos(actor, club_id, media_ids)
         now = p.clock.now()
         check_daily_limit(
             await p.announcements.count_since(club_id, now - timedelta(hours=24)),
@@ -57,12 +62,26 @@ class AnnouncementService:
         )
         if scheduled_at is not None:
             ann.schedule(scheduled_at, now)
-            await p.announcements.add(ann)
-            return ann
-        recipients = await self._deliver(ann)
-        ann.mark_sent(now, recipients)
         await p.announcements.add(ann)
+        for position, photo in enumerate(photos):
+            photo.attach_to_announcement(ann.id, position)
+            photo.updated_at = now
+            await p.media.save(photo)
+        if scheduled_at is None:
+            ann.mark_sent(now, await self._deliver(ann))
+            await p.announcements.save(ann)
         return ann
+
+    async def _photos(
+        self, actor: Actor, club_id: UUID, media_ids: Sequence[UUID]
+    ) -> builtins.list[Media]:
+        """Staged ready photos of this club the actor may attach."""
+        if not media_ids:
+            return []
+        limits = self._p.media_config.announcement_photos_max
+        if len(set(media_ids)) > limits:
+            raise MediaQuotaExceededError(params={"announcement_photos_max": limits})
+        return await MediaService(self._p).stage_for(actor, club_id, list(media_ids))
 
     async def _recipients(self, ann: Announcement) -> builtins.list[UUID]:
         p = self._p
@@ -83,6 +102,11 @@ class AnnouncementService:
 
     async def _deliver(self, ann: Announcement) -> int:
         users = await self._recipients(ann)
+        photos = [
+            str(m.preview_file_id)
+            for m in await self._p.media.list_for_announcement(ann.id)
+            if m.is_served and m.preview_file_id is not None
+        ]
         drafts: list[NotificationDraft] = [
             note(
                 u,
@@ -91,6 +115,7 @@ class AnnouncementService:
                     "club_id": str(ann.club_id),
                     "announcement_id": str(ann.id),
                     "text": ann.text,
+                    "photo_file_ids": photos,
                 },
                 f"activities:announcement:{ann.id}:{u}",
             )
@@ -108,6 +133,11 @@ class AnnouncementService:
         await require(p, actor, ann.club_id, Permission.ANNOUNCE)
         ann.cancel()
         await p.announcements.save(ann)
+        now = p.clock.now()
+        for photo in await p.media.list_for_announcement(ann.id):
+            photo.soft_delete(now)
+            photo.updated_at = now
+            await p.media.save(photo)
         return ann
 
     async def list(self, actor: Actor, club_id: UUID) -> builtins.list[Announcement]:

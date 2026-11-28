@@ -13,6 +13,7 @@ from app.modules.admission.domain.opportunities import (
     PlanEntry,
     TaxonomyNode,
 )
+from app.modules.admission.domain.personal_entries import PersonalEntry
 from app.modules.admission.ports.repositories import AccessRepository
 
 
@@ -111,6 +112,40 @@ class OpportunityRepository(Protocol):
 
     async def delete_plan_entry(self, student_id: UUID, opportunity_id: UUID) -> bool:
         """Remove a saved entry; return whether it existed."""
+        ...
+
+    async def personal_entries(self, student_id: UUID) -> list[PersonalEntry]:
+        """A student's own finds, oldest first."""
+        ...
+
+    async def get_personal(
+        self, student_id: UUID, entry_id: UUID
+    ) -> PersonalEntry | None:
+        """One find of this student; another student's id is None."""
+        ...
+
+    async def personal_by_key(
+        self, student_id: UUID, dedup_key: str
+    ) -> PersonalEntry | None:
+        """The student's find with this dedup key."""
+        ...
+
+    async def personal_by_submission(self, submission_id: UUID) -> list[PersonalEntry]:
+        """Finds that were proposed through this submission."""
+        ...
+
+    async def add_personal(self, entry: PersonalEntry) -> PersonalEntry:
+        """Insert a find; `PlanDuplicateError` when its dedup key is taken."""
+        ...
+
+    async def save_personal(
+        self, entry: PersonalEntry, *, expected_lock: int
+    ) -> PersonalEntry:
+        """Update a find; conflict if the lock moved, `PlanDuplicateError` on a key."""
+        ...
+
+    async def delete_personal(self, student_id: UUID, entry_id: UUID) -> bool:
+        """Remove a find of this student; return whether it existed."""
         ...
 
     async def ai_plan(

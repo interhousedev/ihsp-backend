@@ -6,7 +6,7 @@ from app.interfaces.mcp.constants import SCOPES_BY_SERVER
 from app.shared.actor import Role
 from app.shared.ids import new_id
 from tests.mcp.conftest import World
-from tests.mcp.helpers import call
+from tests.mcp.helpers import call, registered_tools
 
 SCOPES = SCOPES_BY_SERVER["teacher"]
 AI_TOOLS = {
@@ -21,9 +21,7 @@ AI_TOOLS = {
 
 
 async def _tool_names(world: World) -> set[str]:
-    token, _ = world.connector_token("teacher", *SCOPES)
-    async with world.session("teacher", token) as session:
-        return {tool.name for tool in (await session.list_tools()).tools}
+    return {tool.name for tool in await registered_tools(world.deps(), "teacher")}
 
 
 async def test_student_cannot_use_the_teacher_server(world: World) -> None:

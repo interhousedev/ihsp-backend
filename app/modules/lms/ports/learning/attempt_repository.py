@@ -73,3 +73,25 @@ class AttemptRepository(Protocol):
     async def list_submitted_for_course(self, course_id: UUID) -> list[Attempt]:
         """Return all submitted non-preview attempts in the course."""
         ...
+
+    async def list_submitted_for_user(
+        self,
+        user_id: UUID,
+        course_id: UUID,
+        *,
+        step_id: UUID | None = None,
+        limit: int,
+        before: tuple[datetime, UUID] | None = None,
+    ) -> list[Attempt]:
+        """Return the user's submitted non-preview attempts in a course.
+
+        Newest first by ``(submitted_at, id)``; ``before`` is the key of the last
+        row of the previous page. Unsubmitted and preview attempts never appear.
+        """
+        ...
+
+    async def last_submitted_by_course(
+        self, user_id: UUID, course_ids: Sequence[UUID]
+    ) -> dict[UUID, datetime]:
+        """Return when the user last submitted a non-preview attempt per course."""
+        ...

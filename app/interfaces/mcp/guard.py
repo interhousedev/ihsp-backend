@@ -18,6 +18,7 @@ from app.interfaces.mcp.call_log import (
 from app.interfaces.mcp.constants import (
     ALLOWED_ROLES_BY_SERVER,
     CALLS_PER_MINUTE,
+    CONSENT_APP_BY_SERVER,
     SCOPES_BY_SERVER,
     USER_CALLS_PER_MINUTE,
     ServerName,
@@ -88,6 +89,8 @@ class ToolRule:
     log: LogSpec | None = None
     writes: bool = False
     """Mutates state or spends a model call: refused during maintenance."""
+    roles: frozenset[Role] | None = None
+    """Only actors holding one of these roles may call the tool (None: any role)."""
 
 
 @dataclass(slots=True)
@@ -130,10 +133,12 @@ class ToolGuard:
         read_only: bool = True,
         destructive: bool = False,
         writes: bool | None = None,
+        roles: frozenset[Role] | None = None,
     ) -> Callable[[ToolFn], ToolFn]:
         """Decorate a tool so it runs only for tokens granted `scope`.
 
         `writes` defaults to `not read_only`; a read with a side effect sets it True.
+        `roles` limits the tool to actors holding one of them (refused as a scope).
         """
         rule = ToolRule(
             scope,
@@ -142,6 +147,7 @@ class ToolGuard:
             limit,
             log,
             not read_only if writes is None else writes,
+            roles,
         )
 
         def decorate(fn: ToolFn) -> ToolFn:
@@ -256,13 +262,17 @@ class ToolGuard:
             _ACTOR.reset(reset)
         return to_jsonable_dict(result)
 
-    async def _enforce(self, actor: Actor, tool: str, rule: ToolRule) -> None:
+    async def _enforce(  # noqa: C901 - one gate per rule field
+        self, actor: Actor, tool: str, rule: ToolRule
+    ) -> None:
         try:
             if rule.writes:
                 self._refuse_in_maintenance()
             await self._limit(actor)
             if self.deps.consent is not None:
                 await self.deps.consent.execute(actor.user_id)
+                if (app := CONSENT_APP_BY_SERVER.get(self.server)) is not None:
+                    await self.deps.consent.execute(actor.user_id, app)
             if self._role_refused(actor, rule):
                 raise McpScopeError(params={"scope": self.scope_prefix + rule.scope})
             await self._ai_access(actor)
@@ -278,6 +288,8 @@ class ToolGuard:
 
     def _role_refused(self, actor: Actor, rule: ToolRule) -> bool:
         if self.composite and not actor.roles & ALLOWED_ROLES_BY_SERVER[self.server]:
+            return True
+        if rule.roles is not None and not actor.roles & rule.roles:
             return True
         return self._student_only_write(actor, rule)
 

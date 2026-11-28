@@ -35,10 +35,24 @@ Routes expected:
 """
 
 from datetime import timedelta
+from uuid import UUID
 
+from app.modules.activities.ports.gateways import StoredFile
 from app.shared.actor import Actor, Role
 from tests.activities.http.conftest import MakeClient
 from tests.fakes.activities.world import ActivitiesWorld
+
+LOGO_ID = "11111111-1111-4111-8111-111111111111"
+
+
+def _own_logo(world: ActivitiesWorld, owner: Actor) -> str:
+    """A small PNG the owner uploaded through the files API, as a real client does."""
+    fid = UUID(LOGO_ID)
+    world.media_store.files[fid] = StoredFile(
+        fid, owner.user_id, "logo.png", "image/png", 100, "ready", None
+    )
+    return LOGO_ID
+
 
 PUBLIC = "/v1/public/clubs"
 
@@ -78,7 +92,7 @@ async def test_club_logo_url_is_served_to_logged_in_apps(
     cid = await _active_club(world, make_client, student, su)
     c = await make_client(student)
     assert (await c.get(f"/v1/activities/clubs/{cid}")).json()["logo_url"] is None
-    file_id = "11111111-1111-4111-8111-111111111111"
+    file_id = _own_logo(world, student)
     patched = await c.patch(
         f"/v1/activities/clubs/{cid}", json={"logo_file_id": file_id}
     )
@@ -430,7 +444,7 @@ async def test_club_logo_is_anonymous_for_active_and_404_for_draft(
 ) -> None:
     cid = await _active_club(world, make_client, student, su)
     c = await make_client(student)
-    file_id = "11111111-1111-4111-8111-111111111111"
+    file_id = _own_logo(world, student)
     await c.patch(f"/v1/activities/clubs/{cid}", json={"logo_file_id": file_id})
     draft = (
         await c.post(

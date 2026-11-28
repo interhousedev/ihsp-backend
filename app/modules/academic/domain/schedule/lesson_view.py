@@ -21,8 +21,9 @@ class LessonView:
     term_id: UUID | None = None
     audience_groups: dict[UUID, str] = field(default_factory=dict)
     persisted: bool = True
+    emis_homework: bool = False
 
     @property
     def has_homework(self) -> bool:
-        """Return True if the teacher set homework."""
-        return self.ref.homework_text is not None
+        """Return True if the teacher set homework or EMIS linked a homework file."""
+        return self.ref.homework_text is not None or self.emis_homework

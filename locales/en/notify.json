@@ -312,5 +312,14 @@
   "club-transfer-bot-accepted": "Club handed over to you. You now lead it.",
   "club-transfer-bot-declined": "You declined the offer.",
   "club-transfer-bot-not-available": "This offer is no longer available.",
-  "club-transfer-bot-already-answered": "This offer has already been answered."
+  "club-transfer-bot-already-answered": "This offer has already been answered.",
+  "notify-homework-submitted-title": "New homework submission",
+  "notify-homework-submitted-body": "{student}, {group}\n{subject} · {date}{late}\nFiles: {files}",
+  "notify-homework-submitted-late": " · late",
+  "notify-homework-submitted-button": "Open submissions",
+  "notify-homework-reviewed-graded-title": "Homework checked",
+  "notify-homework-reviewed-returned-title": "Homework returned for revision",
+  "notify-homework-reviewed-grade": "Grade: {grade}",
+  "notify-homework-reviewed-button": "Open homework",
+  "notify-homework-emis-file": "Homework file from EMIS"
 }

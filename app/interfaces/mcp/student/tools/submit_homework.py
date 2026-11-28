@@ -30,22 +30,26 @@ def register(kit: ToolKit) -> None:
         file_ids: Annotated[
             list[UUID],
             Field(
-                min_length=1,
                 max_length=10,
-                description="Ready files of the student (see upload_file).",
+                description="Ready files of the student (see upload_file); optional.",
             ),
-        ],
+        ] = [],  # noqa: B006 - pydantic copies the default
         comment: Annotated[
             str | None, Field(max_length=2000, description="Optional note.")
+        ] = None,
+        text: Annotated[
+            str | None,
+            Field(max_length=10000, description="The answer as text; optional."),
         ] = None,
     ) -> dict[str, Any]:
         """Hand in (or replace) the student's submission for a lesson's homework.
 
-        Upload the files first with upload_file. After the due date the submission
-        counts as late.
+        Give text, files or both. Upload files first with upload_file. After the
+        due date the submission counts as late; a graded submission is final.
         """
+        answer = text.strip() if text is not None else None
         return await kit.deps.academic_tools.submit_homework(
-            current_actor(), lesson_id, file_ids, comment
+            current_actor(), lesson_id, file_ids, comment, answer or None
         )
 
     @kit.tool(

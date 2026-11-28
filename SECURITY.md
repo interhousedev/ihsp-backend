@@ -56,6 +56,8 @@ Out of scope:
 
 Students and teachers can share a manual notebook or a personal file with a signed-in user, by name or by a link that requires sign-in. A recipient reads current sources and chats in a private thread on their own AI limits, and cannot change sources or see the owner's chats. Revoking applies to the next request. A presigned download URL issued before revocation keeps working until it expires (at most 60 seconds), and an answer already streaming may finish on screen but is not stored. Access beyond this is in scope as IDOR.
 
+Club photos and videos are served by signed URLs, because an image tag cannot send a Bearer token. Every open re-checks the item and its album: a hidden, reported or deleted item, a deleted album, or an album narrowed to members stops the URL at once. A copied URL still works for anyone who holds it until it expires (one to two hours), and a browser may keep the bytes for 10 minutes; no shared proxy caches them. Passing on such a URL is accepted and out of scope.
+
 ## MCP boundary
 
 - **A media link is a bearer capability.** `get_course_media_link` issues a personal link whose token sits in the URL fragment and is stored only hashed. Anyone holding it can open the media for 5 hours without signing in, and an enrolled student or course staff member can always open it. A signed-in person who is not enrolled is refused, but they can sign out and open the same link within the 5 hours: this is accepted, and treating it as a defect is out of scope. The issuer can pass the link on, and an AI app can too.

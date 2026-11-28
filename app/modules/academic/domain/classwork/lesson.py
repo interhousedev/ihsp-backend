@@ -9,6 +9,8 @@ from app.modules.academic.domain.classwork.names import localized
 from app.shared.contracts.academic import LessonRef
 from app.shared.lesson_kind import LessonKind, TopicSource
 
+HomeworkSource = Literal["teacher", "emis", "both"]
+
 
 @dataclass(slots=True)
 class Lesson:
@@ -50,6 +52,13 @@ class Lesson:
     topic_source: TopicSource | None = None
     # Came late: present for every rate, a subset of the roster, never absent too
     attendance_late: tuple[UUID, ...] | None = None
+    # Homework EMIS linked: the file of the class's topic, and the topic description.
+    emis_homework_url: str | None = None
+    emis_topic_description: str | None = None
+    # Students may hand in only when the teacher (or their default) allows it.
+    homework_accept_submissions: bool = False
+    # Per-lesson Telegram override; None follows the teacher's setting.
+    homework_notify: bool | None = None
 
     @property
     def group_names(self) -> tuple[str, ...]:
@@ -68,8 +77,15 @@ class Lesson:
 
     @property
     def has_homework(self) -> bool:
-        """True if the lesson has homework text."""
-        return self.homework_text is not None
+        """True if the teacher wrote homework or EMIS linked a homework file."""
+        return self.homework_text is not None or self.emis_homework_url is not None
+
+    @property
+    def homework_source(self) -> HomeworkSource | None:
+        """Where the homework comes from; None when the lesson has none."""
+        if self.homework_text is not None:
+            return "both" if self.emis_homework_url is not None else "teacher"
+        return "emis" if self.emis_homework_url is not None else None
 
     def is_taught_by(self, user_id: UUID) -> bool:
         """True if the user is the lesson's teacher."""
