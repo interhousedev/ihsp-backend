@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-11-28
+
 Migrations `academic_0020`, `activities_0005`, `admission_0071`, `files_0006`, `identity_0020`, `lms_0015` and `notify_0025` run forward only.
 
 ### Added
