@@ -1,6 +1,7 @@
 """Personal-data specification of the identity module (export and erasure)."""
 
 from app.modules.identity.infrastructure.orm.audit_event import AuditEvent
+from app.modules.identity.infrastructure.orm.card_qr_token import StudentCardQrTokenRow
 from app.modules.identity.infrastructure.orm.factors import PasskeyRow, UserFactorsRow
 from app.modules.identity.infrastructure.orm.login_cue import LoginCueRow
 from app.modules.identity.infrastructure.orm.mcp_call_log import McpCallLogRow
@@ -24,6 +25,13 @@ _ = ParentLink
 
 SPECS: tuple[PersonalTable, ...] = (
     PersonalTable(Session, E, owner="user_id"),
+    PersonalTable(
+        StudentCardQrTokenRow,
+        E,
+        owner="user_id",
+        note="metadata only",
+        exclude=("token",),
+    ),
     PersonalTable(
         PersonalTokenRow, E, owner="user_id", note="metadata only", exclude=("hash",)
     ),

@@ -104,6 +104,7 @@ EXPECTED_TABLES = {
     "id.passkeys",
     "id.login_cues",
     "id.personal_tokens",
+    "id.student_card_qr_tokens",
     # academic (19)
     "academic.terms",
     "academic.groups",
@@ -328,10 +329,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """spec -> Models plus the later modules (299 tables)."""
+    """spec -> Models plus the later modules (300 tables)."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 299
+    assert len(EXPECTED_TABLES) == 300
     assert actual == EXPECTED_TABLES
 
 

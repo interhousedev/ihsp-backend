@@ -38,7 +38,11 @@ class SqlStudentCardTokens:
         stmt = insert(StudentCardQrTokenRow).values(user_id=user_id, token=token)
         stmt = stmt.on_conflict_do_update(
             index_elements=["user_id"],
-            set_={"token": stmt.excluded.token, "created_at": func.now()},
+            set_={
+                "token": stmt.excluded.token,
+                "created_at": func.now(),
+                "updated_at": func.now(),
+            },
         )
         async with self._sessionmaker.begin() as session:
             await session.execute(stmt)

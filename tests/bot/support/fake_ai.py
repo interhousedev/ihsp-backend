@@ -102,6 +102,7 @@ class FakeAi:
         self.get_chat = SimpleNamespace(execute=self._get)
         self.delete_chat = SimpleNamespace(execute=self._delete)
         self.create_chat = SimpleNamespace(execute=self._create)
+        self.list_chats = SimpleNamespace(execute=self._list)
         self.send_message = SimpleNamespace(stream=self._send)
         self.approve_tool_call = SimpleNamespace(stream=self._approve)
         self.reject_tool_call = SimpleNamespace(stream=self._reject)
@@ -149,6 +150,13 @@ class FakeAi:
         chat_id = new_id()
         self.chats.append(chat_id)
         return SimpleNamespace(id=chat_id, assistant=assistant)
+
+    async def _list(
+        self, *, actor: Actor, assistant: Any, cursor: Any, limit: int
+    ) -> SimpleNamespace:
+        """The newest chats first, deleted ones left out."""
+        alive = [c for c in reversed(self.chats) if c not in self.deleted]
+        return SimpleNamespace(items=[SimpleNamespace(id=c) for c in alive[:limit]])
 
     def _send(
         self,
